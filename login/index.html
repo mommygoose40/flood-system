@@ -79,20 +79,21 @@ async function main(){
 const resp = await fetch(url);
 const data = await resp.json();
 
-// ⭐ 有註冊 → 把姓名與權限丟給 home
+/* ★★★ 這三行是你缺少的 ★★★ */
+const vid = data.vid;
+const name = data.name;
+const role = data.role;
+
+/* ★★★ data.registered 才能正常判斷 & 存資料 ★★★ */
 if (data.registered) {
   localStorage.setItem("vid", vid);
-localStorage.setItem("name", name);
-localStorage.setItem("role", role);
+  localStorage.setItem("name", name);
+  localStorage.setItem("role", role);
 
-window.location.href = "/home";
-  
-return;
-}
-// ⭐ 未註冊 → 只丟 unreg=1
-else {
-  window.location.href =
-    `https://home-blush-six.vercel.app/?unreg=1`;
+  window.location.href = "/home";
+  return;
+} else {
+  window.location.href = `https://home-blush-six.vercel.app/?unreg=1`;
   return;
 }
 }
