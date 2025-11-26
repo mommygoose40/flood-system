@@ -93,9 +93,9 @@
 ============================ */
 const url = new URL(window.location.href);
 
-const vid  = url.searchParams.get("vid");
-const name = url.searchParams.get("name") || "使用者";
-const role = url.searchParams.get("role") || "志工";
+const vid = localStorage.getItem("vid");
+const name = localStorage.getItem("name");
+const role = localStorage.getItem("role");
 const unreg = url.searchParams.get("unreg");
 
 /* 顯示歡迎詞 */
