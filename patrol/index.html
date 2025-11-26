@@ -146,9 +146,9 @@
 <script>
   /* ★ 讀取 login 帶來的身分 */
 const url = new URL(window.location.href);
-const vid = url.searchParams.get("vid");
-const name = url.searchParams.get("name");
-const role = url.searchParams.get("role");
+const vid = localStorage.getItem("vid");
+const name = localStorage.getItem("name");
+const role = localStorage.getItem("role");
 
 if (!vid) {
   alert("缺少志工ID，請重新登入");
