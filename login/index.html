@@ -79,12 +79,13 @@ async function main(){
 const resp = await fetch(url);
 const data = await resp.json();
 
-/* ★★★ 這三行是你缺少的 ★★★ */
-const vid = data.vid;
-const name = data.name;
-const role = data.role;
+console.log("GAS 回傳 =", data);
 
-/* ★★★ data.registered 才能正常判斷 & 存資料 ★★★ */
+// ★★★ 必須加這個，否則永遠 undefined ★★★
+const vid  = data.data?.["志工ID"];
+const name = data.data?.["姓名"];
+const role = data.data?.["權限"];
+
 if (data.registered) {
   localStorage.setItem("vid", vid);
   localStorage.setItem("name", name);
