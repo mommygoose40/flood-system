@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <title>防汛通報系統</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f5f8ff;
+      margin: 0;
+      padding: 0;
+      height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .card {
+      background: white;
+      width: 85%;
+      max-width: 460px;
+      border-radius: 12px;
+      border: 2px solid #d0d7e2;
+      padding: 28px;
+      padding-top: 40px;
+      text-align: center;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.15);
+      position: relative;
+    }
+
+    .logo {
+      width: 72px;
+      height: 72px;
+      object-fit: contain;
+      position: absolute;
+      top: -36px;
+      left: calc(50% - 36px);
+      background: white;
+      border-radius: 50%;
+      padding: 4px;
+      border: 2px solid #d0d7e2;
+    }
+
+    .title {
+      font-size: 26px;
+      font-weight: bold;
+      margin-top: 20px;
+      margin-bottom: 22px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+
+    .msg {
+      font-size: 24px;
+      margin-bottom: 18px;
+      line-height: 1.2;
+    }
+
+    .time {
+      font-size: 22px;
+      color: #666;
+      margin-bottom: 26px;
+    }
+
+    .ui-btn {
+      padding: 10px 26px;
+      background: #0b5ed7;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-size: 22px;
+      cursor: pointer;
+    }
+
+    .ui-btn:active {
+      filter: brightness(0.7);
+    }
+
+    #loadingMask {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.35);
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      z-index: 9999;
+      font-size: 28px;
+      color: white;
+    }
+
+    .spinner {
+      width: 40px;
+      height: 40px;
+      border: 4px solid #eee;
+      border-top: 4px solid #0b5ed7;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+      margin-bottom: 14px;
+    }
+
+    @keyframes spin {
+      from { transform: rotate(0deg); }
+      to   { transform: rotate(360deg); }
+    }
+
+    .check-icon {
+  font-size: 22px;  /* 勾勾大小你可以調整 */
+  margin-right: 4px;
+}
+  </style>
+
+  <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+</head>
+
+<body>
+
+  <!-- loading：只有 spinner + 處理中 / 取消巡視中 / 已取消 -->
+  <div id="loadingMask">
+    <div class="spinner"></div>
+    <div id="loadingText">處理中...</div>
+  </div>
+
+  <!-- 成功畫面 -->
+  <div class="card" id="mainCard" style="display:none;">
+    <img src="https://raw.githubusercontent.com/mommygoose40/patrol/main/logo.jpg" class="logo">
+
+    <div class="title">
+  <span class="check-icon">✔️</span>
+  登記成功
+</div>
+
+    <div class="msg" id="msgText"></div>
+    <div class="time" id="timeText"></div>
+
+    <div style="display:flex; gap:16px; justify-content:center; margin-top:10px;">
+      <button class="ui-btn" id="cancelAfterSubmit" style="background:#6c757d;">取消</button>
+      <button class="ui-btn" id="okBtn">確定</button>
+    </div>
+  </div>
+
+<script>
+  /* ★ 讀取 login 帶來的身分 */
+const url = new URL(window.location.href);
+const vid = url.searchParams.get("vid");
+const name = url.searchParams.get("name");
+const role = url.searchParams.get("role");
+
+if (!vid) {
+  alert("缺少志工ID，請重新登入");
+  window.location.href = "https://你的-login-page";
+}
+
+const gasUrl = "https://script.google.com/macros/s/AKfycbwFeKTS39HUOqNhqpgLaG7vjeJLHxv9a-KBEmWKl6zZybdCBWlSJqJWZ_qXwLxQ3sue/exec";
+
+let isCancelling = false;
+
+/* 時間字串 */
+function nowTimeStr() {
+  const now = new Date();
+  const y = now.getFullYear();
+  const m = (now.getMonth()+1).toString().padStart(2,'0');
+  const d = now.getDate().toString().padStart(2,'0');
+  let hh = now.getHours();
+  const mm = now.getMinutes().toString().padStart(2,'0');
+  const ss = now.getSeconds().toString().padStart(2,'0');
+
+  const period = hh >= 12 ? "下午" : "上午";
+  if (hh > 12) hh -= 12;
+  if (hh === 0) hh = 12;
+  hh = hh.toString().padStart(2,'0');
+
+  return `${y}/${m}/${d} ${period} ${hh}:${mm}:${ss}`;
+}
+
+// ★ 呼叫 GAS → action=patrol
+async function main() {
+  const resp = await fetch(gasUrl + "?action=patrol&vid=" + encodeURIComponent(vid));
+  const msg = await resp.text();
+
+  // ★ 判斷巡視狀態
+  if (msg.includes("已開始巡視")) {
+    localStorage.setItem("patrolStatus", "started");
+  } else if (msg.includes("已結束巡視")) {
+    localStorage.setItem("patrolStatus", "ended");
+  }
+
+  if (isCancelling) return;
+
+  document.getElementById("loadingMask").style.display = "none";
+  document.getElementById("msgText").innerText = msg;
+  document.getElementById("timeText").innerText = nowTimeStr();
+  document.getElementById("mainCard").style.display = "block";
+}
+
+/* ★取消巡視 → action=cancel */
+document.getElementById("cancelAfterSubmit").onclick = async function(){
+  isCancelling = true;
+
+  document.getElementById("mainCard").style.display = "none";
+  document.getElementById("loadingMask").style.display = "flex";
+  document.getElementById("loadingText").innerText = "取消中...";
+
+  const resp = await fetch(gasUrl + "?action=cancel&vid=" + encodeURIComponent(vid));
+  const msg = await resp.text();
+
+  // ★ 根據 GAS 回傳內容更新 patrolStatus
+  if (msg.includes("已取消")) {
+    // 巡視中 → 被刪除 → 回首頁要顯示「開始巡視」
+    localStorage.setItem("patrolStatus", "ended");
+  } else if (msg.includes("已復原")) {
+    // 巡視結束 → 被恢復 → 回首頁要顯示「結束巡視」
+    localStorage.setItem("patrolStatus", "started");
+  }
+
+  document.querySelector("#loadingMask .spinner").style.display = "none";
+  document.getElementById("loadingText").innerText = "✅ 已取消";
+
+  setTimeout(() => {
+    window.location.href =
+      `https://home-blush-six.vercel.app/?vid=${encodeURIComponent(vid)}&name=${encodeURIComponent(name)}&role=${encodeURIComponent(role)}`;
+  }, 1000);
+};
+
+/* ★回首頁（巡視成功） */
+document.getElementById("okBtn").onclick = function(){
+  window.location.href =
+    `https://home-blush-six.vercel.app/?vid=${encodeURIComponent(vid)}&name=${encodeURIComponent(name)}&role=${encodeURIComponent(role)}`;
+};
+
+main();
+</script>
+
+</body>
+</html>
