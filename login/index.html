@@ -23,7 +23,7 @@
     position: fixed;
     inset: 0;
     background: rgba(0,0,0,0.35);
-    display: flex;
+    display: none;
     flex-direction: column;
     justify-content: center;
     align-items: center;
@@ -46,59 +46,94 @@
     from { transform: rotate(0deg); }
     to   { transform: rotate(360deg); }
   }
+
+  /* 前端錯誤顯示區 */
+  #frontendLog {
+    position: fixed;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    background:#fff;
+    padding:12px 18px;
+    border-radius:8px;
+    font-size:18px;
+    color:#333;
+    box-shadow:0 2px 10px rgba(0,0,0,0.25);
+    max-width: 90%;
+    display:none;
+    white-space: pre-wrap;
+  }
 </style>
 </head>
 
 <body>
 
-<!-- 遮罩 + 加載動畫 -->
+<!-- 遮罩：專門用於 GAS 驗證 -->
 <div id="loadingMask">
   <div class="spinner"></div>
-  <div id="loadingText">自動登入中...</div>
+  <div id="loadingText">驗證身份中...</div>
 </div>
 
+<!-- 顯示在前端的 log -->
+<div id="frontendLog"></div>
+
 <script>
-/* ===== 配置 ===== */
 const LIFF_ID = "2007934728-q468EB12";
 const GAS_URL = "https://script.google.com/macros/s/AKfycbwFeKTS39HUOqNhqpgLaG7vjeJLHxv9a-KBEmWKl6zZybdCBWlSJqJWZ_qXwLxQ3sue/exec?action=login";
 
+/* ===== 前端顯示 log ===== */
+function showLog(msg){
+  const box = document.getElementById("frontendLog");
+  box.textContent = msg;
+  box.style.display = "block";
+}
+
+/* ===== 主流程 ===== */
 async function main(){
   await liff.init({ liffId: LIFF_ID });
 
+  // 若未登入 → LINE 自己跳登入畫面，不顯示你的 loading
   if (!liff.isLoggedIn()) {
     liff.login();
     return;
   }
 
-  const profile = await liff.getProfile();
-  const lineName = profile.displayName;
-  const lineUserId = profile.userId;
+  // 登入成功後開始你的流程：顯示「驗證身份中」
+  document.getElementById("loadingMask").style.display = "flex";
 
-  // 正確帶參數（第一個一定要 ?）
-  const url = `${GAS_URL}&lineUserId=${encodeURIComponent(lineUserId)}&nickname=${encodeURIComponent(lineName)}`;
-const resp = await fetch(url);
-const data = await resp.json();
+  try {
+    const profile = await liff.getProfile();
+    const lineUserId = profile.userId;
+    const lineName = profile.displayName;
 
-console.log("GAS 回傳 =", data);
+    const url = `${GAS_URL}&lineUserId=${encodeURIComponent(lineUserId)}&nickname=${encodeURIComponent(lineName)}`;
+    const resp = await fetch(url);
+    const data = await resp.json();
 
-// ★★★ 必須加這個，否則永遠 undefined ★★★
-const vid  = data.data?.["志工ID"];
-const name = data.data?.["姓名"];
-const team = data.data?.["大隊"];
-const role = data.data?.["權限"];
+    showLog("GAS 回傳資料：\n" + JSON.stringify(data, null, 2));
 
-if (data.registered) {
-  localStorage.setItem("vid", vid);
-  localStorage.setItem("name", name);
-  localStorage.setItem("team", team);
-  localStorage.setItem("role", role);
+    const vid  = data.data?.["志工ID"];
+    const name = data.data?.["姓名"];
+    const team = data.data?.["大隊"];
+    const role = data.data?.["權限"];
 
-  window.location.href = "https://flood-system.vercel.app/home";
-  return;
-} else {
-  window.location.href = `https://flood-system.vercel.app/home?unreg=1`;
-  return;
-}
+    if (data.registered) {
+      // 存入 localStorage
+      localStorage.setItem("vid", vid || "");
+      localStorage.setItem("name", name || "");
+      localStorage.setItem("team", team || "");
+      localStorage.setItem("role", role || "");
+
+      window.location.href = "https://flood-system.vercel.app/home";
+      return;
+    }
+
+    // 未註冊
+    window.location.href = "https://flood-system.vercel.app/home?unreg=1";
+    
+  } catch(error) {
+    showLog("錯誤：\n" + error.message);
+  }
 }
 
 main();
