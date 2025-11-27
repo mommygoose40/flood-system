@@ -155,7 +155,7 @@ if (!vid) {
   window.location.href = "https://你的-login-page";
 }
 
-const gasUrl = "https://script.google.com/macros/s/AKfycbyo9aQRtuJsPf65tLUx4BeKeGAFLcv-GeaT6tnftNMQ1Irmjkgz-zoiU9pxN8J32Zm5/exec";
+const gasUrl = "https://script.google.com/macros/s/AKfycbw1_IiH0lZGU7mPqpw0SLJMNYxe_Szbx_T7nbu94US4fH-GR2gETRpFKLJN2aLJ8l5o/exec";
 
 let isCancelling = false;
 
@@ -186,8 +186,8 @@ async function main() {
     `${gasUrl}?action=patrol` +
     `&vid=${encodeURIComponent(vid)}` +
     `&name=${encodeURIComponent(name)}` +
+    `&team=${encodeURIComponent(team)}` +
     `&nickname=${encodeURIComponent(nickname)}` +
-    `&team=${encodeURIComponent(team)}`
   );
 
   const msg = await resp.text();
