@@ -421,9 +421,9 @@ html, body {
 
 <div id="listView" style="display:block;">
 
-
+<!--
     <div id="debug" style="white-space: pre-line; font-size:14px; color:#c00; margin-bottom:16px;"></div>
-
+-->
 
 <div id="loadingMask">
   <div class="spinner"></div>
@@ -708,9 +708,19 @@ function debug(msg) {
   /* ------------------------------------------
       1. 初始化：登入 LIFF 並取得資料
   -------------------------------------------*/
-  async function main() {
+  function showLoading() {
+  document.getElementById("loadingMask").style.display = "flex";
 
-  document.getElementById("loadingMask").style.display = "flex";  // ★ 正確位置
+  document.getElementById("text-loading").style.display = "block";
+  document.getElementById("text-update").style.display = "none";
+  document.getElementById("text-init").style.display = "none";
+  document.getElementById("text-error").style.display = "none";
+  document.getElementById("text-error-format").style.display = "none";
+  document.getElementById("text-error-notfound").style.display = "none";
+}
+
+async function main() {
+  showLoading();  // ★ 這裡顯示載入中...
 
   globalNickname = localStorage.getItem("nickname") || "";
   globalName     = localStorage.getItem("name") || "";
