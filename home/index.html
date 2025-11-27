@@ -73,7 +73,7 @@
 
   <div class="btn" id="patrolBtn" onclick="goPatrol()">記錄巡視</div>
 
-  <div class="btn" onclick="go('report')">上傳回報</div>
+  <div class="btn" onclick="goReport()">上傳回報</div>
 
   <div class="btn" onclick="go('records')">查看回報</div>
 
@@ -97,6 +97,29 @@ const vid = localStorage.getItem("vid");
 const name = localStorage.getItem("name");
 const role = localStorage.getItem("role");
 const unreg = url.searchParams.get("unreg");
+
+// 判斷是否在 LINE 中
+function inLineApp() {
+  return /Line/i.test(navigator.userAgent);
+}
+
+// 專門處理「上傳回報（Report）」 LIFF 啟動
+function goReport() {
+  const target = "https://flood-system.vercel.app/report";
+  const vid = encodeURIComponent(localStorage.getItem("vid"));
+  const name = encodeURIComponent(localStorage.getItem("name"));
+  const role = encodeURIComponent(localStorage.getItem("role"));
+
+  const query = `?vid=${vid}&name=${name}&role=${role}`;
+
+  if (inLineApp()) {
+    const LIFF_ID = "2007934728-xN6aOL3D";
+    window.location.href =
+      `https://liff.line.me/${LIFF_ID}?redirect=${encodeURIComponent(target + query)}`;
+  } else {
+    window.location.href = target + query;
+  }
+}
 
 /* 顯示歡迎詞 */
 function showUserInfo() {
