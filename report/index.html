@@ -492,7 +492,21 @@ input[type="text"]:focus {
 
   <!-- Step 0 -->
 <div class="form-section">
+  <div class="step-title">① 通報類型(必填)</div>
+  <label><input type="radio" name="patrolType" value="平時"> 平時</label>
+  <label style="margin-left:25px;"><input type="radio" name="patrolType" value="災中"> 災中</label>
+  <label style="margin-left:25px;"><input type="radio" name="patrolType" value="其他"> 其他</label>
+</div>
 
+<!-- Step 1 -->
+<style>
+  .tight-row { display:flex; align-items:center; gap:16px; line-height:1.4; margin-top:6px; }
+  .tight-group { display:flex; flex-wrap:wrap; gap:12px 20px; line-height:1.4; margin-top:6px; }
+  .tight-group label, .tight-row label { margin:0; }
+</style>
+
+<div class="form-section">
+  <div class="step-title">② 同行志工</div>
 
   <div class="tight-group">
     <label><input type="checkbox" name="companions" value="志工A"> 志工A</label>
@@ -650,7 +664,7 @@ input[type="text"]:focus {
   font-size: 13px;
   white-space: pre-wrap;
   border-top: 3px solid #444;
-  display: block;
+  display: none;
 "></div>
 
 </div>
