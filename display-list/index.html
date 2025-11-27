@@ -766,28 +766,6 @@ function backToList() {
   // 回列表位置完全不變，不用你管
 }
 
-  /* ---------------------------
-      3. 分權限 → 第一次只載入對的資料
-  --------------------------- */
-
-  if (globalRole === "管理員") {
-    viewMode = "admin";
-    shouldKeepMask = true;        // ★ renderList() 要負責關 mask
-    loadAdminRecords();
-    return;
-  }
-
-  if (globalRole === "大隊長") {
-    viewMode = "team";
-    loadRecordList("team");
-    return;
-  }
-
-  // 志工
-  viewMode = "self";
-  loadRecordList("self");
-}
-
 async function loadAdminRecords() {
 
   const url = `${REPORT_GAS_URL}?action=listAdminFull&days=30`;
