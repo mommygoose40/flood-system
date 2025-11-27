@@ -2401,8 +2401,8 @@ async function submitForm() {
   window.currentReportId = reportId;
 
   // 取得 localStorage 的志工資料 // ★新增
-  const volunteerId   = localStorage.getItem("volunteerId")   || "";
-  const volunteerName = localStorage.getItem("volunteerName") || "";
+  const volunteerId   = localStorage.getItem("vid")   || "";
+  const volunteerName = localStorage.getItem("name") || "";
   const team          = localStorage.getItem("team")          || "";
 
   // 表單資料檢查
