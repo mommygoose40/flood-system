@@ -674,7 +674,7 @@ html, body {
 <script>
 
   const VOLUNTEER_API_URL = "https://script.google.com/macros/s/AKfycbxiGSG5hSMO6We-C6cyEJZLgf4Rnbjp-6w9Tmb0qfF9VM6JB4YGEMqj3QRfTzg7Czpc/exec"; 
-const REPORT_GAS_URL = "https://script.google.com/macros/s/AKfycbxQzZ6rTNi93dl--WhTB_iPQ_UalC5V4Jhng7ZGXwLGITLAN4prAVpA9JYRlstfqPW28w/exec";
+const REPORT_GAS_URL = "https://script.google.com/macros/s/AKfycby7CkyQhtESoXvvQo4syJu_nDEGGmbqa0crrwjHZ0TpQO2LMQFbHVGi6IOmidahgZ2Mtw/exec";
 
 let globalAdminRecords = [];   // 管理員一次抓全部後存在這邊
 let adminViewDays = 3;        // 預設抓最近兩週，可改 30
@@ -722,12 +722,14 @@ function debug(msg) {
 async function main() {
   showLoading();  // ★ 這裡顯示載入中...
 
-  globalNickname = localStorage.getItem("nickname") || "";
-  globalName     = localStorage.getItem("name") || "";
-  globalTeam     = localStorage.getItem("team") || "";
-  globalRole     = localStorage.getItem("role") || "志工";
+  globalVid      = localStorage.getItem("vid") || "";
+globalName     = localStorage.getItem("name") || "";
+globalTeam     = localStorage.getItem("team") || "";
+globalRole     = localStorage.getItem("role") || "志工";
 
-  if (!globalName) globalName = globalNickname;
+if (!globalVid) {
+  debug("錯誤：localStorage 內沒有 vid，無法查詢資料");
+}
 
   if (globalRole === "管理員") {
     viewMode = "admin";
@@ -808,28 +810,29 @@ async function loadAdminRecords() {
       3. 從 GAS 取得回報記錄（未來串 API）
   -------------------------------------------*/
   async function loadRecordList(mode = "self") {
+
+  if (!globalVid) {
+    debug("錯誤：沒有 vid 無法查詢");
+    document.getElementById("loadingMask").style.display = "none";
+    return;
+  }
+
   let url = "";
 
   if (mode === "self") {
-    url = `${REPORT_GAS_URL}?action=listMyReports&nickname=${encodeURIComponent(globalNickname)}`;
+    url = `${REPORT_GAS_URL}?action=listMyReports&vid=${encodeURIComponent(globalVid)}`;
   } 
   else if (mode === "team") {
-    url = `${REPORT_GAS_URL}?action=listTeamReports&team=${encodeURIComponent(globalTeam)}`;
+    url = `${REPORT_GAS_URL}?action=listTeamReports&vid=${encodeURIComponent(globalVid)}`;
   }
 
-  let res = await fetch(url);
-  let text = await res.text();
-
-  if (text.startsWith("callback")) {
-    text = text.replace(/^callback\(/, "").replace(/\);$/, "");
-  }
-
+  const res  = await fetch(url);
+  const text = await res.text();
   const json = JSON.parse(text);
 
   globalRecords = json.records || [];
-
-  // ⭐ 渲染完成後才允許關閉 LoadingMask
   renderList(globalRecords);
+}
 
   if (shouldKeepMask) {
     shouldKeepMask = false;
@@ -974,11 +977,14 @@ function renderList(records) {
 
   let finalRecords = records;
 
-  if (viewMode === "self") {
-    finalRecords = records.filter(r => {
-      return (r.回報者 || "").trim() === globalName;
-    });
+  if (viewMode !== "self") {
+  const n = record.姓名 || "";
+  if (n) {
+    const nameSpan = document.createElement("span");
+    nameSpan.textContent = `｜${n}`;
+    div.appendChild(nameSpan);
   }
+}
 
   globalRecords = records;
 
