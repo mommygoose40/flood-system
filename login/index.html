@@ -13,10 +13,10 @@
     margin: 0;
     padding: 0;
     height: 100vh;
+    overflow: hidden;
     display: flex;
     justify-content: center;
     align-items: center;
-    overflow: hidden; /* 防止跳動 */
   }
 
   /* 遮罩永遠在最上層 */
@@ -28,7 +28,7 @@
     flex-direction: column;
     justify-content: center;
     align-items: center;
-    z-index: 9999999; /* 強制最高 */
+    z-index: 99999999;
     font-size: 26px;
     color: white;
   }
@@ -48,46 +48,40 @@
     to   { transform: rotate(360deg); }
   }
 
-  /* log 放在遮罩下層，不會蓋過遮罩 */
-  #frontendLog {
-    position: fixed;
-    bottom: 20px;
-    left: 50%;
-    transform: translateX(-50%);
-    background:#fff;
-    padding:12px 18px;
-    border-radius:8px;
-    font-size:18px;
-    color:#333;
-    box-shadow:0 2px 10px rgba(0,0,0,0.25);
+  /* log 完全放在遮罩之內 */
+  #maskLog {
+    margin-top: 20px;
+    background: rgba(255,255,255,0.1);
+    padding: 15px;
+    border-radius: 8px;
     max-width: 90%;
-    display:none;
+    font-size: 14px;
     white-space: pre-wrap;
-    z-index: 1000; /* 遮罩之下 */
+    display: none;
   }
 </style>
 </head>
 
 <body>
 
-<!-- 遮罩：永遠最高層 -->
+<!-- 遮罩：永遠最上層 -->
 <div id="loadingMask">
   <div class="spinner"></div>
   <div id="loadingText">驗證身份中...</div>
-</div>
 
-<!-- log：只在遮罩移除後可能看見 -->
-<div id="frontendLog"></div>
+  <!-- debug log 放這裡，不會影響 body 排版 -->
+  <div id="maskLog"></div>
+</div>
 
 <script>
 const LIFF_ID = "2007934728-q468EB12";
 const GAS_URL = "https://script.google.com/macros/s/AKfycbwFeKTS39HUOqNhqpgLaG7vjeJLHxv9a-KBEmWKl6zZybdCBWlSJqJWZ_qXwLxQ3sue/exec?action=login";
 
-/* ===== 前端顯示 log ===== */
+/* ===== 遮罩內顯示 log（不會閃） ===== */
 function showLog(msg){
-  const box = document.getElementById("frontendLog");
-  box.textContent = msg;
-  box.style.display = "block";
+  const log = document.getElementById("maskLog");
+  log.textContent = msg;
+  log.style.display = "block";   // 永遠在遮罩內，不影響 layout
 }
 
 /* ===== 主流程 ===== */
@@ -99,7 +93,6 @@ async function main(){
     return;
   }
 
-  // LINE 回來後：立刻顯示遮罩，不讓任何元素閃出來
   const mask = document.getElementById("loadingMask");
   mask.style.display = "flex";
 
@@ -129,7 +122,7 @@ async function main(){
     }
 
     window.location.href = "https://flood-system.vercel.app/home?unreg=1";
-    
+
   } catch(error) {
     showLog("錯誤：\n" + error.message);
   }
