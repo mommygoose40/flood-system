@@ -109,7 +109,7 @@
   position: fixed;
   inset: 0;
   background: rgba(0,0,0,0.35);
-  display: flex;
+  display: none;
   flex-direction: column;
   justify-content: center;
   align-items: center;
@@ -696,13 +696,7 @@ window.addEventListener("pageshow", function (event) {
   }
 });
 
-// === 只在本頁第一次開啟時執行 main() ===
-if (!sessionStorage.getItem("initialized")) {
-  main();
-  sessionStorage.setItem("initialized", "1");
-} else {
-  console.log("已初始化過 → 不再執行 main()");
-}
+main();
 
 function debug(msg) {
   try {
