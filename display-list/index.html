@@ -820,11 +820,10 @@ async function loadAdminRecords() {
   let url = "";
 
   if (mode === "self") {
-    url = `${REPORT_GAS_URL}?action=listMyReports&vid=${encodeURIComponent(globalVid)}`;
-  } 
-  else if (mode === "team") {
-    url = `${REPORT_GAS_URL}?action=listTeamReports&vid=${encodeURIComponent(globalVid)}`;
-  }
+  url = `${REPORT_GAS_URL}?action=listMyReports&vid=${encodeURIComponent(globalVid)}`;
+} else if (mode === "team") {
+  url = `${REPORT_GAS_URL}?action=listTeamReports&team=${encodeURIComponent(globalTeam)}`;
+}
 
   const res  = await fetch(url);
   const text = await res.text();
