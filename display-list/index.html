@@ -710,6 +710,8 @@ function debug(msg) {
   -------------------------------------------*/
   async function main() {
 
+  document.getElementById("loadingMask").style.display = "flex";  // ★ 正確位置
+
   globalNickname = localStorage.getItem("nickname") || "";
   globalName     = localStorage.getItem("name") || "";
   globalTeam     = localStorage.getItem("team") || "";
@@ -719,18 +721,18 @@ function debug(msg) {
 
   if (globalRole === "管理員") {
     viewMode = "admin";
-    loadAdminRecords();
+    await loadAdminRecords();
     return;
   }
 
   if (globalRole === "大隊長") {
     viewMode = "team";
-    loadRecordList("team");
+    await loadRecordList("team");
     return;
   }
 
   viewMode = "self";
-  loadRecordList("self");
+  await loadRecordList("self");
 }
 
 function openDetail(url) {
