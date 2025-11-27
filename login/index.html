@@ -19,12 +19,12 @@
     align-items: center;
   }
 
-  /* 遮罩永遠在最上層 */
+  /* 遮罩永遠最高層 */
   #loadingMask {
     position: fixed;
     inset: 0;
     background: rgba(0,0,0,0.55);
-    display: none;
+    display: none; 
     flex-direction: column;
     justify-content: center;
     align-items: center;
@@ -48,45 +48,21 @@
     to   { transform: rotate(360deg); }
   }
 
-  /* log 完全放在遮罩之內 */
-  #maskLog {
-    margin-top: 20px;
-    background: rgba(255,255,255,0.1);
-    padding: 15px;
-    border-radius: 8px;
-    max-width: 90%;
-    font-size: 14px;
-    white-space: pre-wrap;
-    display: none;
-  }
 </style>
 </head>
 
 <body>
 
-<!-- 遮罩：永遠最上層 -->
+<!-- 遮罩：永遠蓋住全部 -->
 <div id="loadingMask">
   <div class="spinner"></div>
   <div id="loadingText">驗證身份中...</div>
-
-  <!-- debug log 放這裡，不會影響 body 排版 -->
-  <!--
-  <div id="maskLog"></div>
-  -->
 </div>
 
 <script>
 const LIFF_ID = "2007934728-q468EB12";
 const GAS_URL = "https://script.google.com/macros/s/AKfycbwFeKTS39HUOqNhqpgLaG7vjeJLHxv9a-KBEmWKl6zZybdCBWlSJqJWZ_qXwLxQ3sue/exec?action=login";
 
-/* ===== 遮罩內顯示 log（不會閃） ===== */
-function showLog(msg){
-  const log = document.getElementById("maskLog");
-  log.textContent = msg;
-  log.style.display = "block";   // 永遠在遮罩內，不影響 layout
-}
-
-/* ===== 主流程 ===== */
 async function main(){
   await liff.init({ liffId: LIFF_ID });
 
@@ -95,8 +71,8 @@ async function main(){
     return;
   }
 
-  const mask = document.getElementById("loadingMask");
-  mask.style.display = "flex";
+  // 顯示遮罩（永遠不會撤掉）
+  document.getElementById("loadingMask").style.display = "flex";
 
   try {
     const profile = await liff.getProfile();
@@ -104,10 +80,9 @@ async function main(){
     const lineName = profile.displayName;
 
     const url = `${GAS_URL}&lineUserId=${encodeURIComponent(lineUserId)}&nickname=${encodeURIComponent(lineName)}`;
+
     const resp = await fetch(url);
     const data = await resp.json();
-
-    showLog("GAS 回傳資料：\n" + JSON.stringify(data, null, 2));
 
     const vid  = data.data?.["志工ID"];
     const name = data.data?.["姓名"];
@@ -126,7 +101,8 @@ async function main(){
     window.location.href = "https://flood-system.vercel.app/home?unreg=1";
 
   } catch(error) {
-    showLog("錯誤：\n" + error.message);
+    // 若要提示錯誤，可以在這裡做 alert
+    // alert("身分驗證失敗，請重新嘗試");
   }
 }
 
