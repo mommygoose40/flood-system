@@ -16,18 +16,19 @@
     display: flex;
     justify-content: center;
     align-items: center;
+    overflow: hidden; /* 防止跳動 */
   }
 
-  /* 遮罩 */
+  /* 遮罩永遠在最上層 */
   #loadingMask {
     position: fixed;
     inset: 0;
-    background: rgba(0,0,0,0.35);
+    background: rgba(0,0,0,0.55);
     display: none;
     flex-direction: column;
     justify-content: center;
     align-items: center;
-    z-index: 9999;
+    z-index: 9999999; /* 強制最高 */
     font-size: 26px;
     color: white;
   }
@@ -47,7 +48,7 @@
     to   { transform: rotate(360deg); }
   }
 
-  /* 前端錯誤顯示區 */
+  /* log 放在遮罩下層，不會蓋過遮罩 */
   #frontendLog {
     position: fixed;
     bottom: 20px;
@@ -62,19 +63,20 @@
     max-width: 90%;
     display:none;
     white-space: pre-wrap;
+    z-index: 1000; /* 遮罩之下 */
   }
 </style>
 </head>
 
 <body>
 
-<!-- 遮罩：專門用於 GAS 驗證 -->
+<!-- 遮罩：永遠最高層 -->
 <div id="loadingMask">
   <div class="spinner"></div>
   <div id="loadingText">驗證身份中...</div>
 </div>
 
-<!-- 顯示在前端的 log -->
+<!-- log：只在遮罩移除後可能看見 -->
 <div id="frontendLog"></div>
 
 <script>
@@ -92,14 +94,14 @@ function showLog(msg){
 async function main(){
   await liff.init({ liffId: LIFF_ID });
 
-  // 若未登入 → LINE 自己跳登入畫面，不顯示你的 loading
   if (!liff.isLoggedIn()) {
     liff.login();
     return;
   }
 
-  // 登入成功後開始你的流程：顯示「驗證身份中」
-  document.getElementById("loadingMask").style.display = "flex";
+  // LINE 回來後：立刻顯示遮罩，不讓任何元素閃出來
+  const mask = document.getElementById("loadingMask");
+  mask.style.display = "flex";
 
   try {
     const profile = await liff.getProfile();
@@ -118,17 +120,14 @@ async function main(){
     const role = data.data?.["權限"];
 
     if (data.registered) {
-      // 存入 localStorage
       localStorage.setItem("vid", vid || "");
       localStorage.setItem("name", name || "");
       localStorage.setItem("team", team || "");
       localStorage.setItem("role", role || "");
-
       window.location.href = "https://flood-system.vercel.app/home";
       return;
     }
 
-    // 未註冊
     window.location.href = "https://flood-system.vercel.app/home?unreg=1";
     
   } catch(error) {
