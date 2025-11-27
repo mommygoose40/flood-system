@@ -685,6 +685,8 @@ let globalName = "";  // ★ 必須補這行
 let viewMode = "team";  // self = 看自己, team = 看大隊
 let shouldKeepMask = false;
 let restoredOnce = false;
+let isInitialLoad = true;
+let globalRecords = [];
 
 // === 防止回上一頁重新初始化（BFCache 支援） ===
 window.addEventListener("pageshow", function (event) {
@@ -1105,6 +1107,8 @@ function renderList(records) {
       }
     }
   }, 50); // 稍微延遲確保 DOM 完全渲染
+
+  isInitialLoad = false;
 
   debug("STEP3 完成：列表渲染成功");
 }
