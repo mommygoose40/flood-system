@@ -669,8 +669,12 @@ input[type="text"]:focus {
 <script>
 const WEB_APP_URL='https://script.google.com/macros/s/AKfycbxQzZ6rTNi93dl--WhTB_iPQ_UalC5V4Jhng7ZGXwLGITLAN4prAVpA9JYRlstfqPW28w/exec';
 
-// === 檢查伺服器狀態 ===
-(async () => {
+// 初始化 LIFF （只為了啟動 LIFF SDK，用於 LIFF 功能）
+liff.init({ liffId: '2007934728-xN6aOL3D' }).then(async () => {
+
+  // 不需要登入，不需要 profile，也不需要 userID
+  // 因為此頁只用來顯示伺服器狀態
+
   try {
     const r = await fetch(WEB_APP_URL);
     if (!r.ok) throw new Error(r.status);
@@ -683,7 +687,12 @@ const WEB_APP_URL='https://script.google.com/macros/s/AKfycbxQzZ6rTNi93dl--WhTB_
       '伺服器狀態：無法連線 (' + err.message + ')';
     document.getElementById('serverStatus').style.color = 'red';
   }
-})();
+
+}).catch(err => {
+  console.error('LIFF 初始化錯誤：', err);
+  document.getElementById('serverStatus').textContent = 'LIFF 初始化失敗';
+  document.getElementById('serverStatus').style.color = 'red';
+});
 
 const otherCheck = document.getElementById('otherCompanion');
   const wrap = document.getElementById('otherCompanionWrap');
