@@ -145,9 +145,9 @@
 
 <script>
   /* ★ 讀取 login 帶來的身分 */
-const url = new URL(window.location.href);
-const vid = localStorage.getItem("vid");
+const vid  = localStorage.getItem("vid");
 const name = localStorage.getItem("name");
+const team = localStorage.getItem("team");
 const role = localStorage.getItem("role");
 
 if (!vid) {
@@ -155,7 +155,7 @@ if (!vid) {
   window.location.href = "https://你的-login-page";
 }
 
-const gasUrl = "https://script.google.com/macros/s/AKfycbwFeKTS39HUOqNhqpgLaG7vjeJLHxv9a-KBEmWKl6zZybdCBWlSJqJWZ_qXwLxQ3sue/exec";
+const gasUrl = "https://script.google.com/macros/s/AKfycbwH8oqBZGgDbE3Fz0Da6CYxDHeaNiwQCkodnj1EHH2tNRqJjsUl9KZ4H6H5LaiuqfKR/exec";
 
 let isCancelling = false;
 
@@ -177,9 +177,20 @@ function nowTimeStr() {
   return `${y}/${m}/${d} ${period} ${hh}:${mm}:${ss}`;
 }
 
-// ★ 呼叫 GAS → action=patrol
+/* ======================================================
+   ★ 呼叫 GAS → action=patrol（開始 / 結束）
+====================================================== */
+
 async function main() {
-  const resp = await fetch(gasUrl + "?action=patrol&vid=" + encodeURIComponent(vid));
+
+  // ★ 依照後端新版 → 必須傳 vid + name + team
+  const resp = await fetch(
+    `${gasUrl}?action=patrol` +
+    `&vid=${encodeURIComponent(vid)}` +
+    `&name=${encodeURIComponent(name)}` +
+    `&team=${encodeURIComponent(team)}`
+  );
+
   const msg = await resp.text();
 
   // ★ 判斷巡視狀態
@@ -197,39 +208,51 @@ async function main() {
   document.getElementById("mainCard").style.display = "block";
 }
 
-/* ★取消巡視 → action=cancel */
+/* ======================================================
+   ★取消巡視 → action=cancel
+====================================================== */
+
 document.getElementById("cancelAfterSubmit").onclick = async function(){
+
   isCancelling = true;
 
   document.getElementById("mainCard").style.display = "none";
   document.getElementById("loadingMask").style.display = "flex";
   document.getElementById("loadingText").innerText = "取消中...";
+  document.querySelector("#loadingMask .spinner").style.display = "flex";
 
-  const resp = await fetch(gasUrl + "?action=cancel&vid=" + encodeURIComponent(vid));
+  // ★ 依照後端新版 → 必須傳 vid + name
+  const resp = await fetch(
+    `${gasUrl}?action=cancel` +
+    `&vid=${encodeURIComponent(vid)}` +
+    `&name=${encodeURIComponent(name)}`
+  );
+
   const msg = await resp.text();
 
-  // ★ 根據 GAS 回傳內容更新 patrolStatus
+  // ★ 根據 GAS 回傳更新狀態
   if (msg.includes("已取消")) {
-    // 巡視中 → 被刪除 → 回首頁要顯示「開始巡視」
     localStorage.setItem("patrolStatus", "ended");
   } else if (msg.includes("已復原")) {
-    // 巡視結束 → 被恢復 → 回首頁要顯示「結束巡視」
     localStorage.setItem("patrolStatus", "started");
   }
 
+  // 更新 UI
   document.querySelector("#loadingMask .spinner").style.display = "none";
-  document.getElementById("loadingText").innerText = "✅ 已取消";
+  document.getElementById("loadingText").innerText = "已取消";
 
+  // 1 秒後返回首頁
   setTimeout(() => {
-    window.location.href =
-      `https://flood-system.vercel.app/home`;
+    window.location.href = "https://flood-system.vercel.app/home";
   }, 1000);
 };
 
-/* ★回首頁（巡視成功） */
+/* ======================================================
+   ★ 回首頁
+====================================================== */
+
 document.getElementById("okBtn").onclick = function(){
-  window.location.href =
-    `https://flood-system.vercel.app/home`;
+  window.location.href = "https://flood-system.vercel.app/home";
 };
 
 main();
