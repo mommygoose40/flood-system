@@ -766,54 +766,6 @@ function backToList() {
   // 回列表位置完全不變，不用你管
 }
 
-  /* ------------------------------------------
-      2. 讀取使用者權限 + 大隊等資訊
-  -------------------------------------------*/
-  let isInitialLoad = true;   // ★ 第一次載入
-  shouldKeepMask = false; // ★ 管理員初始化時，需要在 renderList() 才關掉 mask
-
-  /* ---------------------------
-      2. 若沒快取 → 顯示初始化/更新
-  --------------------------- */
-  if (!useCache) {
-
-    mask.style.display = "flex";
-
-    if (!cache) tInit.style.display = "block";
-    else tUpdate.style.display = "block";
-
-    // ★★★ API 呼叫必須包 try/catch，避免卡死
-    try {
-      const url = `${VOLUNTEER_API_URL}?action=query&nickname=${nickname}`;
-      let res = await fetch(url);
-      let text = await res.text();
-
-      if (text.startsWith("callback")) {
-        text = text.replace(/^callback\(/, "").replace(/\);\s*$/, "");
-      }
-
-      const json = JSON.parse(text);
-
-      if (!json.success) throw new Error("API 無 success");
-
-      globalName = json.data.姓名;
-      globalTeam = json.data.大隊;
-      globalRole = json.data.權限 || "志工";
-
-      // 寫快取
-      localStorage.setItem("userInfoCache", JSON.stringify({
-        name: globalName,
-        team: globalTeam,
-        role: globalRole,
-        timestamp: Date.now()
-      }));
-
-    } catch (e) {
-      document.getElementById("text-error").style.display = "block";
-      return; // ★ 但 loadingMask 已經在畫面上
-    }
-  }
-
   /* ---------------------------
       3. 分權限 → 第一次只載入對的資料
   --------------------------- */
@@ -1562,8 +1514,6 @@ function unlockBodyScroll() {
   document.body.style.overflow = "";
   window.scrollTo(0, scrollTopCache);
 }
-
-  main();
 
   /*
 alert("adminTeamSelect:", document.getElementById("adminTeamSelect"));
