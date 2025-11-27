@@ -667,31 +667,38 @@ input[type="text"]:focus {
 </div>
 
 <script>
-const WEB_APP_URL='https://script.google.com/macros/s/AKfycbxQzZ6rTNi93dl--WhTB_iPQ_UalC5V4Jhng7ZGXwLGITLAN4prAVpA9JYRlstfqPW28w/exec';
+const WEB_APP_URL='https://script.google.com/macros/s/AKfycbwe8UTm_YdYtSthx9_2EWxR4JEP-_sZtpIUc-5GsfGgN-IY9Dk3HcFD7mo0EiFcImIytA/exec';
 
-// 初始化 LIFF （只為了啟動 LIFF SDK，用於 LIFF 功能）
+// 初始化 LIFF 並獲取 UserID 和 LINE 暱稱
 liff.init({ liffId: '2007934728-xN6aOL3D' }).then(async () => {
-
-  // 不需要登入，不需要 profile，也不需要 userID
-  // 因為此頁只用來顯示伺服器狀態
+  if (!liff.isLoggedIn()) {
+    liff.login();  // 如果尚未登入，則要求登入
+  }
 
   try {
+    // 獲取 LINE 用戶資料
+    const profile = await liff.getProfile();  // 使用 liff.getProfile() 獲取用戶資料
+    const userID = profile.userId;  // 獲取 UserID
+    const nickname = profile.displayName;  // 獲取 LINE 暱稱
+
+    console.log('User ID:', userID);
+    console.log('Nickname:', nickname);
+
+    // 將 UserID 和 LINE 暱稱 填入隱藏欄位
+    document.getElementById('userID').value = userID;  // 假設有 hidden input 來儲存 UserID
+    document.getElementById('nickname').value = nickname;  // 假設有 hidden input 來儲存 LINE 暱稱
+
+    // 更新伺服器狀態顯示
     const r = await fetch(WEB_APP_URL);
     if (!r.ok) throw new Error(r.status);
-
     document.getElementById('serverStatus').textContent = '伺服器狀態：已連線';
     document.getElementById('serverStatus').style.color = '#0b5ed7';
 
   } catch (err) {
-    document.getElementById('serverStatus').textContent =
-      '伺服器狀態：無法連線 (' + err.message + ')';
+    // 如果獲取資料失敗，顯示錯誤信息
+    document.getElementById('serverStatus').textContent = '伺服器狀態：無法連線 (' + err.message + ')';
     document.getElementById('serverStatus').style.color = 'red';
   }
-
-}).catch(err => {
-  console.error('LIFF 初始化錯誤：', err);
-  document.getElementById('serverStatus').textContent = 'LIFF 初始化失敗';
-  document.getElementById('serverStatus').style.color = 'red';
 });
 
 const otherCheck = document.getElementById('otherCompanion');
@@ -2406,12 +2413,11 @@ async function submitForm() {
   const reportId = `report_${timestamp}`;
   window.currentReportId = reportId;
 
-  // 取得 localStorage 的志工資料 // ★新增
-  const volunteerId   = localStorage.getItem("volunteerId")   || "";
-  const volunteerName = localStorage.getItem("volunteerName") || "";
-  const team          = localStorage.getItem("team")          || "";
+  // 取得隱藏欄位中的 UserID 和 LINE暱稱
+  const userID = document.getElementById('userID').value.trim();  // 使用者的 UserID
+  const nickname = document.getElementById('nickname').value.trim();  // 使用者的 LINE暱稱
 
-  // 表單資料檢查
+  // 確保其他表單資料的檢查
   const reportType = document.querySelector('input[name="patrolType"]:checked')?.value || '';
   if (!reportType) {
     showWarningAlert('請選擇通報類型');
@@ -2473,10 +2479,9 @@ async function submitForm() {
     fd.append('reportId', rid);
     fd.append('reportType', reportType);
 
-    // === ★新增：把 localStorage 的志工資料送給 GAS ===
-    fd.append("volunteerId", volunteerId);
-    fd.append("volunteerName", volunteerName);
-    fd.append("team", team);
+    // 把 UserID 和 LINE 暱稱傳遞給 GAS
+    fd.append('userID', userID);
+    fd.append('nickname', nickname);
 
     const companionsToSend = companionsChecked.map(c =>
       c === '其他' && otherCompanionName ? `其他(${otherCompanionName})` : c
@@ -2484,14 +2489,13 @@ async function submitForm() {
     fd.append('companions', companionsToSend.join(','));
     fd.append('transcription', txt || '');
 
-    // 送出
     const res = await fetch(WEB_APP_URL, { method: 'POST', body: fd });
     const rj = await res.json();
 
     hideUploadModal();
 
     if (rj.result === 'success') {
-      // Store for display page
+      // 暫存資料並跳轉到報告頁面
       const reportData = {
         id: rid,
         通報類型: reportType,
@@ -2499,19 +2503,13 @@ async function submitForm() {
         異常分類: types || otherDisasterText,
         說明: summary,
         語音轉文字: txt,
-
-        // ★改成使用 localStorage 的志工資訊
-        回報者: volunteerName,  
-        回報者ID: volunteerId,
-        所屬大隊: team,
-
-        同行者: companionsChecked.join(',') + 
-                (otherCompanionName ? `,${otherCompanionName}` : '')
+        回報者: nickname,  // 使用從表單中獲取的 LINE 暱稱
+        同行者: companionsChecked.join(',') + (otherCompanionName ? `,${otherCompanionName}` : ''),
+        所屬大隊: ''
       };
-
       localStorage.setItem('tempReportData', JSON.stringify(reportData));
 
-      // 跳轉到 Display 頁面
+      // 跳轉到 Display 頁面（顯示報告）
       window.location.href = `https://display-delta.vercel.app/index.html?id=${rid}&source=form`;
       return;
     } else {
