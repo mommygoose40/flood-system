@@ -144,11 +144,11 @@
   </div>
 
 <script>
-  /* ★ 讀取 login 帶來的身分 */
-const vid  = localStorage.getItem("vid");
-const name = localStorage.getItem("name");
-const team = localStorage.getItem("team");
-const nickname = localStorage.getItem("nickname");
+/* ★ 讀取 login 帶來的身分 */
+const vid       = localStorage.getItem("vid");
+const name      = localStorage.getItem("name");
+const team      = localStorage.getItem("team");
+const nickname  = localStorage.getItem("nickname");   // ← 你之前漏掉這個
 
 if (!vid) {
   alert("缺少志工ID，請重新登入");
@@ -180,21 +180,18 @@ function nowTimeStr() {
 /* ======================================================
    ★ 呼叫 GAS → action=patrol（開始 / 結束）
 ====================================================== */
-
 async function main() {
 
-  // ★ 依照後端新版 → 必須傳 vid + name + team
   const resp = await fetch(
     `${gasUrl}?action=patrol` +
     `&vid=${encodeURIComponent(vid)}` +
     `&name=${encodeURIComponent(name)}` +
-    `&team=${encodeURIComponent(team)}` +
-    `&nickname=${encodeURIComponent(nickname)}`
+    `&nickname=${encodeURIComponent(nickname)}` +
+    `&team=${encodeURIComponent(team)}`
   );
 
   const msg = await resp.text();
 
-  // ★ 判斷巡視狀態
   if (msg.includes("已開始巡視")) {
     localStorage.setItem("patrolStatus", "started");
   } else if (msg.includes("已結束巡視")) {
@@ -212,7 +209,6 @@ async function main() {
 /* ======================================================
    ★取消巡視 → action=cancel
 ====================================================== */
-
 document.getElementById("cancelAfterSubmit").onclick = async function(){
 
   isCancelling = true;
@@ -222,7 +218,6 @@ document.getElementById("cancelAfterSubmit").onclick = async function(){
   document.getElementById("loadingText").innerText = "取消中...";
   document.querySelector("#loadingMask .spinner").style.display = "flex";
 
-  // ★ 依照後端新版 → 必須傳 vid + name
   const resp = await fetch(
     `${gasUrl}?action=cancel` +
     `&vid=${encodeURIComponent(vid)}` +
@@ -231,18 +226,15 @@ document.getElementById("cancelAfterSubmit").onclick = async function(){
 
   const msg = await resp.text();
 
-  // ★ 根據 GAS 回傳更新狀態
   if (msg.includes("已取消")) {
     localStorage.setItem("patrolStatus", "ended");
   } else if (msg.includes("已復原")) {
     localStorage.setItem("patrolStatus", "started");
   }
 
-  // 更新 UI
   document.querySelector("#loadingMask .spinner").style.display = "none";
   document.getElementById("loadingText").innerText = "✅ 已取消";
 
-  // 1 秒後返回首頁
   setTimeout(() => {
     window.location.href = "https://flood-system.vercel.app/home";
   }, 1000);
@@ -251,7 +243,6 @@ document.getElementById("cancelAfterSubmit").onclick = async function(){
 /* ======================================================
    ★ 回首頁
 ====================================================== */
-
 document.getElementById("okBtn").onclick = function(){
   window.location.href = "https://flood-system.vercel.app/home";
 };
