@@ -811,9 +811,10 @@ async function loadAdminRecords() {
   let url = "";
 
   if (mode === "self") {
-    url = `${REPORT_GAS_URL}?action=listMyReports&nickname=${globalNickname}`;
-  } else if (mode === "team") {
-    url = `${REPORT_GAS_URL}?action=listTeamReports&nickname=${globalNickname}`;
+    url = `${REPORT_GAS_URL}?action=listMyReports&nickname=${encodeURIComponent(globalNickname)}`;
+  } 
+  else if (mode === "team") {
+    url = `${REPORT_GAS_URL}?action=listTeamReports&team=${encodeURIComponent(globalTeam)}`;
   }
 
   let res = await fetch(url);
