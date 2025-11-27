@@ -714,13 +714,13 @@ function debug(msg) {
   -------------------------------------------*/
   async function main() {
 
-  // 直接從 localStorage 讀，不再使用 LIFF
   globalNickname = localStorage.getItem("nickname") || "";
   globalName     = localStorage.getItem("name") || "";
   globalTeam     = localStorage.getItem("team") || "";
   globalRole     = localStorage.getItem("role") || "志工";
 
-  // 因為不查志工資料 → 直接進入列表顯示
+  if (!globalName) globalName = globalNickname;
+
   if (globalRole === "管理員") {
     viewMode = "admin";
     loadAdminRecords();
@@ -733,7 +733,6 @@ function debug(msg) {
     return;
   }
 
-  // 其他人 → 看自己的
   viewMode = "self";
   loadRecordList("self");
 }
