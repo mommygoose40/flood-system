@@ -2416,11 +2416,8 @@ function smoothProgress(target) {
   }, 60);
 }
 
-/* === 提交表單（前端可見 Log 版） === */
+/* === 提交表單 === */
 async function submitForm() {
-
-  addLog("=== submitForm() START ===");
-
   const summary = document.getElementById('summary').value.trim();
   const disaster = document.querySelector('input[name="disaster"]:checked')?.value || '';
   const abnormal = disaster === '異常';
@@ -2428,17 +2425,14 @@ async function submitForm() {
     .map(e => e.value).join(',');
   const timestamp = Date.now();
   const reportId = `report_${timestamp}`;
-
   window.currentReportId = reportId;
 
-  const volunteerId   = localStorage.getItem("vid")   || "";
-  const volunteerName = localStorage.getItem("name")  || "";
-  const team          = localStorage.getItem("team")  || "";
+  // 取得 localStorage 的志工資料 // ★新增
+  const volunteerId   = localStorage.getItem("volunteerId")   || "";
+  const volunteerName = localStorage.getItem("volunteerName") || "";
+  const team          = localStorage.getItem("team")          || "";
 
-  addLog("localStorage: vid=" + volunteerId);
-  addLog("localStorage: name=" + volunteerName);
-  addLog("localStorage: team=" + team);
-
+  // 表單資料檢查
   const reportType = document.querySelector('input[name="patrolType"]:checked')?.value || '';
   if (!reportType) {
     showWarningAlert('請選擇通報類型');
@@ -2459,8 +2453,6 @@ async function submitForm() {
     return;
   }
 
-  addLog("照片數量：" + photos.length);
-
   const otherDisasterText = document.getElementById('otherDisasterText')?.value.trim() || '';
 
   document.getElementById('submitBtn').disabled = true;
@@ -2473,29 +2465,24 @@ async function submitForm() {
   let txt = '';
 
   try {
-    addLog("=== 上傳照片 ===");
+    // 上傳照片
     for (let i = 0; i < photos.length; i++) {
-      addLog(`處理照片 ${i+1}/${photos.length}`);
+      const title = `照片上傳中 (${i + 1}/${photos.length})`;
+      showUploadModal(title);
       const comp = await compressImage(photos[i].file);
       const url = await uploadToFirebaseOnce(comp, `reports/${rid}/photo_${i}.jpg`);
-      addLog("照片URL: " + url);
       photoUrls.push(url);
     }
 
+    // 上傳語音
     if (audioBlob) {
-      addLog("=== 上傳語音 ===");
+      showUploadModal('語音上傳中');
       audioUrl = await uploadToFirebaseOnce(audioBlob, `reports/${rid}/recording.wav`);
-      addLog("語音URL: " + audioUrl);
-
-      if (abnormal) {
-        addLog("開始語音轉文字");
-        txt = await transcribeAudio(audioBlob, reportId);
-        addLog("語音轉文字結果: " + txt);
-      }
+      if (abnormal) txt = await transcribeAudio(audioBlob, reportId);
     }
 
-    addLog("=== 送出到 GAS ===");
-
+    // 提交資料到 GAS
+    showUploadModal('提交中');
     const fd = new FormData();
     fd.append('summary', summary);
     fd.append('disaster', disaster);
@@ -2506,6 +2493,8 @@ async function submitForm() {
     fd.append('timestamp', ts.toString());
     fd.append('reportId', rid);
     fd.append('reportType', reportType);
+
+    // === ★新增：把 localStorage 的志工資料送給 GAS ===
     fd.append("volunteerId", volunteerId);
     fd.append("volunteerName", volunteerName);
     fd.append("team", team);
@@ -2516,39 +2505,45 @@ async function submitForm() {
     fd.append('companions', companionsToSend.join(','));
     fd.append('transcription', txt || '');
 
-    addLog("=== FormData 內容 ===");
-    for (let [k, v] of fd.entries()) addLog(k + ": " + v);
-
+    // 送出
     const res = await fetch(WEB_APP_URL, { method: 'POST', body: fd });
-
-    addLog("fetch status: " + res.status);
-
     const rj = await res.json();
-    addLog("GAS 回傳：" + JSON.stringify(rj));
 
     hideUploadModal();
 
     if (rj.result === 'success') {
+      // Store for display page
+      const reportData = {
+        id: rid,
+        通報類型: reportType,
+        狀態: disaster,
+        異常分類: types || otherDisasterText,
+        說明: summary,
+        語音轉文字: txt,
 
-      addLog("=== GAS 寫入成功 ===");
+        // ★改成使用 localStorage 的志工資訊
+        回報者: volunteerName,  
+        回報者ID: volunteerId,
+        所屬大隊: team,
 
-      window.location.href =
-        `https://display-delta.vercel.app/index.html?id=${rid}&source=form`;
-      addLog("跳轉至 Display 頁面");
+        同行者: companionsChecked.join(',') + 
+                (otherCompanionName ? `,${otherCompanionName}` : '')
+      };
 
+      localStorage.setItem('tempReportData', JSON.stringify(reportData));
+
+      // 跳轉到 Display 頁面
+      window.location.href = `https://display-delta.vercel.app/index.html?id=${rid}&source=form`;
+      return;
     } else {
-      addLog("寫入失敗：" + JSON.stringify(rj));
       showWarningAlert('提交失敗：' + (rj.message || ''));
     }
 
   } catch (e) {
-    addLog("submitForm 發生錯誤：" + e.message);
     hideUploadModal();
     showWarningAlert('錯誤: ' + e.message);
-
   } finally {
     document.getElementById('submitBtn').disabled = false;
-    addLog("=== submitForm() END ===");
   }
 }
 
