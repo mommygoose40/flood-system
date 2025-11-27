@@ -84,11 +84,13 @@ console.log("GAS 回傳 =", data);
 // ★★★ 必須加這個，否則永遠 undefined ★★★
 const vid  = data.data?.["志工ID"];
 const name = data.data?.["姓名"];
+const team = data.data?.["大隊"];
 const role = data.data?.["權限"];
 
 if (data.registered) {
   localStorage.setItem("vid", vid);
   localStorage.setItem("name", name);
+  localStorage.setItem("team", team);
   localStorage.setItem("role", role);
 
   window.location.href = "https://flood-system.vercel.app/home";
