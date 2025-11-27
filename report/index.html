@@ -669,36 +669,61 @@ input[type="text"]:focus {
 <script>
 const WEB_APP_URL='https://script.google.com/macros/s/AKfycbwe8UTm_YdYtSthx9_2EWxR4JEP-_sZtpIUc-5GsfGgN-IY9Dk3HcFD7mo0EiFcImIytA/exec';
 
-// 初始化 LIFF 並獲取 UserID 和 LINE 暱稱
-liff.init({ liffId: '2007934728-xN6aOL3D' }).then(async () => {
-  if (!liff.isLoggedIn()) {
-    liff.login();  // 如果尚未登入，則要求登入
+// =============================
+// LIFF 初始化 + redirect 合併版
+// =============================
+liff.init({ liffId: '2007934728-xN6aOL3D' })
+.then(async () => {
+
+  // 1. 如果有 redirect → 代表是從 HOME 跳來的 LIFF 入口
+  const p = new URLSearchParams(location.search);
+  const redirectUrl = p.get("redirect");
+
+  if (redirectUrl) {
+    // 等待 LIFF 完全啟動後導向
+    window.location.href = redirectUrl;
+    return;
   }
 
+  // 2. 如果沒有登入 → 要求使用者登入 LINE
+  if (!liff.isLoggedIn()) {
+    liff.login();
+    return;  
+  }
+
+  // 3. 抓 LINE 個人資料
   try {
-    // 獲取 LINE 用戶資料
-    const profile = await liff.getProfile();  // 使用 liff.getProfile() 獲取用戶資料
-    const userID = profile.userId;  // 獲取 UserID
-    const nickname = profile.displayName;  // 獲取 LINE 暱稱
+    const profile = await liff.getProfile();
+    const userID = profile.userId;
+    const nickname = profile.displayName;
 
     console.log('User ID:', userID);
     console.log('Nickname:', nickname);
 
-    // 將 UserID 和 LINE 暱稱 填入隱藏欄位
-    document.getElementById('userID').value = userID;  // 假設有 hidden input 來儲存 UserID
-    document.getElementById('nickname').value = nickname;  // 假設有 hidden input 來儲存 LINE 暱稱
+    // 4. 將 UserID 和 LINE 名稱寫入你的隱藏欄位
+    document.getElementById('userID').value = userID;
+    document.getElementById('nickname').value = nickname;
 
-    // 更新伺服器狀態顯示
+  } catch (err) {
+    console.error("LIFF profile 讀取錯誤:", err);
+  }
+
+  // 5. 顯示伺服器狀態（保留你的原邏輯）
+  try {
     const r = await fetch(WEB_APP_URL);
     if (!r.ok) throw new Error(r.status);
+
     document.getElementById('serverStatus').textContent = '伺服器狀態：已連線';
     document.getElementById('serverStatus').style.color = '#0b5ed7';
 
   } catch (err) {
-    // 如果獲取資料失敗，顯示錯誤信息
     document.getElementById('serverStatus').textContent = '伺服器狀態：無法連線 (' + err.message + ')';
     document.getElementById('serverStatus').style.color = 'red';
   }
+
+})
+.catch(err => {
+  console.error("LIFF 初始化失敗:", err);
 });
 
 const otherCheck = document.getElementById('otherCompanion');
