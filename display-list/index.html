@@ -977,15 +977,6 @@ function renderList(records) {
 
   let finalRecords = records;
 
-  if (viewMode !== "self") {
-  const n = record.姓名 || "";
-  if (n) {
-    const nameSpan = document.createElement("span");
-    nameSpan.textContent = `｜${n}`;
-    div.appendChild(nameSpan);
-  }
-}
-
   globalRecords = records;
 
   debug("STEP3: 進入 renderList，顯示筆數=" + finalRecords.length);
