@@ -1,0 +1,1585 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <title>防汛通報系統</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f5f8ff;
+      padding: 16px;
+    }
+
+    h2 {
+      text-align: center;
+      margin-bottom: 24px;
+    }
+
+    .year-block, .month-block, .day-block {
+      border: 1px solid #d0d7e2;
+      border-radius: 8px;
+      background: white;
+      margin-bottom: 4px;
+      overflow: hidden;
+    }
+
+    .header {
+      padding: 12px 16px;
+      background: #e8eef8;
+      cursor: pointer;
+      font-size: 22px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .toggle-icon svg {
+  width: 26px;
+  height: 26px;
+  color: #333;
+}
+
+/* 展開後 header 的下方要留距離 */
+.header + .content {
+  margin-top: 4px;
+}
+
+    .content {
+      display: none;
+      padding: 0 16px 12px;
+    }
+
+    .record {
+  display: flex;
+  align-items: center;
+  font-size: 18px;
+  padding: 10px 0;
+  border-bottom: 1px solid #eee;
+  gap: 6px;
+  cursor: pointer;
+}
+
+    .record:last-child {
+      border-bottom: none;
+    }
+
+    /* 讓所有區塊之間保持距離 */
+.year-block, .month-block, .day-block {
+  margin-bottom: 14px;
+}
+
+/* 讓展開的內容不會緊貼 header */
+.content {
+  margin-top: 6px;
+}
+
+.status-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background-color: #E53935;
+}
+
+/* === 修正展開後的區塊間距 === */
+/* 展開後的外框保留較大空隙 */
+.block-open {
+  margin-bottom: 12px !important;
+}
+
+/* 讓展開後的 content 有內距，避免黏住 */
+.year-block > .content,
+.month-block > .content,
+.day-block > .content {
+  padding-top: 10px;
+}
+
+/* 日期展開後的紀錄字體加大 */
+.day-block .record {
+  font-size: 20px;   /* 你可改成 20 / 24 */
+}
+
+/* 本月無巡視紀錄 字體與一般紀錄一致 */
+.month-block .record {
+  font-size: 20px;
+}
+
+#loadingMask {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.35);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  z-index: 9999;
+  font-size: 28px;
+  color: white;
+}
+
+.spinner {
+  width: 40px;
+  height: 40px;
+  border: 4px solid #eee;
+  border-top: 4px solid #0b5ed7;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin-bottom: 14px;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+
+.loadingText {
+  display: none;
+}
+
+#listContainer {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-direction: column;
+}
+
+#switchArea {
+  display: flex;
+  justify-content: space-between;  /* 左右排列 */
+  text-align: center;
+  margin-top:10px;
+  margin-bottom:18px;
+}
+
+#adminFilterArea select {
+  font-size: 20px;
+  padding: 6px;
+}
+#adminFilterArea label {
+  font-size: 20px;
+}
+
+#adminFilterArea div {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: nowrap;   /* ⭐ 不允許換行 */
+  white-space: nowrap;   /* 🔥 完整禁止換行 */
+}
+
+#adminSearchBtn, #viewFullRecords {
+  padding: 8px 14px; /* 更小 */
+  font-size: 20px;   /* 更小 */
+  border: none;
+  color: white;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  flex: none !important;   /* 不要被撐大 */
+  width: auto !important;  /* 自動縮 */
+  display: inline-block;   /* 不要佔滿 */
+}
+
+#adminSearchBtn {
+  background: #0b5ed7;
+  width: 110px !important; /* ★ 小一點 */
+  margin: 0 auto !important;
+  display: block !important;
+}
+
+#adminSearchBtn:hover {
+  background: #0a58ca;
+  transform: translateY(-1px);
+}
+
+#viewFullRecords {
+  background: #28a745;
+}
+
+#viewFullRecords:hover {
+  background: #218838;
+  transform: translateY(-1px);
+}
+
+/* 偽下拉按鈕 */
+.fakeSelectBtn {
+  font-size: 20px;
+  padding: 4px 12px;
+  border: 1px solid #888;
+  border-radius: 4px;
+  background: #fff;
+  color: #333;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: space-between;
+  min-width: 110px;
+  box-sizing: border-box;
+}
+
+/* 偽下拉選單內文字改成同色 */
+.fakeSelectBtn span {
+  font-weight: normal !important;
+}
+
+/* 固定箭頭，不隨字體比例變形 */
+.fakeSelectBtn .arrow {
+  display: inline-block;
+  width: 18px;
+  height: 18px;
+  font-size: 18px;
+  line-height: 18px;
+  text-align: center;
+  margin-left: 6px;
+  flex-shrink: 0; /* ⭐ 不要被擠壓變形 */
+}
+
+/* 黑色遮罩 */
+#fullDropdownMask {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.45);
+  z-index: 99999;
+  display: none;
+  justify-content: center;
+  align-items: center;
+  padding: 30px;         /* 四周留白 */
+}
+
+/* 彈出卡片（升級版：更高、更大） */
+#fullDropdownPanel {
+  width: 92%;            /* 卡片更寬，但不滿版 */
+  max-width: 520px;      /* 大螢幕上仍然不會太大 */
+  max-height: 95%;       /* 🔥 卡片可變更大（原本 60% → 75%） */
+  background: #fff;
+  border-radius: 20px;
+  padding: 14px 0;
+  overflow-y: auto;
+  box-shadow: 0 6px 26px rgba(0,0,0,0.3);
+}
+
+/* 標題（微縮） */
+.panel-title {
+  font-size: 20px;       /* 原本 22 → 現在 20 */
+  font-weight: bold;
+  padding: 0 20px 14px;
+  margin-bottom: 6px;
+  border-bottom: 1px solid #eee;
+}
+
+/* 選項（微縮） */
+.panel-options .option {
+  padding: 14px 20px;    /* 原本 18px → 14px */
+  font-size: 20px;       /* 原本 22px → 20px */
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid #f2f2f2;
+  cursor: pointer;
+  color: #222;
+}
+
+/* 點擊回饋 */
+.panel-options .option:active {
+  background: #f7f7f7;
+}
+
+/* 單選圓圈（微縮） */
+.radio-circle {
+  width: 22px;           /* 原 24 → 22 */
+  height: 22px;
+  border-radius: 50%;
+  border: 2px solid #777;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.radio-circle.selected {
+  border-color: #0b5ed7;
+}
+
+.radio-circle.selected::after {
+  content: "";
+  width: 10px;           /* 原 12 → 10 */
+  height: 10px;
+  background: #0b5ed7;
+  border-radius: 50%;
+}
+
+.searchBtn {
+  padding: 10px 18px;
+  font-size: 20px;
+  background: #0b5ed7;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  display: inline-block;     /* 🔥 讓按鈕寬度回到正常 */
+  width: auto;               /* 🔥 取消 flex 的影響 */
+  margin: 0 auto;            /* 🔥 水平置中 */
+}
+
+/* 完全去除手機觸控高亮 */
+.fakeSelectBtn,
+.panel-options .option {
+  -webkit-tap-highlight-color: transparent !important;
+}
+
+/* 禁用按下時變色 */
+.panel-options .option:active {
+  background: white !important;
+}
+
+/* 被選取的選項高亮 */
+.option.selected {
+  background: #eef5ff !important;
+}
+
+.option.selected::after {
+  content: "";
+  width: 10px;
+  height: 10px;
+  background: #0b5ed7;
+  border-radius: 50%;
+  display: inline-block;
+}
+
+#globalFooter {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 70px;
+  background: #f8f8f8;
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+  align-items: center;
+  padding: 0 16px;
+  box-shadow: 0 -2px 6px rgba(0,0,0,0.12);
+  z-index: 9999;
+}
+
+.gray-btn, .red-btn {
+  flex: 1;
+  height: 48px;
+  font-size: 20px;
+  border-radius: 10px;
+  border: none;
+}
+
+.gray-btn {
+  background: #e0e0e0;
+  color: #333;
+}
+
+.red-btn {
+  background: #d9534f;
+  color: #fff;
+}
+
+/* 電腦版隱藏 Footer */
+@media (min-width: 769px) {
+  #globalFooter {
+    display: none !important;
+  }
+}
+
+#pageWrapper {
+  padding-bottom: 90px; /* 預留 footer 空間 */
+}
+
+#detailView {
+  padding-bottom: 0 !important;
+  height: calc(100vh - 70px);
+  overflow-y: auto;
+}
+
+#globalFooter {
+  box-sizing: border-box;
+}
+
+html, body {
+  height: 100%;
+  overflow: hidden;   /* 關閉全頁滾動 */
+}
+
+#listView {
+  height: calc(100vh - 70px); /* 扣掉 footer 高度 */
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch; /* 讓手機滑動順 */
+}
+  </style>
+
+  <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+</head>
+
+<body>
+
+  <div id="pageWrapper">
+
+<div id="listView" style="display:block;">
+
+<!--
+    <div id="debug" style="white-space: pre-line; font-size:14px; color:#c00; margin-bottom:16px;"></div>
+-->
+
+<div id="loadingMask">
+  <div class="spinner"></div>
+
+  <div id="text-loading" class="loadingText">載入中…</div>
+  <div id="text-update" class="loadingText">資料更新中，請耐心等候…</div>
+  <div id="text-init" class="loadingText">資料初始化中，請耐心等候…</div>
+
+  <!-- 錯誤訊息預留（可選） -->
+  <div id="text-error" class="loadingText">無法連線到資料來源</div>
+  <div id="text-error-format" class="loadingText">資料格式錯誤，請聯絡管理員</div>
+  <div id="text-error-notfound" class="loadingText">找不到您的志工資料</div>
+</div>
+
+<h2 id="pageTitle" style="display:none;">回報紀錄</h2>
+
+<div id="switchArea" style="
+  display:none;
+  text-align:center;
+  margin-top:10px;
+  margin-bottom:18px;
+">
+  <button id="btnTeam" style="
+  padding:6px 16px;
+  font-size:22px;
+  border:2px solid #0b5ed7;
+  background:#0b5ed7;
+  color:white;
+  border-radius:6px;
+  margin-right:6px;
+">大隊紀錄</button>
+
+<button id="btnSelf" style="
+  padding:6px 16px;
+  font-size:22px;
+  border:2px solid #0b5ed7;
+  background:white;
+  color:#0b5ed7;
+  border-radius:6px;
+">我的紀錄</button>
+</div>
+
+<div id="adminFilterArea" style="display:none; padding:12px;">
+
+  <!-- 大隊 -->
+  <div style="margin-bottom:12px;">
+    <label>大隊：</label>
+
+    <!-- 原生 select：保留給 JS 用（hidden 不會被看到） -->
+    <select id="adminTeamSelect" style="display:none;">
+      <option value="全部">全部</option>
+      <option value="1">第1大隊</option>
+      <option value="2">第2大隊</option>
+      <option value="3">第3大隊</option>
+      <option value="4">第4大隊</option>
+      <option value="5">第5大隊</option>
+      <option value="6">第6大隊</option>
+      <option value="7">第7大隊</option>
+      <option value="8">第8大隊</option>
+      <option value="9">第9大隊</option>
+      <option value="10">第10大隊</option>
+    </select>
+
+    <!-- 偽下拉 UI -->
+    <button class="fakeSelectBtn" onclick="openDropdown('team')">
+  <span id="teamText">全部</span>
+  <span class="arrow">▾</span>
+</button>
+  </div>
+
+  <!-- 範圍 -->
+  <div style="margin-bottom:12px;">
+    <label>範圍：</label>
+
+    <select id="adminDayRange" style="display:none;">
+      <option value="3" selected>最近 3 天</option>
+      <option value="7">最近 7 天</option>
+      <option value="14">最近 14 天</option>
+    </select>
+
+    <button class="fakeSelectBtn" onclick="openDropdown('range')">
+  <span id="rangeText">最近 3 天</span>
+  <span class="arrow">▾</span>
+</button>
+  </div>
+
+  <!-- 時間 -->
+  <div style="margin-bottom:12px;">
+    <label>時間：</label>
+
+    <select id="timeStart" style="display:none;">
+      <option value="00:00">00:00</option>
+      <option value="01:00">01:00</option>
+      <option value="02:00">02:00</option>
+      <option value="03:00">03:00</option>
+      <option value="04:00">04:00</option>
+      <option value="05:00">05:00</option>
+      <option value="06:00">06:00</option>
+      <option value="07:00">07:00</option>
+      <option value="08:00">08:00</option>
+      <option value="09:00">09:00</option>
+      <option value="10:00">10:00</option>
+      <option value="11:00">11:00</option>
+      <option value="12:00">12:00</option>
+      <option value="13:00">13:00</option>
+      <option value="14:00">14:00</option>
+      <option value="15:00">15:00</option>
+      <option value="16:00">16:00</option>
+      <option value="17:00">17:00</option>
+      <option value="18:00">18:00</option>
+      <option value="19:00">19:00</option>
+      <option value="20:00">20:00</option>
+      <option value="21:00">21:00</option>
+      <option value="22:00">22:00</option>
+      <option value="23:00">23:00</option>
+    </select>
+
+    <select id="timeEnd" style="display:none;">
+      <option value="00:59">00:59</option>
+      <option value="01:59">01:59</option>
+      <option value="02:59">02:59</option>
+      <option value="03:59">03:59</option>
+      <option value="04:59">04:59</option>
+      <option value="05:59">05:59</option>
+      <option value="06:59">06:59</option>
+      <option value="07:59">07:59</option>
+      <option value="08:59">08:59</option>
+      <option value="09:59">09:59</option>
+      <option value="10:59">10:59</option>
+      <option value="11:59">11:59</option>
+      <option value="12:59">12:59</option>
+      <option value="13:59">13:59</option>
+      <option value="14:59">14:59</option>
+      <option value="15:59">15:59</option>
+      <option value="16:59">16:59</option>
+      <option value="17:59">17:59</option>
+      <option value="18:59">18:59</option>
+      <option value="19:59">19:59</option>
+      <option value="20:59">20:59</option>
+      <option value="21:59">21:59</option>
+      <option value="22:59">22:59</option>
+      <option value="23:59" selected>23:59</option>
+    </select>
+
+    <button class="fakeSelectBtn" onclick="openDropdown('timeStart')">
+  <span id="timeStartText">00:00</span>
+  <span class="arrow">▾</span>
+</button>
+    ～
+    <button class="fakeSelectBtn" onclick="openDropdown('timeEnd')">
+  <span id="timeEndText">23:59</span>
+  <span class="arrow">▾</span>
+</button>
+  </div>
+
+  <!-- 類型 -->
+  <div style="margin-bottom:12px;">
+    <label>類型：</label>
+
+    <select id="adminTypeSelect" style="display:none;">
+      <option value="全部">全部</option>
+      <option value="平時">平時</option>
+      <option value="災中">災中</option>
+      <option value="其他">其他</option>
+    </select>
+
+    <button class="fakeSelectBtn" onclick="openDropdown('type')">
+  <span id="typeText">全部</span>
+  <span class="arrow">▾</span>
+</button>
+  </div>
+
+
+  <!-- 搜尋 -->
+  <div style="text-align:center; margin-top:20px;">
+    <button id="adminSearchBtn" class="searchBtn">搜尋</button>
+</div>
+
+</div>
+
+<!-- 全螢幕偽下拉選單（這段貼這裡） -->
+<div id="fullDropdownMask">
+  <div id="fullDropdownPanel">
+    <div class="panel-title" id="panelTitle"></div>
+    <div class="panel-options" id="panelOptions"></div>
+  </div>
+</div>
+
+<div id="centerSpinner" style="
+  display:none;
+  width:100%;
+  padding:40px 0;
+  justify-content:center;
+  align-items:center;
+  flex-direction:column;
+">
+  <div class="spinner"></div>
+  <div style="font-size:22px; color:#666; margin-top:10px;">載入中...</div>
+</div>
+
+<!-- 清單真正呈現的地方，一開始先隱藏 -->
+<div id="listContainer" style="display: none;"></div>
+
+</div>
+
+<!-- == DetailView 覆蓋層 == -->
+<div id="detailView" style="
+  display:none;
+  position:fixed;
+  top:0;
+  left:0;
+  width:100%;
+  height:100%;
+  background:#fff;
+  z-index:9998;
+  overflow:hidden;   /* 保證不出現白邊 */
+  padding:0;
+  margin:0;
+">
+
+  <!-- == 無邊距 iframe == -->
+  <iframe id="detailFrame"
+    sandbox="allow-scripts allow-same-origin allow-top-navigation-by-user-activation"
+    style="
+      position:absolute;
+      top:0;
+      left:0;
+      width:100%;
+      height:calc(100% - 70px);
+      border:0;
+      padding:0;
+      margin:0;
+      display:block;
+      background:#fff;
+">
+</iframe>
+</div>
+
+<div style="height:15px"></div>
+
+</div>   <!-- pageWrapper 結束 -->
+
+<div id="globalFooter">
+  <button class="gray-btn" onclick="backToList()">回上一頁</button>
+  <button class="red-btn" onclick="handleClosePage()">關閉頁面</button>
+</div>
+
+<script>
+
+  const VOLUNTEER_API_URL = "https://script.google.com/macros/s/AKfycbxiGSG5hSMO6We-C6cyEJZLgf4Rnbjp-6w9Tmb0qfF9VM6JB4YGEMqj3QRfTzg7Czpc/exec"; 
+const REPORT_GAS_URL = "https://script.google.com/macros/s/AKfycbxOWIHS04mtcTRdJNvnWnGOwBnlGPwG3tQOU0qgN5feabS7hbRrIM4bU1_T8VrXaA1-8g/exec";
+
+let globalAdminRecords = [];   // 管理員一次抓全部後存在這邊
+let adminViewDays = 3;        // 預設抓最近兩週，可改 30
+let globalNickname = "";
+let globalRole = "";
+let globalTeam = "";
+let globalName = "";  // ★ 必須補這行
+let viewMode = "team";  // self = 看自己, team = 看大隊
+let shouldKeepMask = false;
+let restoredOnce = false;
+
+// === 防止回上一頁重新初始化（BFCache 支援） ===
+window.addEventListener("pageshow", function (event) {
+  if (event.persisted) {
+    console.log("BFCache restore → 不執行 main()");
+    return;
+  }
+});
+
+// === 只在本頁第一次開啟時執行 main() ===
+if (!sessionStorage.getItem("initialized")) {
+  main();
+  sessionStorage.setItem("initialized", "1");
+} else {
+  console.log("已初始化過 → 不再執行 main()");
+}
+
+function debug(msg) {
+  try {
+    const box = document.getElementById("debug");
+    if (box) box.textContent += msg + "\n";
+  } catch (e) {}
+}
+
+  /* ------------------------------------------
+      1. 初始化：登入 LIFF 並取得資料
+  -------------------------------------------*/
+  async function main() {
+
+  // 直接從 localStorage 讀，不再使用 LIFF
+  globalNickname = localStorage.getItem("nickname") || "";
+  globalName     = localStorage.getItem("name") || "";
+  globalTeam     = localStorage.getItem("team") || "";
+  globalRole     = localStorage.getItem("role") || "志工";
+
+  // 因為不查志工資料 → 直接進入列表顯示
+  if (globalRole === "管理員") {
+    viewMode = "admin";
+    loadAdminRecords();
+    return;
+  }
+
+  if (globalRole === "大隊長") {
+    viewMode = "team";
+    loadRecordList("team");
+    return;
+  }
+
+  // 其他人 → 看自己的
+  viewMode = "self";
+  loadRecordList("self");
+}
+
+function openDetail(url) {
+
+  // 切換畫面
+  document.getElementById("listView").style.display = "none";
+  document.getElementById("detailView").style.display = "block";
+
+  const iframe = document.getElementById("detailFrame");
+  iframe.src = url;
+
+  // 等 Display 的內容載入後，接管返回按鈕
+  iframe.onload = () => {
+    try {
+      const backBtn = iframe.contentDocument.querySelector("#backBtn");
+      if (backBtn) {
+        backBtn.onclick = () => window.parent.backToList();
+      }
+    } catch(e) {
+      console.warn("無法參訪 iframe（可能跨域）", e);
+    }
+  };
+}
+
+function backToList() {
+  document.getElementById("detailView").style.display = "none";
+  document.getElementById("listView").style.display = "block";
+
+  // 回列表位置完全不變，不用你管
+}
+
+  /* ------------------------------------------
+      2. 讀取使用者權限 + 大隊等資訊
+  -------------------------------------------*/
+  let isInitialLoad = true;   // ★ 第一次載入
+  shouldKeepMask = false; // ★ 管理員初始化時，需要在 renderList() 才關掉 mask
+
+  /* ---------------------------
+      2. 若沒快取 → 顯示初始化/更新
+  --------------------------- */
+  if (!useCache) {
+
+    mask.style.display = "flex";
+
+    if (!cache) tInit.style.display = "block";
+    else tUpdate.style.display = "block";
+
+    // ★★★ API 呼叫必須包 try/catch，避免卡死
+    try {
+      const url = `${VOLUNTEER_API_URL}?action=query&nickname=${nickname}`;
+      let res = await fetch(url);
+      let text = await res.text();
+
+      if (text.startsWith("callback")) {
+        text = text.replace(/^callback\(/, "").replace(/\);\s*$/, "");
+      }
+
+      const json = JSON.parse(text);
+
+      if (!json.success) throw new Error("API 無 success");
+
+      globalName = json.data.姓名;
+      globalTeam = json.data.大隊;
+      globalRole = json.data.權限 || "志工";
+
+      // 寫快取
+      localStorage.setItem("userInfoCache", JSON.stringify({
+        name: globalName,
+        team: globalTeam,
+        role: globalRole,
+        timestamp: Date.now()
+      }));
+
+    } catch (e) {
+      document.getElementById("text-error").style.display = "block";
+      return; // ★ 但 loadingMask 已經在畫面上
+    }
+  }
+
+  /* ---------------------------
+      3. 分權限 → 第一次只載入對的資料
+  --------------------------- */
+
+  if (globalRole === "管理員") {
+    viewMode = "admin";
+    shouldKeepMask = true;        // ★ renderList() 要負責關 mask
+    loadAdminRecords();
+    return;
+  }
+
+  if (globalRole === "大隊長") {
+    viewMode = "team";
+    loadRecordList("team");
+    return;
+  }
+
+  // 志工
+  viewMode = "self";
+  loadRecordList("self");
+}
+
+async function loadAdminRecords() {
+
+  const url = `${REPORT_GAS_URL}?action=listAdminFull&days=30`;
+
+  let json;
+  try {
+    const res = await fetch(url);
+    const text = await res.text();
+    json = JSON.parse(text);
+  } catch (e) {
+    document.getElementById("listContainer").innerHTML = "管理員資料載入失敗";
+    shouldKeepMask = false;
+    document.getElementById("loadingMask").style.display = "none";
+    return;
+  }
+
+  globalAdminRecords = json.records || [];
+
+  const filtered = filterAdminRecords();
+  renderList(filtered);
+
+  // ★ renderList 結束後，關掉大 loading
+  if (shouldKeepMask) {
+    shouldKeepMask = false;
+    document.getElementById("loadingMask").style.display = "none";
+  }
+
+  isInitialLoad = false;   // ★ 第一次載入結束
+}
+
+  /* ------------------------------------------
+      3. 從 GAS 取得回報記錄（未來串 API）
+  -------------------------------------------*/
+  async function loadRecordList(mode = "self") {
+  let url = "";
+
+  if (mode === "self") {
+    url = `${REPORT_GAS_URL}?action=listMyReports&nickname=${globalNickname}`;
+  } else if (mode === "team") {
+    url = `${REPORT_GAS_URL}?action=listTeamReports&nickname=${globalNickname}`;
+  }
+
+  let res = await fetch(url);
+  let text = await res.text();
+
+  if (text.startsWith("callback")) {
+    text = text.replace(/^callback\(/, "").replace(/\);$/, "");
+  }
+
+  const json = JSON.parse(text);
+
+  globalRecords = json.records || [];
+
+  // ⭐ 渲染完成後才允許關閉 LoadingMask
+  renderList(globalRecords);
+
+  if (shouldKeepMask) {
+    shouldKeepMask = false;
+    document.getElementById("loadingMask").style.display = "none";
+  }
+
+  updateSwitchUI();
+}
+
+  /* ------------------------------------------
+      4. 渲染「年度 → 月份 → 日期 → 紀錄」
+  -------------------------------------------*/
+  function normalizeDate(dateStr) {
+  // 若是 ISO 格式：2025-11-11T16:00:00.000Z
+  if (dateStr.includes("T")) {
+    const d = new Date(dateStr);
+    const yyyy = d.getFullYear();
+    const mm = String(d.getMonth() + 1).padStart(2, "0");
+    const dd = String(d.getDate()).padStart(2, "0");
+    return `${yyyy}/${mm}/${dd}`;
+  }
+  return dateStr; // 若本來就是 yyyy/mm/dd
+}
+
+function filterAdminRecords() {
+  let records = [...globalAdminRecords];
+
+  // 1. 篩選大隊
+let targetTeam = document.getElementById("adminTeamSelect")?.value;
+
+// iOS hidden select = "" → 必須補救
+if (!targetTeam) {
+  targetTeam = document.getElementById("teamText").innerText || "全部";
+}
+
+if (targetTeam !== "全部") {
+  records = records.filter(r => (r.所屬大隊 + "") === targetTeam);
+}
+
+  // 2. 範圍篩選（重要：從下拉選單讀取）
+  const dayRangeSelect = document.getElementById("adminDayRange");
+  let selectedDays = dayRangeSelect?.value;
+if (!selectedDays) selectedDays = document.getElementById("rangeText").innerText.replace("最近 ", "").replace(" 天", "");
+  adminViewDays = Number(selectedDays);
+  
+  console.log("篩選天數:", adminViewDays); // 除錯用
+  
+  const now = new Date();
+  const cutoff = new Date(now.getTime() - adminViewDays * 24 * 60 * 60 * 1000);
+
+  records = records.filter(r => {
+    let ds = normalizeDate(r.日期);
+    const recordDate = new Date(ds);
+    return recordDate >= cutoff;
+  });
+
+  // 3. 篩選通報類型
+  let targetType = document.getElementById("adminTypeSelect")?.value || "全部";
+  if (targetType !== "全部") {
+    records = records.filter(r => {
+      const type = (r.通報類型 || "").trim();
+      return type === targetType;
+    });
+  }
+
+  // 4. 時間篩選
+  const start = document.getElementById("timeStart")?.value || "00:00";
+const end   = document.getElementById("timeEnd")?.value || "23:59";
+
+const [startHour, startMinute] = start.split(":").map(Number);
+const [endHour, endMinute] = end.split(":").map(Number);
+
+const startTotal = startHour * 60 + startMinute;
+const endTotal = endHour * 60 + endMinute;
+
+records = records.filter(r => {
+  const link = r.詳細紀錄 || "";
+  const match = link.match(/report_(\d+)/);
+  if (!match) return false;
+
+  const t = parseInt(match[1], 10);
+  const d = new Date(t);
+  const h = d.getHours();
+  const m = d.getMinutes();
+  
+  const recordTotal = h * 60 + m;
+
+  if (startTotal <= endTotal) {
+    return recordTotal >= startTotal && recordTotal <= endTotal;
+  } else {
+    return recordTotal >= startTotal || recordTotal <= endTotal;
+  }
+});
+
+  console.log("篩選後筆數:", records.length); // 除錯用
+  return records;
+}
+
+function renderList(records) {
+  const container = document.getElementById("listContainer");
+  const spinner = document.getElementById("centerSpinner");
+  const mask = document.getElementById("loadingMask");
+
+  // 初始化時隱藏列表和 spinner，保持載入中遮罩
+  container.style.display = "none";
+  spinner.style.display = "none";
+
+  // 管理員模式：確保篩選區域顯示
+  if (globalRole === "管理員" && viewMode === "admin") {
+    document.getElementById("adminFilterArea").style.display = "block";
+  } else {
+    document.getElementById("adminFilterArea").style.display = "none";
+  }
+
+  // 只有在切換模式時才顯示小 spinner
+  if (!isInitialLoad) {
+    spinner.style.display = "flex";
+    container.style.display = "none";
+  } else {
+    spinner.style.display = "none";
+  }
+
+  // ⭐⭐⭐ 管理員前端快篩：只在 admin 模式下執行 ⭐⭐⭐
+  if (globalRole === "管理員" && viewMode === "admin") {
+    if (globalAdminRecords.length > 0) {
+      let targetTeam = document.getElementById("adminTeamSelect")?.value || "全部";
+      if (targetTeam !== "全部") {
+        records = records.filter(r => (r.所屬大隊 + "") === targetTeam);
+      }
+
+      const now = new Date();
+      const cutoff = new Date(now.getTime() - adminViewDays * 24 * 60 * 60 * 1000);
+
+      records = records.filter(r => {
+        let ds = normalizeDate(r.日期);
+        return new Date(ds) >= cutoff;
+      });
+    }
+  } else {
+    document.getElementById("adminFilterArea").style.display = "none";
+  }
+
+  let finalRecords = records;
+
+  if (viewMode === "self") {
+    finalRecords = records.filter(r => {
+      return (r.回報者 || "").trim() === globalName;
+    });
+  }
+
+  globalRecords = records;
+
+  debug("STEP3: 進入 renderList，顯示筆數=" + finalRecords.length);
+
+  container.innerHTML = "";
+
+  const now2 = new Date();
+  const currentYear = now2.getFullYear() - 1911;
+  const currentMonth = now2.getMonth() + 1;
+
+  const grouped = {};
+  for (let m = 1; m <= 12; m++) grouped[m] = {};
+
+  finalRecords.forEach(r => {
+    const normalized = normalizeDate(r.日期);
+    debug("STEP3-日期修正：" + r.日期 + " → " + normalized);
+
+    const dateParts = normalized.split("/");
+    const m = parseInt(dateParts[1], 10);
+    const d = parseInt(dateParts[2], 10);
+
+    if (!grouped[m][d]) grouped[m][d] = [];
+    grouped[m][d].push(r);
+  });
+
+  debug("STEP3-1: 日期分組完成");
+
+  const yearBlock = createBlock(`${currentYear} 年`, "year");
+  const yearContent = yearBlock.querySelector(".content");
+
+  const months = Object.keys(grouped)
+    .map(m => parseInt(m, 10))
+    .filter(m => Object.keys(grouped[m]).length > 0)
+    .filter(m => m <= currentMonth)
+    .sort((a, b) => b - a);
+
+  debug("STEP3-2 顯示月份排列 = " + months.join(", "));
+
+  months.forEach(month => {
+    const monthBlock = createBlock(`${month} 月`, "month");
+    const monthContent = monthBlock.querySelector(".content");
+
+    const days = Object.keys(grouped[month]).sort((a, b) => b - a);
+
+    if (days.length === 0) {
+      const emptyDiv = document.createElement("div");
+      emptyDiv.className = "record";
+      emptyDiv.textContent = "本月無巡視紀錄";
+      monthContent.appendChild(emptyDiv);
+    } else {
+      days.forEach(day => {
+        const dayBlock = createBlock(`${day} 日`, "day");
+        const dayContent = dayBlock.querySelector(".content");
+
+        grouped[month][day].forEach(record => {
+          const div = document.createElement("div");
+          div.className = "record";
+
+          let hh = "--", mm = "--";
+
+          try {
+            const match = record.詳細紀錄.match(/report_(\d+)/);
+            if (match) {
+              const t = parseInt(match[1], 10);
+              const dateObj = new Date(t);
+
+              hh = String(dateObj.getHours()).padStart(2, "0");
+              mm = String(dateObj.getMinutes()).padStart(2, "0");
+            }
+          } catch (e) {
+            console.warn("無法解析時間：", record.詳細紀錄);
+          }
+
+          const status = (record.狀態 || "").trim();
+          const isAbnormal = status === "異常";
+
+          const timeText = document.createElement("span");
+          timeText.textContent = `${hh}:${mm}｜${status}`;
+          div.appendChild(timeText);
+
+          if ((viewMode === "team" || viewMode === "admin") && record.回報者 && record.回報者.trim()) {
+            const nameSpan = document.createElement("span");
+            nameSpan.textContent = `｜${record.回報者}`;
+            div.appendChild(nameSpan);
+          }
+
+          if (isAbnormal) {
+            const dot = document.createElement("span");
+            dot.className = "status-dot";
+            div.appendChild(dot);
+          }
+
+          div.onclick = () => {
+            openDetail(record.詳細紀錄);
+          };
+
+          dayContent.appendChild(div);
+        });
+
+        monthContent.appendChild(dayBlock);
+      });
+    }
+
+    yearContent.appendChild(monthBlock);
+  });
+
+  container.appendChild(yearBlock);
+
+  // --- 渲染完成 ---
+  document.getElementById("loadingMask").style.display = "none";
+  container.style.display = "block";
+
+  if (spinner) spinner.style.display = "none";
+
+  if (globalRole === "大隊長" || globalRole === "管理員") {
+    document.getElementById("switchArea").style.display = "block";
+  }
+
+  updateSwitchUI();
+  document.getElementById("pageTitle").style.display = "block";
+
+  // ★★★ 關鍵修改：確保狀態恢復只在第一次渲染時執行，且時機正確
+  setTimeout(() => {
+    if (!restoredOnce) {
+      restoreListState();
+      restoredOnce = true;
+    } else {
+      // 非第一次渲染時，自動展開年份區塊
+      const yearHeader = document.querySelector('.year-block .header');
+      if (yearHeader && yearHeader.nextElementSibling.style.display !== 'block') {
+        yearHeader.click();
+      }
+    }
+  }, 50); // 稍微延遲確保 DOM 完全渲染
+
+  debug("STEP3 完成：列表渲染成功");
+}
+
+function saveListState() {
+  // 取得所有展開的區塊
+  const opened = [];
+
+  document.querySelectorAll(".year-block, .month-block, .day-block").forEach(block => {
+    const content = block.querySelector(".content");
+    if (content && content.style.display === "block") {
+      opened.push(block.querySelector(".header span").textContent.trim());
+    }
+  });
+
+  const state = {
+    openedBlocks: opened,
+    scroll: window.scrollY
+  };
+
+  localStorage.setItem("cleanListState", JSON.stringify(state));
+}
+
+function restoreListState() {
+  const cache = localStorage.getItem("cleanRestore");
+  if (!cache) return;
+
+  const state = JSON.parse(cache);
+  const opened = state.openedBlocks || [];
+
+  // 恢復展開
+  opened.forEach(text => {
+    const headers = document.querySelectorAll(".header span");
+    headers.forEach(h => {
+      if (h.textContent.trim() === text) {
+        const block = h.closest(".year-block, .month-block, .day-block");
+        const content = block.querySelector(".content");
+        const icon = block.querySelector(".toggle-icon");
+
+        content.style.display = "block";
+        icon.innerHTML = `
+          <svg width="40" height="40" viewBox="0 0 24 24">
+            <path fill="#666" d="M5 16l7-8 7 8z"/>
+          </svg>`;
+      }
+    });
+  });
+
+  // 恢復捲動位置
+  setTimeout(() => {
+    window.scrollTo(0, state.scroll || 0);
+  }, 10);
+}
+
+  /* ------------------------------------------
+      5. 工具：建立可收合區塊
+  -------------------------------------------*/
+  function createBlock(title, level) {
+  const block = document.createElement("div");
+  block.className = level + "-block";
+
+  const header = document.createElement("div");
+  header.className = "header";
+
+  const titleSpan = document.createElement("span");
+  titleSpan.textContent = title;
+
+  // ▼（預設收起用）
+  const icon = document.createElement("span");
+  icon.className = "toggle-icon";
+  icon.innerHTML = `
+  <svg width="40" height="40" viewBox="0 0 24 24">
+    <path fill="#666" d="M5 8l7 8 7-8z"/>
+  </svg>
+`;
+
+  const content = document.createElement("div");
+  content.className = "content";
+  content.style.display = "none";
+
+  header.appendChild(titleSpan);
+  header.appendChild(icon);
+
+  header.onclick = () => {
+  const willOpen = content.style.display !== "block";
+
+  content.style.display = willOpen ? "block" : "none";
+
+  icon.innerHTML = willOpen
+    ? `<svg width="40" height="40" viewBox="0 0 24 24">
+         <path fill="#666" d="M5 16l7-8 7 8z"/>  <!-- 向上 -->
+       </svg>`
+    : `<svg width="40" height="40" viewBox="0 0 24 24">
+         <path fill="#666" d="M5 8l7 8 7-8z"/>  <!-- 向下 -->
+       </svg>`;
+};
+
+  block.appendChild(header);
+  block.appendChild(content);
+
+  return block;
+}
+
+document.getElementById("btnSelf").onclick = function () {
+  viewMode = "self";
+  
+  // 立即更新按鈕樣式
+  updateSwitchUI();
+  
+  // 隱藏管理員篩選區域
+  document.getElementById("adminFilterArea").style.display = "none";
+
+  // 顯示載入中
+  renderLoadingInList();
+  
+  // 載入個人紀錄
+  loadRecordList("self");
+};
+
+document.getElementById("btnTeam").onclick = async function () {
+  // 大隊長 → 讀自己的大隊
+  if (globalRole === "大隊長") {
+    viewMode = "team";
+    updateSwitchUI(); // 立即更新按鈕樣式
+    document.getElementById("adminFilterArea").style.display = "none";
+    renderLoadingInList();
+    loadRecordList("team");
+    return;
+  }
+
+  // 管理員 → Admin 模式
+  if (globalRole === "管理員") {
+    viewMode = "admin";
+    updateSwitchUI(); // 立即更新按鈕樣式
+    renderLoadingInList();
+
+    // 如果還沒有管理員資料，先載入
+    if (globalAdminRecords.length === 0) {
+      await loadAdminRecords();
+    } else {
+      // 如果已經有資料，直接顯示篩選和渲染
+      document.getElementById("adminFilterArea").style.display = "block";
+      const filtered = filterAdminRecords();
+      renderList(filtered);
+    }
+  }
+};
+
+document.getElementById("adminSearchBtn").onclick = () => {
+  if (viewMode !== "admin") return;
+
+  // 顯示載入中
+  renderLoadingInList();
+
+  // 使用現有資料進行前端篩選
+  setTimeout(() => {
+    const filtered = filterAdminRecords();
+    renderList(filtered);
+  }, 100); // 稍微延遲讓載入動畫顯示
+};
+
+// 按鈕視覺切換
+function updateSwitchUI() {
+  const btnSelf = document.getElementById("btnSelf");
+  const btnTeam = document.getElementById("btnTeam");
+
+  // 重置所有按鈕樣式
+  btnSelf.style.background = "white";
+  btnSelf.style.color = "#0b5ed7";
+  btnTeam.style.background = "white";
+  btnTeam.style.color = "#0b5ed7";
+
+  // 根據當前模式設定激活狀態
+  if (viewMode === "self") {
+    btnSelf.style.background = "#0b5ed7";
+    btnSelf.style.color = "white";
+  } else if (viewMode === "team" || viewMode === "admin") {
+    btnTeam.style.background = "#0b5ed7";
+    btnTeam.style.color = "white";
+  }
+
+  // ★★★ 在這裡加入即可 ★★★
+  applyAdminButtonFix();
+}
+
+function applyAdminButtonFix() {
+  const btnSelf = document.getElementById("btnSelf");
+
+  // 只在「管理員 + admin 模式」下啟動
+  if (globalRole === "管理員" && viewMode === "admin") {
+
+    // 按鈕文字
+    btnSelf.textContent = "歷史報表";
+
+    // ----- 未選中狀態（白底綠框） -----
+    btnSelf.style.background = "white";
+    btnSelf.style.color = "#28a745";
+    btnSelf.style.border = "2px solid #28a745";
+
+    // hover（還是白底，只是顏色微變）
+    btnSelf.onmouseover = () => {
+      btnSelf.style.background = "#f1fdf1";
+    };
+    btnSelf.onmouseout = () => {
+      // 若目前仍未選中 → 回到白底綠字
+      if (viewMode === "admin") {
+        btnSelf.style.background = "white";
+        btnSelf.style.color = "#28a745";
+      }
+    };
+
+    // ----- 點擊後變成選中狀態（綠底白字） -----
+    btnSelf.onclick = () => {
+      // 綠底白字
+      btnSelf.style.background = "#28a745";
+      btnSelf.style.color = "white";
+
+      // 立即開啟歷史報表
+      window.open(
+        "https://docs.google.com/spreadsheets/d/1GEjlfTy73kgZnMYrM0AHjnYIs1EPLIOQLCqsEE8BMAw/edit?gid=0#gid=0",
+        "_blank"
+      );
+    };
+  }
+}
+
+function showLoadingMask() {
+  document.getElementById("loadingMask").style.display = "flex";
+}
+
+function renderLoadingInList() {
+  const container = document.getElementById("listContainer");
+  const spinner = document.getElementById("centerSpinner");
+
+  container.style.display = "none";
+  spinner.style.display = "flex";
+
+  // 不要顯示大遮罩
+  document.getElementById("loadingMask").style.display = "none";
+}
+
+// 查看完整紀錄按鈕事件
+/*document.getElementById("viewFullRecords").onclick = function() {
+  window.open("https://docs.google.com/spreadsheets/d/1GEjlfTy73kgZnMYrM0AHjnYIs1EPLIOQLCqsEE8BMAw/edit?gid=0#gid=0", "_blank");
+};*/
+
+// 彈窗資料表
+const dropdownData = {
+  team: {
+    title: "選擇大隊",
+    target: "teamText",
+    input: "adminTeamSelect",
+    options: [
+      {value:"全部", text:"全部"},
+      {value:"1", text:"第1大隊"},
+      {value:"2", text:"第2大隊"},
+      {value:"3", text:"第3大隊"},
+      {value:"4", text:"第4大隊"},
+      {value:"5", text:"第5大隊"},
+      {value:"6", text:"第6大隊"},
+      {value:"7", text:"第7大隊"},
+      {value:"8", text:"第8大隊"},
+      {value:"9", text:"第9大隊"},
+      {value:"10", text:"第10大隊"},
+    ]
+  },
+
+  range: {
+    title: "選擇範圍",
+    target: "rangeText",
+    input: "adminDayRange",
+    options: [
+      {value:"3", text:"最近 3 天"},
+      {value:"7", text:"最近 7 天"},
+      {value:"14", text:"最近 14 天"}
+    ]
+  },
+
+  type: {
+    title: "選擇類型",
+    target: "typeText",
+    input: "adminTypeSelect",
+    options: [
+      {value:"全部", text:"全部"},
+      {value:"平時", text:"平時"},
+      {value:"災中", text:"災中"},
+      {value:"其他", text:"其他"}
+    ]
+  },
+
+  timeStart: {
+    title: "開始時間",
+    target: "timeStartText",
+    input: "timeStart",
+    options: Array.from({length:24}).map((_,i)=>({
+      value: `${String(i).padStart(2,'0')}:00`,
+      text: `${String(i).padStart(2,'0')}:00`
+    }))
+  },
+
+  timeEnd: {
+    title: "結束時間",
+    target: "timeEndText",
+    input: "timeEnd",
+    options: Array.from({length:24}).map((_,i)=>({
+      value: `${String(i).padStart(2,'0')}:59`,
+      text: `${String(i).padStart(2,'0')}:59`
+    }))
+  }
+};
+
+// 開啟
+function openDropdown(type){
+  const info = dropdownData[type];
+  if (!info) return;
+
+  document.getElementById("panelTitle").textContent = info.title;
+
+  const box = document.getElementById("panelOptions");
+  box.innerHTML = "";
+
+  const currentSelectedValue = document.getElementById(info.input).value;
+
+  info.options.forEach(opt => {
+    const div = document.createElement("div");
+    div.className = "option";
+    div.textContent = opt.text;
+
+    // 若與 select 目前的值相同 → 套用選取樣式
+    if (opt.value == currentSelectedValue) {
+      div.classList.add("selected");
+    }
+
+    div.onclick = () => {
+  document.getElementById(info.target).textContent = opt.text;
+  document.getElementById(info.input).value = opt.value;
+
+  // 清掉所有選取狀態
+  document.querySelectorAll(".option").forEach(o => {
+    o.classList.remove("selected");
+  });
+
+  // ☆☆☆ 一次加 selected → 藍底＋藍點同一個 frame 一起亮
+  div.classList.add("selected");
+
+  // 增加人眼可辨識的延遲（150–180ms）
+  setTimeout(() => {
+    closeDropdown();
+  }, 180);
+};
+
+    box.appendChild(div);
+  });
+
+  document.getElementById("fullDropdownMask").style.display = "flex";
+  lockBodyScroll();
+}
+
+function closeDropdown(){
+  document.getElementById("fullDropdownMask").style.display = "none";
+  unlockBodyScroll();
+}
+
+/* 點黑底關閉 */
+document.getElementById("fullDropdownMask").addEventListener("click", function(e){
+  if (e.target.id === "fullDropdownMask") closeDropdown();
+});
+
+let scrollTopCache = 0;
+
+function lockBodyScroll() {
+  scrollTopCache = window.scrollY || document.documentElement.scrollTop;
+  document.body.style.position = "absolute";
+  document.body.style.top = `-${scrollTopCache}px`;
+  document.body.style.left = "0";
+  document.body.style.right = "0";
+  document.body.style.overflow = "hidden";
+}
+
+function unlockBodyScroll() {
+  document.body.style.position = "";
+  document.body.style.top = "";
+  document.body.style.left = "";
+  document.body.style.right = "";
+  document.body.style.overflow = "";
+  window.scrollTo(0, scrollTopCache);
+}
+
+  main();
+
+  /*
+alert("adminTeamSelect:", document.getElementById("adminTeamSelect"));
+alert("viewFullRecords:", document.getElementById("viewFullRecords"));
+alert("fullDropdownMask:", document.getElementById("fullDropdownMask"));
+*/
+
+function handleClosePage() {
+  if (window.liff && window.liff.isInClient()) {
+    liff.closeWindow(); // LINE 內 → 正確關閉
+  } else {
+    window.location.href = "about:blank"; // 外部瀏覽器 → 強制離開
+  }
+}
+</script>
+
+</body>
+</html>
