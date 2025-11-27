@@ -1133,7 +1133,7 @@ function saveListState() {
 }
 
 function restoreListState() {
-  const cache = localStorage.getItem("cleanRestore");
+  const cache = localStorage.getItem("cleanListState");
   if (!cache) return;
 
   const state = JSON.parse(cache);
