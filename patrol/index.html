@@ -148,7 +148,7 @@
 const vid  = localStorage.getItem("vid");
 const name = localStorage.getItem("name");
 const team = localStorage.getItem("team");
-const role = localStorage.getItem("role");
+const team = localStorage.getItem("nickname");
 
 if (!vid) {
   alert("缺少志工ID，請重新登入");
@@ -188,7 +188,8 @@ async function main() {
     `${gasUrl}?action=patrol` +
     `&vid=${encodeURIComponent(vid)}` +
     `&name=${encodeURIComponent(name)}` +
-    `&team=${encodeURIComponent(team)}`
+    `&team=${encodeURIComponent(team)}` +
+    `&team=${encodeURIComponent(nickname)}`
   );
 
   const msg = await resp.text();
