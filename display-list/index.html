@@ -700,9 +700,16 @@ main();
 
 function debug(msg) {
   try {
-    const box = document.getElementById("debug");
-    if (box) box.textContent += msg + "\n";
-  } catch (e) {}
+    const box = document.getElementById("debugLog");
+    if (box) {
+      // 這裡添加新的日誌
+      box.textContent += msg + "\n";
+      box.scrollTop = box.scrollHeight;  // 滾動到最新的日誌位置
+    }
+    console.log(msg);  // 依然在控制台打印
+  } catch (e) {
+    console.error("Debug log error: ", e);
+  }
 }
 
   /* ------------------------------------------
@@ -810,7 +817,6 @@ async function loadAdminRecords() {
       3. 從 GAS 取得回報記錄（未來串 API）
   -------------------------------------------*/
   async function loadRecordList(mode = "self") {
-
   if (!globalVid) {
     debug("錯誤：沒有 vid 無法查詢");
     document.getElementById("loadingMask").style.display = "none";
@@ -820,14 +826,18 @@ async function loadAdminRecords() {
   let url = "";
 
   if (mode === "self") {
-  url = `${REPORT_GAS_URL}?action=listMyReports&vid=${encodeURIComponent(globalVid)}`;
-} else if (mode === "team") {
-  url = `${REPORT_GAS_URL}?action=listTeamReports&team=${encodeURIComponent(globalTeam)}`;
-}
+    url = `${REPORT_GAS_URL}?action=listMyReports&vid=${encodeURIComponent(globalVid)}`;
+  } else if (mode === "team") {
+    url = `${REPORT_GAS_URL}?action=listTeamReports&team=${encodeURIComponent(globalTeam)}`;
+  }
 
-  const res  = await fetch(url);
+  debug("發送 API 請求，URL: " + url); // 打印 API 請求的 URL
+
+  const res = await fetch(url);
   const text = await res.text();
   const json = JSON.parse(text);
+
+  debug("返回的資料: " + JSON.stringify(json)); // 打印 API 返回的資料
 
   globalRecords = json.records || [];
   renderList(globalRecords);
