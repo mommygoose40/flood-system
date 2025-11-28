@@ -241,7 +241,7 @@
   inset: 0;
   background: rgba(0,0,0,0.45);
   z-index: 99999;
-  display: none;
+  display: flex;  /* 確保它使用 flex 來顯示 */
   justify-content: center;
   align-items: center;
   padding: 30px;         /* 四周留白 */
@@ -387,7 +387,7 @@
 }
 
 #pageWrapper {
-  padding-bottom: 90px; /* 預留 footer 空間 */
+  padding-bottom: 120px; /* 預留 footer 空間 */
 }
 
 #detailView {
@@ -1519,10 +1519,11 @@ alert("fullDropdownMask:", document.getElementById("fullDropdownMask"));
 */
 
 function handleClosePage() {
-  if (window.liff && window.liff.isInClient()) {
-    liff.closeWindow(); // LINE 內 → 正確關閉
+  if (window.location.href === "about:blank") {
+    // 如果當前頁面是空白頁面，則什麼都不做
+    return;
   } else {
-    window.location.href = "about:blank"; // 外部瀏覽器 → 強制離開
+    window.close(); // 正常關閉頁面
   }
 }
 </script>
