@@ -442,6 +442,17 @@ html, body {
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
 }
+
+#listView {
+  padding: 0 16px 100px !important; /* 左右內距+底部留空 */
+  box-sizing: border-box;
+}
+
+.fakeSelectBtn {
+  height: 42px !important;
+  display: inline-flex;
+  align-items: center;
+}
   </style>
 
   <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
@@ -813,18 +824,36 @@ function openDetail(url) {
 
   // ★★★ iframe 載入後再檢查一次（照片頁通常是這裡才會觸發）
   iframe.onload = () => {
-    try {
-      const realURL = iframe.contentWindow.location.href;
-      if (isPhotoPage(realURL)) {
-        footer.style.display = "none";
+  try {
+    const doc = iframe.contentDocument;
+
+    // 監控整個 iframe 內的 DOM
+    const observer = new MutationObserver(() => {
+      const footer = document.getElementById("globalFooter");
+
+      // 找「照片查看的灰幕 or mask」
+      const hasPhotoMask =
+        doc.querySelector('.photo-mask') ||
+        doc.querySelector('.image-viewer') ||
+        doc.querySelector('.lightbox') ||
+        doc.querySelector('.viewer-backdrop') ||
+        doc.querySelector('[class*="mask"]') ||
+        doc.querySelector('[class*="overlay"]');   
+
+      if (hasPhotoMask) {
+        footer.style.display = "none";   // ★ 照片開時隱藏 footer
       } else {
-        footer.style.display = "flex";
+        footer.style.display = "flex";   // ★ 一關掉照片恢復 footer
       }
-    } catch (e) {
-      // 跨網域不會爆炸，只是無法讀 href
-      console.warn("無法讀取 iframe URL", e);
-    }
-  };
+    });
+
+    // 開始監控 iframe 變動
+    observer.observe(doc.body, { childList: true, subtree: true });
+
+  } catch (e) {
+    console.warn("無法偵測 iframe 內 DOM（跨域）", e);
+  }
+}
 }
 
 // ★★★ 統一照片頁偵測邏輯
