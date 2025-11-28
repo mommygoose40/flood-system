@@ -237,21 +237,21 @@
 
 .timeRow {
   display: flex;
-  align-items: center; /* ← 最重要，垂直置中也統一高度 */
-  gap: 8px;
+  align-items: center;
+  gap: 10px;
 }
 
 .timeRow .fakeSelectBtn {
-  padding: 6px 12px;   /* 與其他選單一致 */
-  height: 44px;        /* 與其他偽下拉統一高度 */
+  height: 42px;
+  padding: 0 12px;
   display: flex;
   align-items: center;
 }
 
 .tilde {
-  font-size: 22px;
+  font-size: 20px;
   line-height: 1;
-  padding: 0 4px;
+  padding: 0 2px;
 }
 
 /* 黑色遮罩 */
@@ -410,13 +410,21 @@
 }
 
 #detailView {
-  padding-bottom: 0 !important;
-  height: calc(100vh - 70px);
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+
+  bottom: 70px;  /* ★ 同理 */
   overflow-y: auto;
 }
 
 #globalFooter {
-  box-sizing: border-box;
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 70px;
 }
 
 html, body {
@@ -425,9 +433,14 @@ html, body {
 }
 
 #listView {
-  height: calc(100vh - 70px); /* 扣掉 footer 高度 */
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+
+  bottom: 70px;  /* ★ 不用 calc，直接讓它撐滿到 footer 上方 */
   overflow-y: auto;
-  -webkit-overflow-scrolling: touch; /* 讓手機滑動順 */
+  -webkit-overflow-scrolling: touch;
 }
   </style>
 
@@ -589,15 +602,15 @@ html, body {
       <option value="23:59" selected>23:59</option>
     </select>
 
-    <div class="timeRow">
-  <button class="fakeSelectBtn time-btn" onclick="openDropdown('timeStart')">
+    <div id="timeWrapper" class="timeRow">
+  <button class="fakeSelectBtn timeBtn" onclick="openDropdown('timeStart')">
     <span id="timeStartText">00:00</span>
     <span class="arrow">▾</span>
   </button>
 
   <span class="tilde">～</span>
 
-  <button class="fakeSelectBtn time-btn" onclick="openDropdown('timeEnd')">
+  <button class="fakeSelectBtn timeBtn" onclick="openDropdown('timeEnd')">
     <span id="timeEndText">23:59</span>
     <span class="arrow">▾</span>
   </button>
@@ -780,34 +793,43 @@ if (!globalVid) {
 }
 
 function openDetail(url) {
-
-  // 切換畫面
-  document.getElementById("listView").style.display = "none";
-  document.getElementById("detailView").style.display = "block";
-
+  const list = document.getElementById("listView");
+  const detail = document.getElementById("detailView");
   const iframe = document.getElementById("detailFrame");
-  iframe.src = url;
-
-  // === ★ 自動偵測：如果是照片頁面 → 隱藏 footer ===
   const footer = document.getElementById("globalFooter");
 
-  if (/photo|image|img|gallery|picture/i.test(url)) {
+  // 顯示 detail
+  list.style.display = "none";
+  detail.style.display = "block";
+
+  // 預先判斷一次 URL
+  if (isPhotoPage(url)) {
     footer.style.display = "none";
   } else {
     footer.style.display = "flex";
   }
 
-  // 等 Display 的內容載入後，接管返回按鈕
+  iframe.src = url;
+
+  // ★★★ iframe 載入後再檢查一次（照片頁通常是這裡才會觸發）
   iframe.onload = () => {
     try {
-      const backBtn = iframe.contentDocument.querySelector("#backBtn");
-      if (backBtn) {
-        backBtn.onclick = () => window.parent.backToList();
+      const realURL = iframe.contentWindow.location.href;
+      if (isPhotoPage(realURL)) {
+        footer.style.display = "none";
+      } else {
+        footer.style.display = "flex";
       }
-    } catch(e) {
-      console.warn("iframe 跨域無法操作", e);
+    } catch (e) {
+      // 跨網域不會爆炸，只是無法讀 href
+      console.warn("無法讀取 iframe URL", e);
     }
   };
+}
+
+// ★★★ 統一照片頁偵測邏輯
+function isPhotoPage(url) {
+  return /photo|image|img|picture|gallery/i.test(url);
 }
 
 function backToList() {
