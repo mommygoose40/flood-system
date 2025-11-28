@@ -235,6 +235,10 @@
   flex-shrink: 0; /* ⭐ 不要被擠壓變形 */
 }
 
+.fakeSelectBtn.time-btn {
+  padding: 10px 12px;  /* ← 與其他高度一致 */
+}
+
 /* 黑色遮罩 */
 #fullDropdownMask {
   position: fixed;
@@ -374,8 +378,8 @@
   color: #333;
 }
 
-.red-btn {
-  background: #d9534f;
+.blue-btn {
+  background: #0b5ed7;
   color: #fff;
 }
 
@@ -387,7 +391,7 @@
 }
 
 #pageWrapper {
-  padding-bottom: 90px; /* 預留 footer 空間 */
+  padding-bottom: 30px; /* 預留 footer 空間 */
 }
 
 #detailView {
@@ -571,12 +575,12 @@ html, body {
       <option value="23:59" selected>23:59</option>
     </select>
 
-    <button class="fakeSelectBtn" onclick="openDropdown('timeStart')">
+    <button class="fakeSelectBtn time-btn" onclick="openDropdown('timeStart')">
   <span id="timeStartText">00:00</span>
   <span class="arrow">▾</span>
 </button>
-    ～
-    <button class="fakeSelectBtn" onclick="openDropdown('timeEnd')">
+～
+<button class="fakeSelectBtn time-btn" onclick="openDropdown('timeEnd')">
   <span id="timeEndText">23:59</span>
   <span class="arrow">▾</span>
 </button>
