@@ -63,15 +63,15 @@
 const LIFF_ID = "2007934728-q468EB12";
 const GAS_URL = "https://script.google.com/macros/s/AKfycbxxvRxP_9iiISK9s7zIsCWSnzKLM6CzRalNcCFk5DxttOk7U7A98kqf7oaEIp3W2JJK/exec?action=login";
 
-async function main(){
+async function main() {
   await liff.init({ liffId: LIFF_ID });
 
+  // 第一次進來且尚未登入 → 正式登入並 redirect 回來
   if (!liff.isLoggedIn()) {
-    liff.login();
-    return;
+    return liff.login({ redirectUri: location.href });
   }
 
-  // 顯示遮罩（永遠不會撤掉）
+  // === 只有登入成功後才會執行以下 ===
   document.getElementById("loadingMask").style.display = "flex";
 
   try {
@@ -96,14 +96,13 @@ async function main(){
       localStorage.setItem("team", team || "");
       localStorage.setItem("nickname", nickname);
       localStorage.setItem("role", role || "");
-      window.location.href = "https://flood-system.vercel.app/home";
-      return;
+
+      return window.location.href = "https://flood-system.vercel.app/home";
     }
 
     window.location.href = "https://flood-system.vercel.app/home?unreg=1";
 
-  } catch(error) {
-    // 若要提示錯誤，可以在這裡做 alert
+  } catch (err) {
     // alert("身分驗證失敗，請重新嘗試");
   }
 }
