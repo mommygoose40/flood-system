@@ -809,6 +809,17 @@ if (!globalVid) {
   await loadRecordList("self");
 }
 
+window.addEventListener("message", (e) => {
+  const footer = document.getElementById("globalFooter");
+
+  if (e.data.action === "PHOTO_OPEN") {
+    footer.style.display = "none";
+  }
+  if (e.data.action === "PHOTO_CLOSE") {
+    footer.style.display = "flex";
+  }
+});
+
 function openDetail(url) {
   const list = document.getElementById("listView");
   const detail = document.getElementById("detailView");
