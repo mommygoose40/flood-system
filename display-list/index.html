@@ -423,8 +423,9 @@ html, body {
 
 
     <!-- 這個 div 用來顯示所有的日誌 -->
-<div id="debugLog" style="position: fixed; bottom: 0; left: 0; width: 100%; background-color: rgba(0, 0, 0, 0.7); color: white; font-size: 14px; padding: 10px; overflow-y: auto; max-height: 200px;"></div>
-
+<!--
+  <div id="debugLog" style="position: fixed; bottom: 0; left: 0; width: 100%; background-color: rgba(0, 0, 0, 0.7); color: white; font-size: 14px; padding: 10px; overflow-y: auto; max-height: 200px;"></div>
+-->
 
 <div id="loadingMask">
   <div class="spinner"></div>
@@ -778,10 +779,18 @@ function openDetail(url) {
 }
 
 function backToList() {
-  document.getElementById("detailView").style.display = "none";
-  document.getElementById("listView").style.display = "block";
+  const detail = document.getElementById("detailView");
+  const list = document.getElementById("listView");
 
-  // 回列表位置完全不變，不用你管
+  // 1. 如果正在 iframe（detailView 開著） → 回列表
+  if (detail.style.display === "block") {
+    detail.style.display = "none";
+    list.style.display = "block";
+    return;
+  }
+
+  // 2. 否則（本來就在列表）→ 回主選單
+  window.location.href = "/home";  // ← 這裡換成你的主選單頁
 }
 
 async function loadAdminRecords() {
@@ -1519,8 +1528,9 @@ alert("fullDropdownMask:", document.getElementById("fullDropdownMask"));
 */
 
 function handleClosePage() {
-  window.close(); // 只在窗口由其他窗口開啟時生效
+  window.location.href = "/home";  // 替換成你的主選單頁
 }
+
 </script>
 
 </body>
