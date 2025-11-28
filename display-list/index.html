@@ -400,9 +400,14 @@
   box-sizing: border-box;
 }
 
-html, body {
+html {
   height: 100%;
-  overflow: hidden;   /* 關閉全頁滾動 */
+  overflow: hidden;
+}
+
+body {
+  height: 100%;
+  overflow-y: auto; /* 只讓 body 捲動 */
 }
 
 #listView {
