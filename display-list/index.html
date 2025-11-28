@@ -387,7 +387,7 @@
 }
 
 #pageWrapper {
-  padding-bottom: 120px; /* 預留 footer 空間 */
+  padding-bottom: 150px; /* 預留 footer 空間 */
 }
 
 #detailView {
@@ -1519,12 +1519,7 @@ alert("fullDropdownMask:", document.getElementById("fullDropdownMask"));
 */
 
 function handleClosePage() {
-  if (window.location.href === "about:blank") {
-    // 如果當前頁面是空白頁面，則什麼都不做
-    return;
-  } else {
-    window.close(); // 正常關閉頁面
-  }
+  window.close(); // 只在窗口由其他窗口開啟時生效
 }
 </script>
 
