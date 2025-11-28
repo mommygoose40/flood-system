@@ -815,42 +815,32 @@ function openDetail(url) {
   const iframe = document.getElementById("detailFrame");
   const footer = document.getElementById("globalFooter");
 
-  // 顯示 detail
   list.style.display = "none";
   detail.style.display = "block";
-
-  // 預先判斷一次 URL
-  if (isPhotoPage(url)) {
-    footer.style.display = "none";
-  } else {
-    footer.style.display = "flex";
-  }
-
   iframe.src = url;
 
-  // ★★★ iframe 載入後再檢查一次（照片頁通常是這裡才會觸發）
+  footer.style.display = "flex"; // 預設顯示 footer
+
   iframe.onload = () => {
     try {
       const doc = iframe.contentDocument;
 
-      // 監控 iframe 內部 DOM
+      // 監控 iframe 的 body（detect modal change）
       const observer = new MutationObserver(() => {
-        const footer = document.getElementById("globalFooter");
+        
+        const modal = doc.querySelector('#image-modal');
 
-        // ★★★ 決定是否進入照片查看模式的關鍵 ★★★
-        const screenLock = doc.querySelector('#screenLock, .screenLock');
-
-        if (screenLock && screenLock.style.display !== "none") {
-          footer.style.display = "none";     // 進照片查看 → 隱藏 footer
+        if (modal && modal.style.display === "block") {
+          footer.style.display = "none"; // ★ 查看照片 → 隱藏 footer
         } else {
-          footer.style.display = "flex";     // 離開照片查看 → 顯示 footer
+          footer.style.display = "flex"; // ★ 其他情況 → 顯示 footer
         }
       });
 
-      observer.observe(doc.body, { childList: true, subtree: true });
-
+      observer.observe(doc.body, { childList: true, subtree: true, attributes: true });
+      
     } catch (err) {
-      console.warn(err);
+      console.warn('iframe 無法存取', err);
     }
   };
 }
