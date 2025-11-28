@@ -723,7 +723,7 @@ html, body {
 
 <div id="globalFooter">
   <button class="gray-btn" onclick="backToList()">回上一頁</button>
-  <button class="blue-btn" onclick="handleClosePage()">回主選單</button>
+  <button class="gray-btn" onclick="handleClosePage()">回主選單</button>
 </div>
 
 <script>
@@ -837,7 +837,7 @@ function openDetail(url) {
         }
       });
 
-      observer.observe(doc.body, { childList: true, subtree: true, attributes: true });
+      observer.observe(modal, { attributes: true, attributeFilter: ["style"] });
       
     } catch (err) {
       console.warn('iframe 無法存取', err);
