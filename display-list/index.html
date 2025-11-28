@@ -825,20 +825,33 @@ function openDetail(url) {
     try {
       const doc = iframe.contentDocument;
 
-      // 監控 iframe 的 body（detect modal change）
-      const observer = new MutationObserver(() => {
-        
-        const modal = doc.querySelector('#image-modal');
+      // 先抓 modal（一定會存在，只是 display:none）
+      const modal = doc.querySelector('#image-modal');
 
-        if (modal && modal.style.display === "block") {
-          footer.style.display = "none"; // ★ 查看照片 → 隱藏 footer
+      // 保險檢查
+      if (!modal) {
+        console.warn("找不到 #image-modal，可能還沒載入");
+        return;
+      }
+
+      // ★★★ 監控 modal 的 style 是否改變（關鍵）
+      const observer = new MutationObserver(() => {
+
+        const isOpen = modal.style.display === "block";
+
+        if (isOpen) {
+          footer.style.display = "none";  // 進照片查看 → 隱藏 footer
         } else {
-          footer.style.display = "flex"; // ★ 其他情況 → 顯示 footer
+          footer.style.display = "flex";  // 離開照片查看 → 顯示 footer
         }
       });
 
-      observer.observe(modal, { attributes: true, attributeFilter: ["style"] });
-      
+      // ★★★ 監控 #image-modal 的 style 變化
+      observer.observe(modal, {
+        attributes: true,
+        attributeFilter: ["style"]
+      });
+
     } catch (err) {
       console.warn('iframe 無法存取', err);
     }
