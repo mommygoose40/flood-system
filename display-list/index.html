@@ -811,12 +811,16 @@ if (!globalVid) {
 
 window.addEventListener("message", (e) => {
   const footer = document.getElementById("globalFooter");
+  const iframe = document.getElementById("detailFrame");
 
   if (e.data.action === "PHOTO_OPEN") {
     footer.style.display = "none";
+    iframe.style.height = "100%";   // ★ 滿版
   }
+
   if (e.data.action === "PHOTO_CLOSE") {
     footer.style.display = "flex";
+    iframe.style.height = "calc(100% - 70px)"; // ★ 恢復
   }
 });
 
