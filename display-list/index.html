@@ -235,8 +235,23 @@
   flex-shrink: 0; /* ⭐ 不要被擠壓變形 */
 }
 
-.fakeSelectBtn.time-btn {
-  padding: 10px 12px;  /* ← 與其他高度一致 */
+.timeRow {
+  display: flex;
+  align-items: center; /* ← 最重要，垂直置中也統一高度 */
+  gap: 8px;
+}
+
+.timeRow .fakeSelectBtn {
+  padding: 6px 12px;   /* 與其他選單一致 */
+  height: 44px;        /* 與其他偽下拉統一高度 */
+  display: flex;
+  align-items: center;
+}
+
+.tilde {
+  font-size: 22px;
+  line-height: 1;
+  padding: 0 4px;
 }
 
 /* 黑色遮罩 */
@@ -574,15 +589,19 @@ html, body {
       <option value="23:59" selected>23:59</option>
     </select>
 
-    <button class="fakeSelectBtn time-btn" onclick="openDropdown('timeStart')">
-  <span id="timeStartText">00:00</span>
-  <span class="arrow">▾</span>
-</button>
-～
-<button class="fakeSelectBtn time-btn" onclick="openDropdown('timeEnd')">
-  <span id="timeEndText">23:59</span>
-  <span class="arrow">▾</span>
-</button>
+    <div class="timeRow">
+  <button class="fakeSelectBtn time-btn" onclick="openDropdown('timeStart')">
+    <span id="timeStartText">00:00</span>
+    <span class="arrow">▾</span>
+  </button>
+
+  <span class="tilde">～</span>
+
+  <button class="fakeSelectBtn time-btn" onclick="openDropdown('timeEnd')">
+    <span id="timeEndText">23:59</span>
+    <span class="arrow">▾</span>
+  </button>
+</div>
   </div>
 
   <!-- 類型 -->
@@ -769,6 +788,15 @@ function openDetail(url) {
   const iframe = document.getElementById("detailFrame");
   iframe.src = url;
 
+  // === ★ 自動偵測：如果是照片頁面 → 隱藏 footer ===
+  const footer = document.getElementById("globalFooter");
+
+  if (/photo|image|img|gallery|picture/i.test(url)) {
+    footer.style.display = "none";
+  } else {
+    footer.style.display = "flex";
+  }
+
   // 等 Display 的內容載入後，接管返回按鈕
   iframe.onload = () => {
     try {
@@ -777,7 +805,7 @@ function openDetail(url) {
         backBtn.onclick = () => window.parent.backToList();
       }
     } catch(e) {
-      console.warn("無法參訪 iframe（可能跨域）", e);
+      console.warn("iframe 跨域無法操作", e);
     }
   };
 }
