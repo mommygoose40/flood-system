@@ -805,6 +805,18 @@ html, body {
     flex-direction: column-reverse;
   }
 }
+
+    /* 電腦版 list 模式：小圓鈕改成固定定位 */
+@media (min-width: 769px) {
+  body.desktop-card-mode:not(.show-detail) #floatingButtons {
+    position: fixed !important;
+    top: 140px !important;
+
+    /* 對齊卡片右邊：螢幕中心 + 卡片寬度一半 */
+    right: calc(50% - 410px) !important;
+  }
+}
+
   </style>
 
   <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
