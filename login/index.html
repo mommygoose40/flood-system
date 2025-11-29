@@ -88,7 +88,7 @@ async function main() {
     if (!loggedIn) {
       logDebug("尚未登入，準備跳轉到 LINE 登入畫面");
       return liff.login({
-        redirectUri: "https://flood-system.vercel.app/login"
+        redirectUri: "https://flood-system.vercel.app/login/index.html"
       });
     }
 
