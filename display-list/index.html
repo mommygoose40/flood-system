@@ -398,150 +398,44 @@
   color: #fff;
 }
 
-/* 電腦版隱藏 Footer */
-@media (min-width: 769px) {
-  #globalFooter {
-    display: none !important;
-  }
-}
 
-#pageWrapper {
-  padding-bottom: 0px; /* 預留 footer 空間 */
-}
-
-#detailView {
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-
-  bottom: 70px;  /* ★ 同理 */
-  overflow-y: auto;
-}
-
-#globalFooter {
-  position: fixed;
-  bottom: 0;
-  left: 0;
-  width: 100%;
-  height: 70px;
-}
-
-html, body {
-  height: 100%;
-  overflow: hidden;   /* 關閉全頁滾動 */
-}
-
-#listView {
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-
-  bottom: 70px;  /* ★ 不用 calc，直接讓它撐滿到 footer 上方 */
-  overflow-y: auto;
-  -webkit-overflow-scrolling: touch;
-}
-
-#listView {
-  padding: 0 16px 50px !important; /* 左右內距+底部留空 */
-  box-sizing: border-box;
-}
-
-.fakeSelectBtn {
-  height: 42px !important;
-  display: inline-flex;
-  align-items: center;
-}
-
-#globalFooter {
-  padding-left: 16px !important;
-  padding-right: 16px !important;
-  box-sizing: border-box !important;
-}
-
-/* === 電腦版：只有 listView 顯示時才套用卡片模式 === */
+/* === 電腦版專區（邏輯：list = 卡片寬度、detail = 滿版） === */
 @media (min-width: 769px) {
 
-  /* 讓電腦版恢復整頁滾動（重要） */
+  /* 回復電腦版整頁滾動 */
   html, body {
     overflow: auto !important;
     height: auto !important;
   }
 
-  /* 卡片外框 */
-  body.desktop-card-mode {
-    background: #f1f1f1 !important;
-    display: flex !important;
-    justify-content: center !important;
-    padding: 40px 0 !important;
-    overflow: auto !important;     /* ★ 不要卡片裡面滚，要整頁捲 */
-  }
-
-  /* 卡片本體 */
-  body.desktop-card-mode #pageWrapper {
-    max-width: 800px !important;
-    width: 100%;
-    background: white;
-    border-radius: 12px;
-    padding: 20px 24px;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
-    margin: 0 auto;
-
-    /* ★★★★★ 關鍵：卡片不要自己滾 → 高度自動撐開 */
-    max-height: none !important;
-    height: auto !important;
-    overflow: visible !important;
-  }
-
-  /* listView 在卡片內正常展開 */
-  body.desktop-card-mode #listView {
-    position: static !important;
-    height: auto !important;
-    overflow: visible !important;
-    padding: 0 !important;
-  }
-
-  /* detailView 一律不要卡片，要滿版 → footer 才會顯示出來 */
-  #detailView {
-    position: fixed !important;
-    top: 0;
-    left: 0;
-    width: 100% !important;
-    height: 100% !important;
-  }
-}
-
-/* === 電腦版 footer 跟著卡片寬度 === */
-@media (min-width: 769px) {
-
-  /* footer 改為置中並限制寬度 */
-  #globalFooter {
-    position: fixed;
-    bottom: 0;
+  /* LIST 模式：footer 等寬卡片 */
+  body.desktop-card-mode #globalFooter {
+    position: absolute;       /* ★ 不要 fixed，footer 進入卡片 */
     left: 50%;
     transform: translateX(-50%);
-    
-    max-width: 800px !important;   /* ★ 與卡片寬度一致 */
+    bottom: 0;
+
+    max-width: 800px !important; /* ★ 卡片寬度 */
     width: 100%;
-    padding: 0 16px;
-    
-    background: #f8f8f8;
-    box-shadow: 0 -2px 6px rgba(0,0,0,0.12);
-    z-index: 9999;
 
-    border-radius: 0 0 12px 12px;  /* ★ 與卡片底部邊角一致 */
+    border-radius: 0 0 12px 12px;
   }
 
-  /* footer 按鈕游標改成 pointer */
-  #globalFooter button {
-    cursor: pointer !important;
+  /* LIST 模式：卡片底部預留 footer 空間 */
+  body.desktop-card-mode #pageWrapper {
+    padding-bottom: 100px !important;   /* ★ 避免內容被 footer 遮住 */
   }
 
-  /* ★ 重點：讓整頁能滾到 footer 下面，不被截掉 */
-  body.desktop-card-mode {
-    padding-bottom: 120px !important;  
-    /* 卡片內距變大，避免內容蓋到 footer */
+  /* DETAIL 模式：footer 固定在視窗最底部、滿版（iframe 模式） */
+  body:not(.desktop-card-mode) #globalFooter {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    transform: none;
+
+    width: 100% !important;  /* ★ iframe 模式要求滿版 */
+    max-width: none !important;
+    border-radius: 0;
   }
 }
   </style>
