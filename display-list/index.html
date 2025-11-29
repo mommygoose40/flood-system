@@ -510,10 +510,38 @@ html, body {
     width: 100% !important;
     height: 100% !important;
   }
+}
 
-  /* 電腦版允許 footer（因為你要求 iframe 一律要有 footer） */
+/* === 電腦版 footer 跟著卡片寬度 === */
+@media (min-width: 769px) {
+
+  /* footer 改為置中並限制寬度 */
   #globalFooter {
-    display: flex !important;
+    position: fixed;
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    
+    max-width: 800px !important;   /* ★ 與卡片寬度一致 */
+    width: 100%;
+    padding: 0 16px;
+    
+    background: #f8f8f8;
+    box-shadow: 0 -2px 6px rgba(0,0,0,0.12);
+    z-index: 9999;
+
+    border-radius: 0 0 12px 12px;  /* ★ 與卡片底部邊角一致 */
+  }
+
+  /* footer 按鈕游標改成 pointer */
+  #globalFooter button {
+    cursor: pointer !important;
+  }
+
+  /* ★ 重點：讓整頁能滾到 footer 下面，不被截掉 */
+  body.desktop-card-mode {
+    padding-bottom: 120px !important;  
+    /* 卡片內距變大，避免內容蓋到 footer */
   }
 }
   </style>
