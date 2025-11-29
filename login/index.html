@@ -91,6 +91,7 @@ async function main() {
   logDebug("目前網址: " + window.location.href);
 
   try {
+    liff.logout();  // ← 強制清除登入狀態（測試用）
     logDebug("開始 liff.init");
     await liff.init({ liffId: LIFF_ID });
     logDebug("liff.init 完成");
