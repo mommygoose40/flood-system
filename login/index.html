@@ -198,5 +198,16 @@ function createCustomAlert(title, message = '', isSuccess = false) {
 }
 </script>
 
+<!-- 下面是關鍵：SDK 要放在 BODY 最後 -->
+  <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+
+  <script>
+  const sdk = document.querySelector('script[src*="liff"]');
+  sdk.onerror = () => {
+    document.getElementById("debug").innerText = "LIFF SDK 載入失敗";
+    console.log("LIFF SDK 載入失敗");
+  };
+</script>
+
 </body>
 </html>
