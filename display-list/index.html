@@ -731,6 +731,60 @@ html, body {
     display: inline-block;
   }
 }
+
+    /* ================================
+   電腦版：遊戲風小圓鈕浮動 Footer
+   ================================ */
+@media (min-width: 769px) {
+
+  /* 隱藏原本的手機 footer */
+  #globalFooter {
+    display: none !important;
+  }
+
+  /* 圓鈕容器 */
+  #floatingButtons {
+    position: fixed;
+    right: 28px;
+    bottom: 28px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    z-index: 99999;
+  }
+
+  /* 圓鈕共用樣式 */
+  .circle-btn {
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.92);
+    border: 1px solid #ccc;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.18);
+    backdrop-filter: blur(6px);
+    cursor: pointer;
+
+    display: flex;
+    justify-content: center;
+    align-items: center;
+
+    font-size: 15px;
+    color: #333;
+    transition: all 0.2s ease;
+  }
+
+  /* 滑過 → 微亮 */
+  .circle-btn:hover {
+    background: rgba(255,255,255,1);
+    box-shadow: 0 6px 14px rgba(0,0,0,0.22);
+    transform: translateY(-2px);
+  }
+
+  /* 按下 → 微縮 */
+  .circle-btn:active {
+    transform: scale(0.94);
+  }
+}
   </style>
 
   <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
@@ -739,11 +793,6 @@ html, body {
 <body>
 
   <div id="pageWrapper">
-
-  <div id="desktopCardHeader">
-    <button id="desktopBackBtn" onclick="backToList()">返回</button>
-    <button id="desktopHomeBtn" onclick="handleClosePage()">回首頁</button>
-  </div>
 
 <div id="listView" style="display:block;">
 
@@ -997,6 +1046,12 @@ html, body {
 <div style="height:15px"></div>
 
 </div>   <!-- pageWrapper 結束 -->
+
+  <!-- 電腦版小圓鈕 -->
+<div id="floatingButtons" style="display:none;">
+  <button class="circle-btn" onclick="backToList()">返</button>
+  <button class="circle-btn" onclick="handleClosePage()">主</button>
+</div>
 
 <div id="globalFooter">
   <button class="gray-btn" onclick="backToList()">回上一頁</button>
@@ -1916,6 +1971,26 @@ function handleClosePage() {
 document.addEventListener("DOMContentLoaded", () => {
   if (window.innerWidth >= 769) {
     document.body.classList.add("desktop-card-mode");
+  }
+});
+
+  // 啟動 floating 圓鈕（只在電腦版）
+document.addEventListener("DOMContentLoaded", () => {
+  if (window.innerWidth >= 769) {
+    document.getElementById("floatingButtons").style.display = "flex";
+  }
+});
+
+// detailView 開啟圖片時 → 自動隱藏圓鈕
+window.addEventListener("message", (e) => {
+  const fb = document.getElementById("floatingButtons");
+
+  if (e.data.action === "PHOTO_OPEN") {
+    fb.style.display = "none";
+  }
+
+  if (e.data.action === "PHOTO_CLOSE") {
+    if (window.innerWidth >= 769) fb.style.display = "flex";
   }
 });
   
