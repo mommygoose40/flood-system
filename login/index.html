@@ -66,7 +66,7 @@ async function main() {
   // 第一次進來且尚未登入 → 正式登入並 redirect 回來
   if (!liff.isLoggedIn()) {
     return liff.login({
-  redirectUri: window.location.origin + window.location.pathname
+  redirectUri: "https://flood-system.vercel.app/login"
 });
   }
 
