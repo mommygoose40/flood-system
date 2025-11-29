@@ -127,24 +127,38 @@ async function main() {
     const nickname = data.data?.["LINE暱稱"];
     const role = data.data?.["權限"];
 
-    // （4）更新 localStorage（這就是有「最新身份」的時候）
-    localStorage.setItem("vid", vid || "");
-    localStorage.setItem("name", name || "");
-    localStorage.setItem("team", team || "");
-    localStorage.setItem("nickname", nickname || "");
-    localStorage.setItem("role", role || "");
+    // （4）更新 localStorage：只在「已註冊」時存身分與快取
+if (data.registered) {
+  localStorage.setItem("vid", vid || "");
+  localStorage.setItem("name", name || "");
+  localStorage.setItem("team", team || "");
+  localStorage.setItem("nickname", nickname || "");
+  localStorage.setItem("role", role || "");
 
-    // ★★★（最重要）更新「上次成功抓 GAS 的時間」★★★
-    localStorage.setItem("lastGasCheck", Date.now());
+  // 註冊者 → 才存快取
+  localStorage.setItem("lastGasCheck", Date.now());
 
-    if (data.registered) {
-      logDebug("已註冊 → 跳 home");
-      window.location.href = "https://flood-system.vercel.app/home";
-      return;
-    }
+  logDebug("已註冊 → 跳 home");
+  window.location.href = "https://flood-system.vercel.app/home";
+  return;
+}
 
-    logDebug("未註冊 → 跳 home?unreg=1");
-    window.location.href = "https://flood-system.vercel.app/home?unreg=1";
+// =============================
+//     訪客（未註冊）
+// =============================
+
+// 訪客 → 不存身份
+localStorage.removeItem("vid");
+localStorage.removeItem("name");
+localStorage.removeItem("team");
+localStorage.removeItem("nickname");
+localStorage.removeItem("role");
+
+// 訪客 → 不存 lastGasCheck（確保每次重新抓 GAS）
+localStorage.removeItem("lastGasCheck");
+
+logDebug("未註冊 → 跳 home?unreg=1");
+window.location.href = "https://flood-system.vercel.app/home?unreg=1";
 
   } catch (err) {
     logDebug("錯誤: " + err);
