@@ -846,6 +846,33 @@ html, body {
   }
 }
 
+    /* =====================================================
+   修正：電腦版 loadingMask 一開始被壓住→渲染完才出現
+   - 只影響電腦版，不觸碰手機
+   ===================================================== */
+@media (min-width: 769px) {
+
+  /* 1. 讓 loadingMask 不會被 desktop 的 flex 壓縮 */
+  body.desktop-card-mode #loadingMask {
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    width: 100vw !important;
+    height: 100vh !important;
+    z-index: 999999 !important;
+  }
+
+  /* 2. 進入 loading 時：解除 overflow 限制 */
+  body.desktop-card-mode.loading {
+    overflow: visible !important;
+  }
+
+  /* 3. loading 期間：強制顯示 loadingMask（覆蓋所有衝突） */
+  body.desktop-card-mode.loading #loadingMask {
+    display: flex !important;
+  }
+}
+
   </style>
 
   <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
