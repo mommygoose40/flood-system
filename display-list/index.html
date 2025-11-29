@@ -463,16 +463,23 @@ html, body {
 /* === 電腦版：只有 listView 顯示時才套用卡片模式 === */
 @media (min-width: 769px) {
 
-  /* 預設：先不要卡片 → 用滿版 */
+  /* 讓電腦版恢復整頁滾動（重要） */
+  html, body {
+    overflow: auto !important;
+    height: auto !important;
+  }
+
+  /* 卡片外框 */
   body.desktop-card-mode {
     background: #f1f1f1 !important;
     display: flex !important;
     justify-content: center !important;
     padding: 40px 0 !important;
+    overflow: auto !important;     /* ★ 不要卡片裡面滚，要整頁捲 */
   }
 
-  /* 只有在 desktop-card-mode 時，listView 才變卡片 */
-body.desktop-card-mode #pageWrapper {
+  /* 卡片本體 */
+  body.desktop-card-mode #pageWrapper {
     max-width: 800px !important;
     width: 100%;
     background: white;
@@ -481,12 +488,13 @@ body.desktop-card-mode #pageWrapper {
     box-shadow: 0 4px 12px rgba(0,0,0,0.08);
     margin: 0 auto;
 
-    max-height: calc(100vh - 40px) !important;
-    overflow-y: auto !important;
-    overflow-x: hidden;
-}
+    /* ★★★★★ 關鍵：卡片不要自己滾 → 高度自動撐開 */
+    max-height: none !important;
+    height: auto !important;
+    overflow: visible !important;
+  }
 
-  /* listView 的內框要解除強制 layout，才能變成卡片內容 */
+  /* listView 在卡片內正常展開 */
   body.desktop-card-mode #listView {
     position: static !important;
     height: auto !important;
