@@ -460,55 +460,49 @@ html, body {
   box-sizing: border-box !important;
 }
 
-/* === 電腦版強制使用手機版比例（固定寬度 App 介面）=== */
+/* === 電腦版強制呈現卡片比例（符合你截圖的樣式） === */
 @media (min-width: 769px) {
 
+  /* body 變成水平置中的「外框」 */
   body {
-    background: #e6e9ef;          /* 讓外側有淡灰背景，像手機在電腦上置中 */
     display: flex;
     justify-content: center;
-    padding: 20px 0;
+    background: #f1f1f1;
+    padding: 40px 0;
   }
 
-  /* 手機寬度區塊（核心） */
+  /* 卡片本體 */
   .container {
-    width: 450px !important;      /* 固定成手機寬度 */
-    max-width: 450px !important;
+    max-width: 800px !important;
+    width: 100%;
     margin: 0 auto !important;
     border-radius: 12px;
-    box-shadow: 0 0 20px rgba(0,0,0,0.15);
-    padding: 20px;
   }
 
-  /* 讓 modal、圖片檢視時也維持手機寬度 */
+  /* modal 也跟卡片對齊，不滿版 */
   .modal {
-    width: 450px !important;
-    max-width: 450px !important;
-    margin: 0 auto !important;
     left: 50% !important;
     transform: translateX(-50%) !important;
+    max-width: 800px !important;
+    width: 100% !important;
     border-radius: 12px;
-    overflow: hidden;
   }
 
-  /* 圖片容器跟手機一致比例顯示 */
   .modal-content-container {
-    width: 450px !important;
-    max-width: 450px !important;
+    max-width: 800px !important;
     margin: 0 auto;
   }
 
-  /* 縮放控制的置中與寬度 */
   .zoom-controls {
     left: 50% !important;
     transform: translateX(-50%) !important;
   }
 
-  /* 底部按鈕在電腦也保留（手機比例） */
+  /* 底部按鈕在電腦也保留（卡片寬度） */
   .footer-actions {
     display: flex !important;
-    width: 450px !important;
-    max-width: 450px !important;
+    width: 800px !important;  /* 和 container 同寬 */
+    max-width: 800px !important;
     margin: 20px auto 0 auto !important;
   }
 }
