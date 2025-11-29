@@ -15,8 +15,6 @@
     h2 {
       text-align: center;
       margin-bottom: 24px;
-      position: relative;
-  z-index: 1000001 !important;
     }
 
     .year-block, .month-block, .day-block {
@@ -549,7 +547,7 @@ html, body {
   }
 
   #desktopBackBtn { left: calc(50% - 410px); }
-  #desktopHomeBtn { right: calc(50% - 410px); }
+  #desktopHomeBtn { right: calc(50% - 410px - 24px); }
 
   #desktopBackBtn:hover,
   #desktopHomeBtn:hover {
@@ -681,7 +679,7 @@ html, body {
   <div id="text-error-notfound" class="loadingText">找不到您的志工資料</div>
 </div>
 
-<h2 id="pageTitle" style="display:none;">回報紀錄</h2>
+<h2 id="pageTitle" style="display:block;">回報紀錄</h2>
 
 <div id="switchArea" style="
   display:none;
