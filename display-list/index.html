@@ -651,7 +651,11 @@ html, body {
     display: flex !important;
   }
 }
-   
+    
+   body.photo-open #floatingButtons {
+  display: none !important;
+}
+
   </style>
 
   <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
@@ -1854,31 +1858,17 @@ document.addEventListener("DOMContentLoaded", () => {
   const iframe = document.getElementById("detailFrame");
 
   if (e.data.action === "PHOTO_OPEN") {
-    isPhotoOpened = true;
+    document.body.classList.add("photo-open");
 
-    // 手機 footer
     footer.style.display = "none";
     iframe.style.height = "100%";
-
-    // 電腦圓鈕
-    if (window.innerWidth >= 769) {
-      fb.style.display = "none";
-    }
   }
 
   if (e.data.action === "PHOTO_CLOSE") {
-    isPhotoOpened = false;
+    document.body.classList.remove("photo-open");
 
-    // 手機 footer
-    if (window.innerWidth < 769) {
-      footer.style.display = "flex";
-    }
+    if (window.innerWidth < 769) footer.style.display = "flex";
     iframe.style.height = "calc(100% - 70px)";
-
-    // 電腦圓鈕
-    if (window.innerWidth >= 769) {
-      fb.style.display = "flex";
-    }
   }
 });
   
