@@ -811,7 +811,7 @@ html, body {
   body.desktop-card-mode:not(.show-detail) #floatingButtons {
     position: fixed !important;
     top: 140px !important;
-    right: calc(50% - 450px) !important; 
+    right: calc(50% - 500px) !important; 
     /* ↑ 改這個值就能往右或往左 */
   }
 }
@@ -821,11 +821,34 @@ html, body {
   body.show-detail #floatingButtons {
     position: fixed !important;
     top: 28px !important;
-    right: calc(50% - 450px) !important;
+    right: calc(50% - 500px) !important;
     flex-direction: column-reverse;
   }
 }
 
+    /* 電腦版：避免初始化造成右側小捲軸 */
+@media (min-width: 769px) {
+  html, body {
+    overflow-x: hidden !important;  /* 關鍵修正 */
+    overflow-y: auto !important;    /* 允許正常垂直捲動 */
+  }
+}
+
+    /* 強制 loading 永遠在最上層，與 overflow 改動無關 */
+#loadingMask {
+  position: fixed !important;
+  inset: 0 !important;
+  z-index: 200000 !important;
+  display: flex !important;
+  justify-content: center;
+  align-items: center;
+}
+
+/* spinner 固定尺寸避免 overflow 影響 */
+#loadingMask .spinner {
+  width: 40px !important;
+  height: 40px !important;
+}
   </style>
 
   <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
