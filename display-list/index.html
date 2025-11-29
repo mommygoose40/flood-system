@@ -653,10 +653,11 @@ html, body {
   }
 }
 
-    /* 電腦版：載入中時隱藏卡片 */
+/* 電腦版：載入中時隱藏卡片（不影響 loadingMask） */
 @media (min-width: 769px) {
   body.desktop-card-mode.loading #pageWrapper {
-    visibility: hidden !important;
+    opacity: 0 !important;           /* 視覺消失 */
+    pointer-events: none !important; /* 不可點 */
   }
 }
 
@@ -667,7 +668,7 @@ html, body {
   #desktopHomeBtn {
     display: block !important;
     position: fixed !important;   /* ← 固定，不會被切 */
-    top: 20px !important;         /* ← 不會被上方截掉 */
+    top: 80px !important;         /* ← 不會被上方截掉 */
     z-index: 10050 !important;    /* ← 永遠在最上面 */
     padding: 10px 18px;
     font-size: 15px;
