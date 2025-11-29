@@ -630,7 +630,7 @@ input[type="text"]:focus {
   <!-- Submit -->
 <div class="form-section" style="text-align:center;">
   <div style="display: flex; justify-content: center; gap: 14px;">
-    <label id="closeBtn" class="ui-btn gray" onclick="liff.closeWindow()">回主選單</label>
+    <label id="closeBtn" class="ui-btn gray" onclick="closeWindowSafe()">回主選單</label>
     <label id="submitBtn" class="ui-btn" onclick="submitForm()">提交回報</label>
   </div>
   <!--<div id="serverStatus" style="margin-top:10px;">伺服器狀態：檢查中...</div>-->
@@ -2615,6 +2615,10 @@ function writeString(view, offset, str) {
     for (let i = 0; i < str.length; i++) {
         view.setUint8(offset + i, str.charCodeAt(i));
     }
+}
+
+function closeWindowSafe() {
+  window.location.href = "https://flood-system.vercel.app/home";  // 替換成你的主選單頁
 }
 </script>
 </body>
