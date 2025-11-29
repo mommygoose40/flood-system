@@ -923,15 +923,20 @@ function backToList() {
   detail.style.display = "none";
   list.style.display = "block";
 
-    // ★ 回到列表 → 恢復卡片模式（電腦）
-    if (window.innerWidth >= 769) {
-      document.body.classList.add("desktop-card-mode");
-    }
-
-    return;
+  // 電腦版回到列表 → 啟動卡片模式
+  if (window.innerWidth >= 769) {
+    document.body.classList.add("desktop-card-mode");
+    list.style.position = "static";
+    list.style.overflow = "visible";
   }
 
-  window.location.href = "/home";
+  const iframe = document.getElementById("detailFrame");
+  const footer = document.getElementById("globalFooter");
+
+  footer.style.display = "none";
+  iframe.src = "";
+
+  return;
 }
 
 async function loadAdminRecords() {
