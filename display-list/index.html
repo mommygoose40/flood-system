@@ -482,14 +482,6 @@ html, body {
     margin: 0 auto;
   }
 
-  /* listView 的內框要解除強制 layout，才能變成卡片內容 */
-  body.desktop-card-mode #listView {
-    position: static !important;
-    height: auto !important;
-    overflow: visible !important;
-    padding: 0 !important;
-  }
-
   /* detailView 一律不要卡片，要滿版 → footer 才會顯示出來 */
   #detailView {
     position: fixed !important;
