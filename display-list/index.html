@@ -785,12 +785,24 @@ html, body {
     stroke: #333;
   }
 
-  /* detailView 打開時（iframe 滿版），固定在螢幕右邊 */
+  /* 卡片容器要成為定位父層 */
+  body.desktop-card-mode #pageWrapper {
+    position: relative !important;
+  }
+
+  /* 小圓鈕：list 模式貼著卡片右邊（會跟著滾動） */
+  body.desktop-card-mode #floatingButtons {
+    position: absolute !important;
+    right: -70px !important;
+    top: 140px !important;
+  }
+
+  /* ★★ detail 模式時改成固定在螢幕右上 ★★ */
   body.show-detail #floatingButtons {
     position: fixed !important;
     right: 28px !important;
     top: 28px !important;
-    flex-direction: column-reverse; /* 房子在上、返回在下 */
+    flex-direction: column-reverse;
   }
 }
   </style>
