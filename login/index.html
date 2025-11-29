@@ -8,16 +8,13 @@
 
 <style>
   body {
-    font-family: Arial, sans-serif;
-    background-color: #f5f8ff;
-    margin: 0;
-    padding: 0;
-    height: 100vh;
-    overflow: hidden;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-  }
+  font-family: Arial, sans-serif;
+  background-color: #f5f8ff;
+  margin: 0;
+  padding: 0;
+  min-height: 100vh;
+  overflow-x: hidden; 
+}
 
   /* 遮罩永遠最高層 */
   #loadingMask {
@@ -68,7 +65,9 @@ async function main() {
 
   // 第一次進來且尚未登入 → 正式登入並 redirect 回來
   if (!liff.isLoggedIn()) {
-    return liff.login({ redirectUri: location.href });
+    return liff.login({
+  redirectUri: window.location.origin + window.location.pathname
+});
   }
 
   // === 只有登入成功後才會執行以下 ===
