@@ -631,7 +631,37 @@ html, body {
   }
 }
 
-    
+ /* 電腦版：圓鈕貼著卡片 */
+@media (min-width: 769px) {
+
+  /* 卡片變定位父層 */
+  #pageWrapper {
+    position: relative !important;
+  }
+
+  /* list / display-list 模式：圓鈕跟著卡片 */
+  body.desktop-card-mode:not(.show-detail) #floatingButtons {
+    position: absolute !important;
+    top: 28px !important;
+
+    /* 圓鈕距離卡片右邊 24px（可改） */
+    right: -24px !important;  
+    z-index: 99999 !important;
+
+    display: flex !important;
+    flex-direction: column;
+    gap: 14px;
+  }
+
+  /* detail 模式（iframe 全螢幕）：圓鈕改貼螢幕右上 */
+  body.show-detail #floatingButtons {
+    position: fixed !important;
+    top: 28px !important;
+    right: 28px !important;
+    flex-direction: column !important;
+  }
+}
+   
   </style>
 
   <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
