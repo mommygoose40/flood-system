@@ -117,16 +117,19 @@ async function main() {
     const role = data.data?.["權限"];
 
     if (data.registered) {
-      localStorage.setItem("vid", vid || "");
-      localStorage.setItem("name", name || "");
-      localStorage.setItem("team", team || "");
-      localStorage.setItem("nickname", nickname || "");
-      localStorage.setItem("role", role || "");
+  localStorage.setItem("vid", vid || "");
+  localStorage.setItem("name", name || "");
+  localStorage.setItem("team", team || "");
+  localStorage.setItem("nickname", nickname || "");
+  localStorage.setItem("role", role || "");
 
-      logDebug("已註冊，導向 /home");
-      window.location.href = "https://flood-system.vercel.app/home";
-      return;
-    }
+  // 加這一行：記錄登入時間（用於 10 秒快取）
+  localStorage.setItem("authTime", Date.now());
+
+  logDebug("已註冊，導向 /home");
+  window.location.href = "https://flood-system.vercel.app/home";
+  return;
+}
 
     logDebug("未註冊，導向 /home?unreg=1");
     window.location.href = "https://flood-system.vercel.app/home?unreg=1";
