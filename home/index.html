@@ -88,17 +88,26 @@
 </footer>
 
 <script>
-// ===== 讀取 localStorage 身份 =====
-let vid = localStorage.getItem("vid");
-let name = localStorage.getItem("name");
-let role = localStorage.getItem("role");
+/*****************************************
+ *  身份載入邏輯（志工 + 訪客都可使用）
+ *****************************************/
 
-// ===== 若身份不存在 → 回 login =====
-if (!vid || !name || !role) {
+// 讀取 GAS 最後抓取時間
+const lastGasCheck = Number(localStorage.getItem("lastGasCheck") || 0);
+
+// 若從未抓過 GAS → 一定要回 login 檢查一次
+if (!lastGasCheck) {
   window.location.href = "https://liff.line.me/2007934728-q468EB12";
 }
 
-// ===== 讀取 URL 參數 =====
+// 讀取身份（如果有）
+// 可能為 null（訪客） → 這是正常的，不需要跳回 login
+let vid = localStorage.getItem("vid");
+let name = localStorage.getItem("name");
+let role = localStorage.getItem("role");
+let nickname = localStorage.getItem("nickname");
+
+// 讀取 URL 參數
 const url = new URL(window.location.href);
 const unreg = url.searchParams.get("unreg");
 
@@ -125,10 +134,17 @@ function goReport() {
   }
 }
 
-/* 顯示歡迎詞 */
+// 顯示歡迎詞（志工 or 訪客）
 function showUserInfo() {
   const box = document.getElementById("welcomeBox");
-  box.textContent = `${name} ${role}，您好！`;
+
+  if (name && role) {
+    // 有身份的志工
+    box.textContent = `${name} ${role}，您好！`;
+  } else {
+    // 沒身份 → 訪客
+    box.textContent = `${nickname} 訪客，您好!`;
+  }
 }
 
 /* 顯示管理員按鈕 */
