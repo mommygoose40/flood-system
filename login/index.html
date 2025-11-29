@@ -154,15 +154,6 @@ async function main() {
   }
 }
 
-window.addEventListener("load", () => {
-  logDebug("window.onload 觸發，準備執行 main()");
-  if (typeof liff === "undefined") {
-    logDebug("liff 物件不存在，LIFF SDK 可能沒載入成功");
-    return;
-  }
-  main();
-});
-
 /* ===== 隱藏遮罩 ===== */
 function hideLoading() {
   document.getElementById("loadingMask").style.display = "none";
@@ -239,6 +230,12 @@ function createCustomAlert(title, message = '', isSuccess = false) {
   overlay.appendChild(box);
   document.body.appendChild(overlay);
 }
+</script>
+
+  <script>
+  // 這一段讓 main() 在任何情況都會被呼叫
+  logDebug("強制呼叫 main()");
+  main();
 </script>
 
 </body>
