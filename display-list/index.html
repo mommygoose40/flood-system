@@ -787,26 +787,12 @@ html, body {
 
   /* detailView 打開時（iframe 滿版），固定在螢幕右邊 */
   body.show-detail #floatingButtons {
-    position: absolute !important;
-    right: -70px !important;
-    top: 140px !important;
-    flex-direction: column;
+    position: fixed !important;
+    right: 28px !important;
+    top: 28px !important;
+    flex-direction: column-reverse; /* 房子在上、返回在下 */
+  }
 }
-}
-
-    #pageWrapper {
-    min-height: 100%;
-    overflow: hidden;
-}
-
-    #listView {
-    overflow-y: auto;
-}
-
-    #floatingButtons { z-index:200000 !important; display:flex !important; }
-.circle-btn { width:54px; height:54px; border-radius:50%; border:1px solid #ccc; background:rgba(255,255,255,0.92); backdrop-filter:blur(6px); display:flex; justify-content:center; align-items:center; box-shadow:0 4px 12px rgba(0,0,0,0.18); }
-body.desktop-card-mode #floatingButtons { display:flex !important; }
-
   </style>
 
   <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
@@ -2059,4 +2045,4 @@ document.addEventListener("DOMContentLoaded", () => {
 </script>
 
 </body>
-</html>
+</html> 
