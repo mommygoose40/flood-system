@@ -581,7 +581,7 @@ html, body {
   #floatingButtons {
     position: fixed !important;
 
-    top: 60px !important;
+    top: 50px !important;
 
     /* ★★★★★ 重要：卡片半寬 410px + 外距 24px */
     left: calc(50% + 410px + 60px) !important;
@@ -623,7 +623,7 @@ html, body {
   /* show-detail 也用同一位置（禁止覆蓋） */
   body.show-detail #floatingButtons {
     position: fixed !important;
-    top: 60px !important;
+    top: 50px !important;
     left: calc(50% + 410px + 60px) !important;
     flex-direction: column !important;
   }
@@ -1883,15 +1883,32 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 });
 
-// detailView 開啟圖片時 → 自動隱藏圓鈕
+// 電腦 / 手機 查看照片 → 隱藏圓鈕 ＋ 隱藏 footer
 window.addEventListener("message", (e) => {
   const fb = document.getElementById("floatingButtons");
+  const footer = document.getElementById("globalFooter");
+  const iframe = document.getElementById("detailFrame");
 
+  // === 查看照片 ===
   if (e.data.action === "PHOTO_OPEN") {
-    fb.style.display = "none";
+    // 手機 footer
+    footer.style.display = "none";
+    iframe.style.height = "100%";
+
+    // 電腦圓鈕
+    if (window.innerWidth >= 769) fb.style.display = "none";
   }
 
+  // === 關閉照片 ===
   if (e.data.action === "PHOTO_CLOSE") {
+    // 手機 footer
+    if (window.innerWidth < 769) {
+      footer.style.display = "flex";
+    }
+
+    iframe.style.height = "calc(100% - 70px)";
+
+    // 電腦圓鈕回來
     if (window.innerWidth >= 769) fb.style.display = "flex";
   }
 });
