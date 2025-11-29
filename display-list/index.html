@@ -1049,47 +1049,46 @@ document.body.classList.add("loaded");
 });
 
 function openDetail(url) {
-  const list = document.getElementById("listView");
+  const list   = document.getElementById("listView");
   const detail = document.getElementById("detailView");
   const iframe = document.getElementById("detailFrame");
   const footer = document.getElementById("globalFooter");
-  const fb = document.getElementById("floatingButtons");
+  const fb     = document.getElementById("floatingButtons");   // ← 正確變數
 
+  // 切換畫面
   list.style.display = "none";
   detail.style.display = "block";
   iframe.src = url;
 
-  // ★ 手機 → 顯示 footer；電腦 → 隱藏 footer、顯示圓鈕
+  // 手機 vs 電腦的 footer/圓鈕設定
   if (window.innerWidth < 769) {
     footer.style.display = "flex";
     fb.style.display = "none";
   } else {
     footer.style.display = "none";
-    fb.style.display = "flex";
-    document.body.classList.add("show-detail");
+    fb.style.display = "flex";                // ← 電腦初始顯示圓鈕
+    document.body.classList.add("show-detail");  // ← 啟動小圓鈕定位
   }
 
+  // iframe 載入完成後執行
   iframe.onload = () => {
     try {
-      const doc = iframe.contentDocument;
-      const modal = doc.querySelector('#image-modal');
+      const doc   = iframe.contentDocument;
+      const modal = doc.querySelector('#image-modal');  // 照片查看視窗
 
-      if (!modal) {
-        console.warn("找不到 #image-modal");
-        return;
-      }
+      if (!modal) return;
 
+      // 監控查看照片的顯示狀態
       const observer = new MutationObserver(() => {
         const isOpen = modal.style.display === "block";
 
-        // 手機：顯示/隱藏 footer
         if (window.innerWidth < 769) {
+          // 手機：照片開啟時隱藏 footer
           footer.style.display = isOpen ? "none" : "flex";
-          return;
+        } else {
+          // 電腦：照片開啟時隱藏小圓鈕
+          fb.style.display = isOpen ? "none" : "flex";
         }
-
-        // 電腦：顯示/隱藏圓鈕
-        fb.style.display = isOpen ? "none" : "flex";
       });
 
       observer.observe(modal, {
@@ -1098,7 +1097,7 @@ function openDetail(url) {
       });
 
     } catch (err) {
-      console.warn("iframe 無法存取", err);
+      console.warn("iframe 無法存取內容", err);
     }
   };
 }
