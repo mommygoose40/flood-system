@@ -50,6 +50,10 @@
 
 <body>
 
+<div id="debug" style="position:fixed;top:10px;left:10px;background:#000;color:#fff;padding:5px;z-index:99999999;">
+  JS 未開始
+</div>
+
 <!-- 遮罩：永遠蓋住全部 -->
 <div id="loadingMask">
   <div class="spinner"></div>
@@ -59,6 +63,9 @@
 <script>
 const LIFF_ID = "2007934728-q468EB12";
 const GAS_URL = "https://script.google.com/macros/s/AKfycbypFnD67Ed5mN6pau0wfEJ4RMu-vGoJa8RZhh0ASru_DSrOxFH4wjdzF0RMK-U3lbtG/exec?action=login";
+
+document.getElementById("debug").innerText = "JS 已開始執行";
+console.log("JS 已開始執行");
 
 async function main() {
   await liff.init({ liffId: LIFF_ID });
