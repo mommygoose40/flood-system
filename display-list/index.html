@@ -806,14 +806,23 @@ html, body {
   }
 }
 
-    /* 電腦版 list 模式：小圓鈕改成固定定位 */
+    /* ===== 電腦版 list 模式：圓鈕固定在卡片右側 ===== */
 @media (min-width: 769px) {
   body.desktop-card-mode:not(.show-detail) #floatingButtons {
     position: fixed !important;
     top: 140px !important;
+    right: calc(50% - 450px) !important; 
+    /* ↑ 改這個值就能往右或往左 */
+  }
+}
 
-    /* 對齊卡片右邊：螢幕中心 + 卡片寬度一半 */
-    right: calc(50% - 410px) !important;
+/* ===== 電腦版 detail 模式：與卡片右側對齊 ===== */
+@media (min-width: 769px) {
+  body.show-detail #floatingButtons {
+    position: fixed !important;
+    top: 28px !important;
+    right: calc(50% - 450px) !important;
+    flex-direction: column-reverse;
   }
 }
 
