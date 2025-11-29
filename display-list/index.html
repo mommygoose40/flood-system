@@ -652,6 +652,41 @@ html, body {
     top: 20px !important;
   }
 }
+
+    /* 電腦版：載入中時隱藏卡片 */
+@media (min-width: 769px) {
+  body.desktop-card-mode.loading #pageWrapper {
+    visibility: hidden !important;
+  }
+}
+
+    /* 電腦版：按鈕永遠貼在卡片上方 */
+@media (min-width: 769px) {
+
+  #desktopBackBtn,
+  #desktopHomeBtn {
+    display: block !important;
+    position: fixed !important;   /* ← 固定，不會被切 */
+    top: 20px !important;         /* ← 不會被上方截掉 */
+    z-index: 10050 !important;    /* ← 永遠在最上面 */
+    padding: 10px 18px;
+    font-size: 15px;
+    border-radius: 8px;
+    border: 1px solid #ddd;
+    cursor: pointer;
+    background: white;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+  }
+
+  #desktopBackBtn { left: calc(50% - 410px); } /* 卡片左邊對齊 */
+  #desktopHomeBtn { right: calc(50% - 410px); } /* 卡片右邊對齊 */
+
+  /* 懸浮時微變色 */
+  #desktopBackBtn:hover,
+  #desktopHomeBtn:hover {
+    background: #f5f5f5;
+  }
+}
   </style>
 
   <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
@@ -968,6 +1003,8 @@ function debug(msg) {
       1. 初始化：登入 LIFF 並取得資料
   -------------------------------------------*/
   function showLoading() {
+  document.body.classList.add("loading");  // ★ 電腦版卡片隱藏用
+
   document.getElementById("loadingMask").style.display = "flex";
 
   document.getElementById("text-loading").style.display = "block";
@@ -1430,6 +1467,8 @@ function renderList(records) {
   }, 50); // 稍微延遲確保 DOM 完全渲染
 
   isInitialLoad = false;
+
+  document.body.classList.remove("loading");
 
   debug("STEP3 完成：列表渲染成功");
 }
