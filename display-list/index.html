@@ -460,23 +460,19 @@ html, body {
   box-sizing: border-box !important;
 }
 
-/* === 電腦版修正：解除滿版鎖定，讓卡片樣式恢復 === */
+/* === 電腦版：只有 listView 顯示時才套用卡片模式 === */
 @media (min-width: 769px) {
 
-  html, body {
-    height: auto !important;         /* 解除 100% 高度鎖定 */
-    overflow: auto !important;       /* 允許滾動 → 卡片效果才能出現 */
-  }
-
-  body {
-    background: #f1f1f1 !important;  /* 灰色背景 */
+  /* 預設：先不要卡片 → 用滿版 */
+  body.desktop-card-mode {
+    background: #f1f1f1 !important;
     display: flex !important;
     justify-content: center !important;
     padding: 40px 0 !important;
   }
 
-  /* 把 listView 包成卡片 */
-  #pageWrapper {
+  /* 只有在 desktop-card-mode 時，listView 才變卡片 */
+  body.desktop-card-mode #pageWrapper {
     max-width: 800px !important;
     width: 100%;
     background: white;
@@ -484,20 +480,28 @@ html, body {
     padding: 20px 24px;
     box-shadow: 0 4px 12px rgba(0,0,0,0.08);
     margin: 0 auto;
-    height: auto !important;
   }
 
-  /* 解除內層滾動，改用外層滾動 */
-  #listView {
+  /* listView 的內框要解除強制 layout，才能變成卡片內容 */
+  body.desktop-card-mode #listView {
     position: static !important;
     height: auto !important;
     overflow: visible !important;
     padding: 0 !important;
   }
 
-  /* footer 在電腦版隱藏（你原本需求） */
+  /* detailView 一律不要卡片，要滿版 → footer 才會顯示出來 */
+  #detailView {
+    position: fixed !important;
+    top: 0;
+    left: 0;
+    width: 100% !important;
+    height: 100% !important;
+  }
+
+  /* 電腦版允許 footer（因為你要求 iframe 一律要有 footer） */
   #globalFooter {
-    display: none !important;
+    display: flex !important;
   }
 }
   </style>
@@ -871,46 +875,36 @@ function openDetail(url) {
   const iframe = document.getElementById("detailFrame");
   const footer = document.getElementById("globalFooter");
 
+  // ★ 離開卡片模式，恢復滿版
+  document.body.classList.remove("desktop-card-mode");
+
   list.style.display = "none";
   detail.style.display = "block";
   iframe.src = url;
 
-  footer.style.display = "flex"; // 預設顯示 footer
+  // ★ footer 一定要顯示
+  footer.style.display = "flex";
 
   iframe.onload = () => {
     try {
       const doc = iframe.contentDocument;
-
-      // 先抓 modal（一定會存在，只是 display:none）
       const modal = doc.querySelector('#image-modal');
+      if (!modal) return;
 
-      // 保險檢查
-      if (!modal) {
-        console.warn("找不到 #image-modal，可能還沒載入");
-        return;
-      }
-
-      // ★★★ 監控 modal 的 style 是否改變（關鍵）
       const observer = new MutationObserver(() => {
-
-        const isOpen = modal.style.display === "block";
-
-        if (isOpen) {
-          footer.style.display = "none";  // 進照片查看 → 隱藏 footer
+        // 照片開啟 → footer 隱藏
+        if (modal.style.display === "block") {
+          footer.style.display = "none";
+          iframe.style.height = "100%";
         } else {
-          footer.style.display = "flex";  // 離開照片查看 → 顯示 footer
+          footer.style.display = "flex";
+          iframe.style.height = "calc(100% - 70px)";
         }
       });
 
-      // ★★★ 監控 #image-modal 的 style 變化
-      observer.observe(modal, {
-        attributes: true,
-        attributeFilter: ["style"]
-      });
+      observer.observe(modal, { attributes: true, attributeFilter: ["style"] });
 
-    } catch (err) {
-      console.warn('iframe 無法存取', err);
-    }
+    } catch {}
   };
 }
 
@@ -923,15 +917,19 @@ function backToList() {
   const detail = document.getElementById("detailView");
   const list = document.getElementById("listView");
 
-  // 1. 如果正在 iframe（detailView 開著） → 回列表
   if (detail.style.display === "block") {
     detail.style.display = "none";
     list.style.display = "block";
+
+    // ★ 回到列表 → 恢復卡片模式（電腦）
+    if (window.innerWidth >= 769) {
+      document.body.classList.add("desktop-card-mode");
+    }
+
     return;
   }
 
-  // 2. 否則（本來就在列表）→ 回主選單
-  window.location.href = "/home";  // ← 這裡換成你的主選單頁
+  window.location.href = "/home";
 }
 
 async function loadAdminRecords() {
@@ -1274,6 +1272,11 @@ function renderList(records) {
   }, 50); // 稍微延遲確保 DOM 完全渲染
 
   isInitialLoad = false;
+
+  // ★ 電腦版：listView 渲染完成 → 啟用卡片模式
+if (window.innerWidth >= 769) {
+  document.body.classList.add("desktop-card-mode");
+}
 
   debug("STEP3 完成：列表渲染成功");
 }
