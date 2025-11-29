@@ -398,115 +398,45 @@
   color: #fff;
 }
 
+/* =============================
+   電腦版專用（≥769px）
+   — 統一、完全不干擾手機 —
+   ============================= */
 @media (min-width: 769px) {
 
+  /* 解除手機設定造成的 overflow 高度限制 */
   html, body {
-    overflow: auto !important;
     height: auto !important;
+    overflow: auto !important;
+    background: #f1f1f1 !important;
   }
 
-  /* 電腦版卡片 */
+  /* ========== List / 卡片版面 ========== */
   body.desktop-card-mode {
     background: #f1f1f1 !important;
     display: flex !important;
     justify-content: center !important;
-    padding: 40px 0 140px !important; /* ★ 保留 footer 空間 */
-    overflow: auto !important;
+    padding: 40px 0 !important;
   }
 
-  /* 卡片本體 */
   body.desktop-card-mode #pageWrapper {
     max-width: 800px !important;
     width: 100%;
     background: white;
     border-radius: 12px;
-    padding: 20px 24px;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
-    margin: 0 auto;
-
-    height: auto !important;
-    max-height: none !important;
-    overflow: visible !important;
-  }
-
-  /* listView 在卡片內展開，不能 fixed */
-  body.desktop-card-mode #listView {
-    position: static !important;
-    height: auto !important;
-    overflow: visible !important;
-    padding: 0 !important;
-  }
-}
-
-/* === 電腦版 footer：與卡片一致的設計 === */
-@media (min-width: 769px) {
-
-  /* 整體背景 */
-  body.desktop-card-mode {
-    background: #f1f1f1 !important;
-    display: flex !important;
-    justify-content: center !important;
-    padding: 40px 0 140px !important; /* 保留 footer 空間 */
-    overflow: auto !important;
-  }
-
-  /* 卡片 */
-  body.desktop-card-mode #pageWrapper,
-  #detailView > div:first-child {
-    max-width: 800px !important;
-    margin: 0 auto;
-    background: #fff;
-    border-radius: 12px;
     padding: 24px 30px;
     box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+    margin: 0 auto;
   }
 
-  /* footer 置中 + 同寬 */
-  #globalFooter {
-    position: fixed;
-    left: 50%;
-    bottom: 20px;                   /* ★ footer 浮起來更好看 */
-    transform: translateX(-50%);
-    width: 100%;
-    max-width: 800px;               /* ★ 卡片同寬 */
-    height: 70px;
-
-    background: white;
-    border-radius: 12px;
-    box-shadow: 0 2px 10px rgba(0,0,0,0.12);
-
-    padding: 0 24px;
-    display: flex !important;
-    align-items: center;
-    justify-content: space-between;
-    gap: 12px;
-    z-index: 9999;
+  body.desktop-card-mode #listView {
+    position: static !important;
+    overflow: visible !important;
+    height: auto !important;
+    padding: 0 !important;
   }
 
-  #globalFooter button {
-    height: 48px;
-    font-size: 20px;
-    cursor: pointer !important;
-    border-radius: 8px;
-    border: none;
-    flex: 1;
-  }
-
-  #globalFooter .gray-btn {
-    background: #f0f0f0;
-    color: #333;
-  }
-
-  #globalFooter .blue-btn {
-    background: #0b5ed7;
-    color: #fff;
-  }
-}
-
-/* === 電腦版：detailView 的 iframe 100% 真滿版 === */
-@media (min-width: 769px) {
-
-  /* 讓 detailView 本身變成整個螢幕 */
+  /* ========== DetailView 滿版 ========== */
   #detailView {
     position: fixed !important;
     top: 0 !important;
@@ -517,58 +447,46 @@
     height: 100% !important;
     margin: 0 !important;
     padding: 0 !important;
+    overflow: hidden !important;
     background: #fff !important;
-    overflow: hidden !important; /* ★ 不要露出任何底色 */
+    z-index: 9990;
   }
 
-  /* iframe 直接吃滿 detailView，不扣任何 px */
   #detailFrame {
-    position: absolute !important;
-    top: 0 !important;
-    left: 0 !important;
     width: 100% !important;
-    height: 100% !important;   /* ★ 真 · 滿版 */
+    height: 100% !important; /* 真滿版 */
     border: none !important;
     margin: 0 !important;
     padding: 0 !important;
-    background: #fff !important;
-  }
-}
-
-/* === 電腦版：按鈕貼在卡片上方左右 === */
-@media (min-width: 769px) {
-
-  /* 讓卡片容器成為定位基準 */
-  #pageWrapper {
-    position: relative !important;
   }
 
-  /* 隱藏手機 footer */
+  /* ========== 隱藏手機 footer ========== */
   #globalFooter {
     display: none !important;
   }
 
-  /* 兩顆按鈕 */
+  /* ========== 電腦版按鈕（貼在卡片上） ========== */
   #desktopBackBtn,
   #desktopHomeBtn {
     position: absolute;
-    top: -20px;                /* ★ 讓按鈕跑到卡片“外面上方”貼著 */
+    top: -20px;
     z-index: 9999;
     padding: 10px 18px;
-    font-size: 16px;
+    font-size: 15px;
     border-radius: 8px;
-    border: none;
+    border: 1px solid #ddd;
     cursor: pointer;
     background: white;
     box-shadow: 0 2px 6px rgba(0,0,0,0.08);
   }
 
+  /* 左右貼齊卡片 */
   #desktopBackBtn {
-    left: 0;                  /* 左貼齊 */
+    left: 0;
   }
 
   #desktopHomeBtn {
-    right: 0;                 /* 右貼齊 */
+    right: 0;
   }
 
   #desktopBackBtn:hover,
@@ -584,6 +502,9 @@
 <body>
 
   <div id="pageWrapper">
+
+    <button id="desktopBackBtn" onclick="backToList()">返回</button>
+    <button id="desktopHomeBtn" onclick="handleClosePage()">回首頁</button>
 
 <div id="listView" style="display:block;">
 
@@ -842,9 +763,6 @@
   <button class="gray-btn" onclick="backToList()">回上一頁</button>
   <button class="gray-btn" onclick="handleClosePage()">回主選單</button>
 </div>
-
-  <button id="desktopBackBtn" onclick="backToList()">返回</button>
-<button id="desktopHomeBtn" onclick="handleClosePage()">回首頁</button>
 
 <script>
 
