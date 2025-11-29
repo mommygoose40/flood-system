@@ -74,19 +74,9 @@ function logDebug(msg) {
 
 async function main() {
   logDebug("JS 已開始執行");
-  logDebug("目前網址: " + window.location.href);
-
-  // ===== 判斷是否需要重新從 GAS 抓身份 =====
-  const GAS_CACHE_LIMIT = 15000; // 10 秒
-  const lastGasCheck = Number(localStorage.getItem("lastGasCheck") || 0);
-
-  if (lastGasCheck && (Date.now() - lastGasCheck) < GAS_CACHE_LIMIT) {
-    logDebug("距離上次 GAS 驗證 < 10 秒 → 使用快取，不重抓 GAS");
-    window.location.href = "https://flood-system.vercel.app/home";
-    return;
-  }
 
   try {
+    // （1）永遠必須先做 LIFF init，Android 才不會卡住
     logDebug("開始 liff.init");
     await liff.init({ liffId: LIFF_ID });
     logDebug("liff.init 完成");
@@ -94,17 +84,28 @@ async function main() {
     const loggedIn = liff.isLoggedIn();
     logDebug("isLoggedIn = " + loggedIn);
 
-    // 第一次進來且尚未登入 → 正式登入並 redirect 回來
     if (!loggedIn) {
-      logDebug("尚未登入，準備跳轉到 LINE 登入畫面");
+      logDebug("尚未登入 → 跳 LINE 登入畫面");
       return liff.login({
         redirectUri: "https://flood-system.vercel.app/login"
       });
     }
 
-    // === 只有登入成功後才會執行以下 ===
+    // （2）登入成功後 → 才能合法判斷要不要重抓 GAS
+    const GAS_CACHE_LIMIT = 10000; // 10 秒
+    const lastGasCheck = Number(localStorage.getItem("lastGasCheck") || 0);
+
+    logDebug("lastGasCheck = " + lastGasCheck);
+
+    if (lastGasCheck && (Date.now() - lastGasCheck) < GAS_CACHE_LIMIT) {
+      logDebug("距離上次 GAS 抓取 < 10 秒 → 使用 localStorage，直接跳 home");
+      window.location.href = "https://flood-system.vercel.app/home";
+      return;
+    }
+
+    // （3）超過 10 秒 → 需要重新抓 GAS
     document.getElementById("loadingMask").style.display = "flex";
-    logDebug("已登入，開始取得個人資料");
+    logDebug("超過 10 秒 → 開始重新抓 LINE profile");
 
     const profile = await liff.getProfile();
     const lineUserId = profile.userId;
@@ -126,28 +127,27 @@ async function main() {
     const nickname = data.data?.["LINE暱稱"];
     const role = data.data?.["權限"];
 
+    // （4）更新 localStorage（這就是有「最新身份」的時候）
+    localStorage.setItem("vid", vid || "");
+    localStorage.setItem("name", name || "");
+    localStorage.setItem("team", team || "");
+    localStorage.setItem("nickname", nickname || "");
+    localStorage.setItem("role", role || "");
+
+    // ★★★（最重要）更新「上次成功抓 GAS 的時間」★★★
+    localStorage.setItem("lastGasCheck", Date.now());
+
     if (data.registered) {
-  localStorage.setItem("vid", vid || "");
-  localStorage.setItem("name", name || "");
-  localStorage.setItem("team", team || "");
-  localStorage.setItem("nickname", nickname || "");
-  localStorage.setItem("role", role || "");
+      logDebug("已註冊 → 跳 home");
+      window.location.href = "https://flood-system.vercel.app/home";
+      return;
+    }
 
-  // ★ 記錄「上一次成功抓 GAS 身份」的時間
-  localStorage.setItem("lastGasCheck", Date.now());
-
-  window.location.href = "https://flood-system.vercel.app/home";
-  return;
-}
-
-    logDebug("未註冊，導向 /home?unreg=1");
+    logDebug("未註冊 → 跳 home?unreg=1");
     window.location.href = "https://flood-system.vercel.app/home?unreg=1";
 
   } catch (err) {
-    logDebug("發生錯誤: " + (err && err.message ? err.message : String(err)));
-    console.error(err);
-    // 真的要顯示 alert 再打開這行
-    // alert("身分驗證失敗，請重新嘗試");
+    logDebug("錯誤: " + err);
   }
 }
 
