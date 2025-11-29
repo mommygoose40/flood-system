@@ -631,19 +631,21 @@ html, body {
   }
 }
 
-    /* =======================================================
-   電腦版：載入中 → 隱藏 卡片 ＋ 小圓紐（不影響載入動畫）
-   ======================================================= */
-@media (min-width: 769px) {
+   @media (min-width: 769px) {
+  #loadingMask {
+    display: flex !important;   /* ★ 灰幕永遠跑出來 */
+    opacity: 1 !important;
+  }
+}
 
-  /* 載入中：隱藏卡片 */
-  body.loading.desktop-card-mode #pageWrapper {
-    display: none !important;
+    @media (min-width: 769px) {
+
+  body.loading #pageWrapper {
+    visibility: hidden !important;  /* ★ 不影響 layout，不卡 loadingMask */
   }
 
-  /* 載入中：隱藏右側小圓紐 */
   body.loading #floatingButtons {
-    display: none !important;
+    visibility: hidden !important;
   }
 }
     
@@ -1466,7 +1468,8 @@ function renderList(records) {
 
   isInitialLoad = false;
 
-  document.body.classList.remove("loading");
+  // 渲染完成後 → 手動隱藏
+document.getElementById("loadingMask").style.display = "none";
 
   debug("STEP3 完成：列表渲染成功");
 }
