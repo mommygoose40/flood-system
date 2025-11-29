@@ -137,6 +137,11 @@
   display: none;
 }
 
+    #desktopBackBtn,
+#desktopHomeBtn {
+  display: none;
+}
+
 #listContainer {
   display: flex;
   justify-content: center;
@@ -494,6 +499,13 @@
     background: #f5f5f5;
   }
 }
+
+    @media (min-width: 769px) {
+  #desktopBackBtn,
+  #desktopHomeBtn {
+    display: block !important;
+  }
+}
   </style>
 
   <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
@@ -501,10 +513,11 @@
 
 <body>
 
-  <div id="pageWrapper">
+  <!-- 卡片外（不會被 detailView 蓋掉） -->
+  <button id="desktopBackBtn">返回</button>
+  <button id="desktopHomeBtn">回首頁</button>
 
-    <button id="desktopBackBtn" onclick="backToList()">返回</button>
-    <button id="desktopHomeBtn" onclick="handleClosePage()">回首頁</button>
+  <div id="pageWrapper">
 
 <div id="listView" style="display:block;">
 
