@@ -101,9 +101,14 @@ const lastGasCheck = Number(localStorage.getItem("lastGasCheck") || 0);
 
 // 如果不是訪客（沒有 ?unreg=1）→ 才需要檢查 GAS 時間
 if (!unreg) {
-  if (!lastGasCheck) {
+  liff.init({ liffId: LIFF_ID }).then(() => {
+  const token = liff.getIDToken();
+
+  // 沒 token 才表示真的要重新登入 LINE
+  if (!token && !unreg) {
     window.location.href = "https://flood-system.vercel.app/login";
   }
+});
 }
 
 // 讀取身份（如果有）
