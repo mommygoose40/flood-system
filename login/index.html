@@ -8,6 +8,18 @@
   <!-- 只保留「一個」 LIFF SDK -->
   <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
 
+  <script>
+  const sdk = document.querySelector('script[src*="liff"]');
+
+  sdk.onload = () => {
+    document.getElementById("debug").textContent += "\nSDK 載入成功";
+  };
+
+  sdk.onerror = () => {
+    document.getElementById("debug").textContent += "\nSDK 載入失敗！！！";
+  };
+</script>
+
   <style>
     body {
       font-family: Arial, sans-serif;
