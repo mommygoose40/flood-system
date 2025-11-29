@@ -438,32 +438,68 @@
   }
 }
 
+/* === 電腦版 footer：與卡片一致的設計 === */
 @media (min-width: 769px) {
 
+  /* 整體背景 */
+  body.desktop-card-mode {
+    background: #f1f1f1 !important;
+    display: flex !important;
+    justify-content: center !important;
+    padding: 40px 0 140px !important; /* 保留 footer 空間 */
+    overflow: auto !important;
+  }
+
+  /* 卡片 */
+  body.desktop-card-mode #pageWrapper,
+  #detailView > div:first-child {
+    max-width: 800px !important;
+    margin: 0 auto;
+    background: #fff;
+    border-radius: 12px;
+    padding: 24px 30px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+  }
+
+  /* footer 置中 + 同寬 */
   #globalFooter {
     position: fixed;
-    bottom: 0;
     left: 50%;
+    bottom: 20px;                   /* ★ footer 浮起來更好看 */
     transform: translateX(-50%);
-
-    max-width: 800px;       /* ★ 卡片同寬 */
     width: 100%;
+    max-width: 800px;               /* ★ 卡片同寬 */
     height: 70px;
 
-    background: #f8f8f8;
-    padding: 0 16px;
-    box-shadow: 0 -2px 6px rgba(0,0,0,0.12);
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.12);
 
-    border-radius: 0 0 12px 12px;  /* ★ 與卡片一致 */
+    padding: 0 24px;
     display: flex !important;
-    justify-content: center;
     align-items: center;
+    justify-content: space-between;
     gap: 12px;
     z-index: 9999;
   }
 
   #globalFooter button {
-    cursor: pointer !important; /* ★ 修復不能點的問題 */
+    height: 48px;
+    font-size: 20px;
+    cursor: pointer !important;
+    border-radius: 8px;
+    border: none;
+    flex: 1;
+  }
+
+  #globalFooter .gray-btn {
+    background: #f0f0f0;
+    color: #333;
+  }
+
+  #globalFooter .blue-btn {
+    background: #0b5ed7;
+    color: #fff;
   }
 }
 
