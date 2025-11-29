@@ -630,6 +630,22 @@ html, body {
     filter: none !important;
   }
 }
+
+    /* =======================================================
+   電腦版：載入中 → 隱藏 卡片 ＋ 小圓紐（不影響載入動畫）
+   ======================================================= */
+@media (min-width: 769px) {
+
+  /* 載入中：隱藏卡片 */
+  body.loading.desktop-card-mode #pageWrapper {
+    display: none !important;
+  }
+
+  /* 載入中：隱藏右側小圓紐 */
+  body.loading #floatingButtons {
+    display: none !important;
+  }
+}
     
   </style>
 
