@@ -95,9 +95,18 @@
 // 讀取 GAS 最後抓取時間
 const lastGasCheck = Number(localStorage.getItem("lastGasCheck") || 0);
 
-// 若從未抓過 GAS → 一定要回 login 檢查一次
-if (!lastGasCheck) {
-  window.location.href = "https://liff.line.me/2007934728-q468EB12";
+// 讀取 URL 參數
+const url = new URL(window.location.href);
+const unreg = url.searchParams.get("unreg");
+
+// 讀取 GAS 最後抓取時間（只有志工才會有）
+const lastGasCheck = Number(localStorage.getItem("lastGasCheck") || 0);
+
+// 如果不是訪客（沒有 ?unreg=1）→ 才需要檢查 GAS 時間
+if (!unreg) {
+  if (!lastGasCheck) {
+    window.location.href = "https://flood-system.vercel.app/login";
+  }
 }
 
 // 讀取身份（如果有）
