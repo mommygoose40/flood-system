@@ -1,59 +1,57 @@
 <!DOCTYPE html>
 <html lang="zh-TW">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>防汛通報系統</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>防汛通報系統</title>
+<script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
 
-  <!-- 只保留「一個」 LIFF SDK -->
-  <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
+<style>
+  body {
+    font-family: Arial, sans-serif;
+    background-color: #f5f8ff;
+    margin: 0;
+    padding: 0;
+    height: 100vh;
+    overflow: hidden;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
 
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      background-color: #f5f8ff;
-      margin: 0;
-      padding: 0;
-      min-height: 100vh;
-      overflow-x: hidden;
-    }
+  /* 遮罩永遠最高層 */
+  #loadingMask {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.55);
+    display: none; 
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    z-index: 99999999;
+    font-size: 26px;
+    color: white;
+  }
 
-    /* 遮罩永遠最高層 */
-    #loadingMask {
-      position: fixed;
-      inset: 0;
-      background: rgba(0,0,0,0.55);
-      display: none;
-      flex-direction: column;
-      justify-content: center;
-      align-items: center;
-      z-index: 99999999;
-      font-size: 26px;
-      color: white;
-    }
+  .spinner {
+    width: 42px;
+    height: 42px;
+    border: 4px solid #eee;
+    border-top: 4px solid #0b5ed7;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin-bottom: 14px;
+  }
 
-    .spinner {
-      width: 42px;
-      height: 42px;
-      border: 4px solid #eee;
-      border-top: 4px solid #0b5ed7;
-      border-radius: 50%;
-      animation: spin 1s linear infinite;
-      margin-bottom: 14px;
-    }
+  @keyframes spin {
+    from { transform: rotate(0deg); }
+    to   { transform: rotate(360deg); }
+  }
 
-    @keyframes spin {
-      from { transform: rotate(0deg); }
-      to   { transform: rotate(360deg); }
-    }
-  </style>
+</style>
 </head>
 
 <body>
-
-<div id="debug" style="position:fixed;top:10px;left:10px;background:#000;color:#fff;padding:5px;z-index:99999999;white-space:pre-line;font-size:12px;">
-  JS 未開始
-</div>
 
 <!-- 遮罩：永遠蓋住全部 -->
 <div id="loadingMask">
@@ -65,50 +63,26 @@
 const LIFF_ID = "2007934728-q468EB12";
 const GAS_URL = "https://script.google.com/macros/s/AKfycbypFnD67Ed5mN6pau0wfEJ4RMu-vGoJa8RZhh0ASru_DSrOxFH4wjdzF0RMK-U3lbtG/exec?action=login";
 
-function logDebug(msg) {
-  const el = document.getElementById("debug");
-  if (!el) return;
-  el.textContent += "\n" + msg;
-  console.log(msg);
-}
-
 async function main() {
-  logDebug("JS 已開始執行");
-  logDebug("目前網址: " + window.location.href);
+  await liff.init({ liffId: LIFF_ID });
+
+  // 第一次進來且尚未登入 → 正式登入並 redirect 回來
+  if (!liff.isLoggedIn()) {
+    return liff.login({ redirectUri: location.href });
+  }
+
+  // === 只有登入成功後才會執行以下 ===
+  document.getElementById("loadingMask").style.display = "flex";
 
   try {
-    logDebug("開始 liff.init");
-    await liff.init({ liffId: LIFF_ID });
-    logDebug("liff.init 完成");
-
-    const loggedIn = liff.isLoggedIn();
-    logDebug("isLoggedIn = " + loggedIn);
-
-    // 第一次進來且尚未登入 → 正式登入並 redirect 回來
-    if (!loggedIn) {
-      logDebug("尚未登入，準備跳轉到 LINE 登入畫面");
-      return liff.login({
-        redirectUri: "https://flood-system.vercel.app/login"
-      });
-    }
-
-    // === 只有登入成功後才會執行以下 ===
-    document.getElementById("loadingMask").style.display = "flex";
-    logDebug("已登入，開始取得個人資料");
-
     const profile = await liff.getProfile();
     const lineUserId = profile.userId;
     const lineName = profile.displayName;
 
-    logDebug("取得 profile 成功: " + lineUserId + " / " + lineName);
-
     const url = `${GAS_URL}&lineUserId=${encodeURIComponent(lineUserId)}&nickname=${encodeURIComponent(lineName)}`;
-    logDebug("呼叫 GAS: " + url);
 
     const resp = await fetch(url);
     const data = await resp.json();
-
-    logDebug("GAS 回傳: " + JSON.stringify(data));
 
     const vid  = data.data?.["志工ID"];
     const name = data.data?.["姓名"];
@@ -120,33 +94,20 @@ async function main() {
       localStorage.setItem("vid", vid || "");
       localStorage.setItem("name", name || "");
       localStorage.setItem("team", team || "");
-      localStorage.setItem("nickname", nickname || "");
+      localStorage.setItem("nickname", nickname);
       localStorage.setItem("role", role || "");
 
-      logDebug("已註冊，導向 /home");
-      window.location.href = "https://flood-system.vercel.app/home";
-      return;
+      return window.location.href = "https://flood-system.vercel.app/home";
     }
 
-    logDebug("未註冊，導向 /home?unreg=1");
     window.location.href = "https://flood-system.vercel.app/home?unreg=1";
 
   } catch (err) {
-    logDebug("發生錯誤: " + (err && err.message ? err.message : String(err)));
-    console.error(err);
-    // 真的要顯示 alert 再打開這行
     // alert("身分驗證失敗，請重新嘗試");
   }
 }
 
-window.addEventListener("load", () => {
-  logDebug("window.onload 觸發，準備執行 main()");
-  if (typeof liff === "undefined") {
-    logDebug("liff 物件不存在，LIFF SDK 可能沒載入成功");
-    return;
-  }
-  main();
-});
+main();
 
 /* ===== 隱藏遮罩 ===== */
 function hideLoading() {
@@ -159,6 +120,7 @@ function showWarningAlert(title, message = '') {
 }
 
 function createCustomAlert(title, message = '', isSuccess = false) {
+
   document.getElementById('customAlert')?.remove();
   document.body.style.overflow = 'hidden';
 
