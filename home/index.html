@@ -99,16 +99,12 @@ const unreg = url.searchParams.get("unreg");
 // 讀取 GAS 最後抓取時間（只有志工才會有）
 const lastGasCheck = Number(localStorage.getItem("lastGasCheck") || 0);
 
-// 如果不是訪客（沒有 ?unreg=1）→ 才需要檢查 GAS 時間
-if (!unreg) {
-  liff.init({ liffId: LIFF_ID }).then(() => {
-  const token = liff.getIDToken();
+const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
 
-  // 沒 token 才表示真的要重新登入 LINE
-  if (!token && !unreg) {
+if (!unreg) {
+  if (!isSafari && !lastGasCheck) {
     window.location.href = "https://flood-system.vercel.app/login";
   }
-});
 }
 
 // 讀取身份（如果有）
