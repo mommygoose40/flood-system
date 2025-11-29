@@ -688,6 +688,49 @@ html, body {
     background: #f5f5f5;
   }
 }
+
+/* 電腦版卡片 Header */
+@media (min-width: 769px) {
+
+  #desktopCardHeader {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 14px 6px 20px;
+    margin-bottom: 10px;
+
+    /* 讓 header 與卡片融合 */
+    background: transparent;
+    position: relative;
+    z-index: 20;
+  }
+
+  #desktopCardHeader button {
+    padding: 8px 14px;
+    font-size: 16px;
+    border-radius: 8px;
+    border: 1px solid #ccc;
+    background: #fff;
+    cursor: pointer;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.08);
+  }
+
+  #desktopCardHeader button:hover {
+    background: #f5f5f5;
+  }
+
+  /* 隱藏手機版 */
+  #desktopBackBtn,
+  #desktopHomeBtn {
+    display: none;
+  }
+
+  /* 電腦版顯示 */
+  body.desktop-card-mode #desktopBackBtn,
+  body.desktop-card-mode #desktopHomeBtn {
+    display: inline-block;
+  }
+}
   </style>
 
   <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
@@ -695,11 +738,12 @@ html, body {
 
 <body>
 
-  <!-- 電腦版固定按鈕 -->
-  <button id="desktopBackBtn" onclick="backToList()">返回</button>
-  <button id="desktopHomeBtn" onclick="handleClosePage()">回首頁</button>
-
   <div id="pageWrapper">
+
+  <div id="desktopCardHeader">
+    <button id="desktopBackBtn" onclick="backToList()">返回</button>
+    <button id="desktopHomeBtn" onclick="handleClosePage()">回首頁</button>
+  </div>
 
 <div id="listView" style="display:block;">
 
