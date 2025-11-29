@@ -467,30 +467,26 @@ html, body {
 
 /* ============================================================
    電腦版（≥769px）
-   完整重構後：卡片模式 + detailView 滿版 + 浮動圓鈕 +
-   loadingMask 立即顯示，不會延遲或被壓住
+   整理後版本：卡片模式 + detailView 滿版 + 浮動圓鈕 +
+   loadingMask 灰幕（不模糊、不亮度、不延遲）
    ============================================================ */
 @media (min-width: 769px) {
 
-  /* =============================
-     全域：解除手機版限制
-     ============================= */
+  /* ============= 全域設定（解除手機限制） ============= */
   html, body {
     height: auto !important;
     overflow: auto !important;
     background: #f1f1f1 !important;
-    overflow-x: hidden !important;  /* 避免右側小捲軸 */
+    overflow-x: hidden !important;
   }
 
-  /* =============================
-     卡片模式的版心（pageWrapper）
-     ============================= */
+  /* ============= 卡片模式主體 ============= */
   body.desktop-card-mode {
     background: #f1f1f1 !important;
     display: flex !important;
     justify-content: center !important;
     padding: 40px 0 !important;
-    position: relative !important; /* 避免 loadingMask 被 flex 壓住 */
+    position: relative !important;
     overflow: visible !important;
   }
 
@@ -504,7 +500,7 @@ html, body {
     position: relative !important;
   }
 
-  /* listView 在電腦版不使用手機版的絕對定位 */
+  /* listView 在電腦版改回正常流動 */
   body.desktop-card-mode #listView {
     position: static !important;
     height: auto !important;
@@ -512,9 +508,7 @@ html, body {
     padding: 0 !important;
   }
 
-  /* =============================
-     detailView 滿版顯示（覆蓋卡片）
-     ============================= */
+  /* ============= detailView：滿版顯示 ============= */
   #detailView {
     position: fixed !important;
     top: 0 !important;
@@ -536,16 +530,12 @@ html, body {
     padding: 0 !important;
   }
 
-  /* =============================
-     電腦版：手機 footer 不需要
-     ============================= */
+  /* ============= 隱藏手機 footer ============= */
   #globalFooter {
     display: none !important;
   }
 
-  /* =============================
-     電腦版：返回／回首頁按鈕
-     ============================= */
+  /* ============= 回首頁 / 返回 按鈕 ============= */
   #desktopBackBtn,
   #desktopHomeBtn {
     display: inline-block !important;
@@ -570,9 +560,7 @@ html, body {
     background: #f5f5f5;
   }
 
-  /* =============================
-     電腦版圓形浮動按鈕（右側）
-     ============================= */
+  /* ============= 浮動圓鈕 ============= */
   #floatingButtons {
     position: fixed !important;
     top: 140px !important;
@@ -583,7 +571,6 @@ html, body {
     z-index: 99999 !important;
   }
 
-  /* 小圓鈕外觀 */
   .circle-btn {
     width: 54px;
     height: 54px;
@@ -619,25 +606,28 @@ html, body {
     flex-direction: column-reverse;
   }
 
-  /* =============================
-     電腦版 loadingMask（最重要）
-     ============================= */
+  /* ============= 電腦版 LoadingMask（灰幕 + 置中） ============= */
   #loadingMask {
     position: fixed !important;
-    top: 0 !important;
-    left: 0 !important;
+    inset: 0 !important;
     width: 100vw !important;
     height: 100vh !important;
+    background: rgba(0,0,0,0.35) !important; /* 灰色遮罩 */
     z-index: 999999 !important;
 
-    display: flex !important; /* ★ 初始化立即出現 */
+    display: none !important;  /* 預設不出現 */
     justify-content: center !important;
     align-items: center !important;
   }
 
-  /* loading 時可加柔化效果（不影響 layout） */
+  /* 載入中 → 顯示灰幕 */
+  body.loading #loadingMask {
+    display: flex !important;
+  }
+
+  /* 完全拿掉你不想要的模糊、亮度、透明 */
   body.desktop-card-mode.loading #pageWrapper {
-    filter: blur(4px) brightness(0.6);
+    filter: none !important;
   }
 }
     
