@@ -732,9 +732,9 @@ html, body {
   }
 }
 
-   /* ================================
-   電腦版：圓鈕固定在卡片右下角
-   ================================ */
+   /* ===========================================================
+   電腦版：靠卡片邊邊的遊戲風圓鈕
+   =========================================================== */
 @media (min-width: 769px) {
 
   /* 隱藏手機 footer */
@@ -742,47 +742,41 @@ html, body {
     display: none !important;
   }
 
-  /* 電腦版圓鈕容器，貼著卡片右下 */
+  /* 容器固定貼在卡片右側 */
   #floatingButtons {
     position: absolute;
-    right: -70px;   /* ★ 靠卡片右側距離（可調） */
-    bottom: 40px;   /* ★ 靠卡片底部距離（可調） */
-
+    right: -70px;                /* ★ 緊貼卡片右側（可微調） */
+    top: 140px;                  /* ★ 從卡片上緣往下（可調） */
     display: flex;
     flex-direction: column;
     gap: 16px;
-    z-index: 9999;
+    z-index: 99999;
   }
 
-  /* detailView 模式（卡片消失 → 要靠螢幕右下） */
-  body.show-detail #floatingButtons {
-    position: fixed !important;
-    right: 28px !important;
-    bottom: 28px !important;
-  }
-
-  /* 圓鈕外觀 */
+  /* 圓形按鈕 */
   .circle-btn {
     width: 54px;
     height: 54px;
     border-radius: 50%;
-    background: rgba(255,255,255,0.94);
     border: 1px solid #ccc;
+
+    background: rgba(255,255,255,0.92);
     backdrop-filter: blur(6px);
-    box-shadow: 0 4px 12px rgba(0,0,0,0.18);
-    cursor: pointer;
 
     display: flex;
     justify-content: center;
     align-items: center;
 
-    transition: all .2s ease;
+    cursor: pointer;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.18);
+
+    transition: all 0.2s ease;
   }
 
   .circle-btn:hover {
-    background: white;
-    box-shadow: 0 6px 16px rgba(0,0,0,0.25);
+    background: rgba(255,255,255,1);
     transform: translateY(-2px);
+    box-shadow: 0 6px 14px rgba(0,0,0,0.22);
   }
 
   .circle-btn svg {
@@ -790,6 +784,23 @@ html, body {
     height: 26px;
     stroke: #333;
   }
+
+  /* detailView 打開時（iframe 滿版），固定在螢幕右邊 */
+  body.show-detail #floatingButtons {
+    position: absolute !important;
+    right: -70px !important;
+    top: 140px !important;
+    flex-direction: column;
+}
+}
+
+    #pageWrapper {
+    min-height: 100%;
+    overflow: hidden;
+}
+
+    #listView {
+    overflow-y: auto;
 }
   </style>
 
@@ -799,6 +810,23 @@ html, body {
 <body>
 
   <div id="pageWrapper">
+
+    <!-- 電腦版卡片邊邊圓鈕 -->
+<div id="floatingButtons" style="display:none;">
+  <button class="circle-btn" onclick="handleClosePage()">
+    <!-- 房子 icon -->
+    <svg fill="none" viewBox="0 0 24 24" stroke-width="2">
+      <path d="M3 9.5L12 3l9 6.5V21a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1V9.5z"/>
+    </svg>
+  </button>
+
+  <button class="circle-btn" onclick="backToList()">
+    <!-- 左箭頭 icon -->
+    <svg fill="none" viewBox="0 0 24 24" stroke-width="2">
+      <path d="M15 6l-6 6 6 6" />
+    </svg>
+  </button>
+</div>
 
 <div id="listView" style="display:block;">
 
@@ -875,24 +903,6 @@ html, body {
   <span id="teamText">全部</span>
   <span class="arrow">▾</span>
 </button>
-
-    <!-- 電腦版圓鈕 -->
-<div id="floatingButtons" style="display:none;">
-  <button class="circle-btn" onclick="handleClosePage()">
-    <!-- 房子 icon -->
-    <svg fill="none" viewBox="0 0 24 24" stroke-width="2">
-      <path d="M3 9.5L12 3l9 6.5V21a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1V9.5z"/>
-    </svg>
-  </button>
-
-  <button class="circle-btn" onclick="backToList()">
-    <!-- 左箭頭 icon -->
-    <svg fill="none" viewBox="0 0 24 24" stroke-width="2">
-      <path d="M15 6l-6 6 6 6"/>
-    </svg>
-  </button>
-</div>
-
   </div>
 
   <!-- 範圍 -->
@@ -1196,7 +1206,7 @@ function openDetail(url) {
   detail.style.display = "block";
   iframe.src = url;
 
-  // 手機 → footer；電腦 → 圓鈕
+  // ★ 手機 → 顯示 footer；電腦 → 隱藏 footer、顯示圓鈕
   if (window.innerWidth < 769) {
     footer.style.display = "flex";
     fb.style.display = "none";
@@ -1210,16 +1220,23 @@ function openDetail(url) {
     try {
       const doc = iframe.contentDocument;
       const modal = doc.querySelector('#image-modal');
-      if (!modal) return;
+
+      if (!modal) {
+        console.warn("找不到 #image-modal");
+        return;
+      }
 
       const observer = new MutationObserver(() => {
         const isOpen = modal.style.display === "block";
 
+        // 手機：顯示/隱藏 footer
         if (window.innerWidth < 769) {
           footer.style.display = isOpen ? "none" : "flex";
-        } else {
-          fb.style.display = isOpen ? "none" : "flex";
+          return;
         }
+
+        // 電腦：顯示/隱藏圓鈕
+        fb.style.display = isOpen ? "none" : "flex";
       });
 
       observer.observe(modal, {
@@ -1227,8 +1244,8 @@ function openDetail(url) {
         attributeFilter: ["style"]
       });
 
-    } catch (e) {
-      console.warn("iframe 無法存取", e);
+    } catch (err) {
+      console.warn("iframe 無法存取", err);
     }
   };
 }
@@ -1246,11 +1263,14 @@ function backToList() {
   if (detail.style.display === "block") {
     detail.style.display = "none";
     list.style.display = "block";
+
     document.body.classList.remove("show-detail");
 
+    // 電腦版回列表 → 圓鈕貼卡片邊
     if (window.innerWidth >= 769) {
-      fb.style.display = "flex"; // 跟著卡片右下
+      fb.style.display = "flex";
     }
+
     return;
   }
 
@@ -2024,7 +2044,7 @@ window.addEventListener("message", (e) => {
   }
 });
 
-// ★ 電腦版啟動圓鈕
+  // 啟動圓鈕（電腦版）
 document.addEventListener("DOMContentLoaded", () => {
   if (window.innerWidth >= 769) {
     document.getElementById("floatingButtons").style.display = "flex";
