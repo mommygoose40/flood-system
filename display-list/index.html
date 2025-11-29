@@ -460,43 +460,56 @@ html, body {
   box-sizing: border-box !important;
 }
 
-/* === 電腦版強制使用手機版寬度 === */
+/* === 電腦版強制使用手機版比例（固定寬度 App 介面）=== */
 @media (min-width: 769px) {
+
   body {
+    background: #e6e9ef;          /* 讓外側有淡灰背景，像手機在電腦上置中 */
     display: flex;
     justify-content: center;
-    background: #e6e9ef; /* 讓外側淡淡背景，看起來像 App */
+    padding: 20px 0;
   }
 
-  #pageWrapper {
-    width: 450px !important;     /* 固定成手機寬度 */
-    min-height: 100vh;
-    background: white;
-    box-shadow: 0 0 18px rgba(0,0,0,0.15);
-    position: relative;
-  }
-
-  #listView,
-  #detailView {
-    left: 0 !important;
-    right: 0 !important;
-    width: 100% !important;
-  }
-}
-
-/* === 電腦版也要顯示 footer（不滿版）=== */
-@media (min-width: 769px) {
-  #globalFooter {
-    display: flex !important;
-    max-width: 450px !important; /* 不滿版，跟手機一樣寬度 */
+  /* 手機寬度區塊（核心） */
+  .container {
+    width: 450px !important;      /* 固定成手機寬度 */
+    max-width: 450px !important;
     margin: 0 auto !important;
-    left: 50%;
-    transform: translateX(-50%);
+    border-radius: 12px;
+    box-shadow: 0 0 20px rgba(0,0,0,0.15);
+    padding: 20px;
   }
 
-  /* 讓 iframe 不會被 footer 擋到 */
-  #detailFrame {
-    height: calc(100% - 70px) !important;
+  /* 讓 modal、圖片檢視時也維持手機寬度 */
+  .modal {
+    width: 450px !important;
+    max-width: 450px !important;
+    margin: 0 auto !important;
+    left: 50% !important;
+    transform: translateX(-50%) !important;
+    border-radius: 12px;
+    overflow: hidden;
+  }
+
+  /* 圖片容器跟手機一致比例顯示 */
+  .modal-content-container {
+    width: 450px !important;
+    max-width: 450px !important;
+    margin: 0 auto;
+  }
+
+  /* 縮放控制的置中與寬度 */
+  .zoom-controls {
+    left: 50% !important;
+    transform: translateX(-50%) !important;
+  }
+
+  /* 底部按鈕在電腦也保留（手機比例） */
+  .footer-actions {
+    display: flex !important;
+    width: 450px !important;
+    max-width: 450px !important;
+    margin: 20px auto 0 auto !important;
   }
 }
   </style>
