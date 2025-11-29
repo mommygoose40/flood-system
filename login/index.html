@@ -106,7 +106,9 @@ async function main() {
   }
 }
 
-main();
+window.onload = () => {
+  main();
+};
 
 /* ===== 隱藏遮罩 ===== */
 function hideLoading() {
