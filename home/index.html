@@ -92,9 +92,6 @@
  *  身份載入邏輯（志工 + 訪客都可使用）
  *****************************************/
 
-// 讀取 GAS 最後抓取時間
-const lastGasCheck = Number(localStorage.getItem("lastGasCheck") || 0);
-
 // 讀取 URL 參數
 const url = new URL(window.location.href);
 const unreg = url.searchParams.get("unreg");
@@ -115,10 +112,6 @@ let vid = localStorage.getItem("vid");
 let name = localStorage.getItem("name");
 let role = localStorage.getItem("role");
 let nickname = localStorage.getItem("nickname");
-
-// 讀取 URL 參數
-const url = new URL(window.location.href);
-const unreg = url.searchParams.get("unreg");
 
 // 判斷是否在 LINE 中
 function inLineApp() {
