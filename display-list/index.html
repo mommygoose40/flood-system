@@ -886,19 +886,8 @@ html, body {
 }
 
     @media (min-width: 769px) {
-  #loadingMask {
-    position: fixed !important;
-    top: 0 !important;
-    left: 0 !important;
-    width: 100vw !important;
-    height: 100vh !important;
-    z-index: 999999 !important;
-
-    /* ★★ 關鍵：初始化立即顯示，不等待 flex 排版 */
-    display: flex !important;
-
-    justify-content: center !important;
-    align-items: center !important;
+  body.desktop-card-mode.loading #pageWrapper {
+    visibility: hidden;   /* 不透明化 → 渲染不會延遲 */
   }
 }
     
