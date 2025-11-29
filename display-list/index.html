@@ -460,43 +460,38 @@ html, body {
   box-sizing: border-box !important;
 }
 
-/* === 電腦版強制呈現卡片比例（符合你截圖的樣式） === */
+/* === 電腦版：DisplayList 變成卡片效果 === */
 @media (min-width: 769px) {
-
-  /* body 變成水平置中的「外框」 */
+  
+  /* 外層背景改成灰色並置中卡片 */
   body {
+    background: #f1f1f1;
     display: flex;
     justify-content: center;
-    background: #f1f1f1;
     padding: 40px 0;
   }
 
-  /* 卡片本體 */
-  .container {
+  /* 把整個頁面的內容放進一張「卡片」 */
+  #app,   /* 你的外層容器 ID，如果不是 #app，換成你的最外層 div */
+  .main-container,
+  .display-wrapper {
+    /* 你 DisplayList 的最外層元素是誰就改哪一個 */
     max-width: 800px !important;
     width: 100%;
-    margin: 0 auto !important;
+    background: white;
     border-radius: 12px;
-  }
-
-  /* modal 也跟卡片對齊，不滿版 */
-  .modal {
-    left: 50% !important;
-    transform: translateX(-50%) !important;
-    max-width: 800px !important;
-    width: 100% !important;
-    border-radius: 12px;
-  }
-
-  .modal-content-container {
-    max-width: 800px !important;
+    padding: 20px 24px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
     margin: 0 auto;
   }
 
-  .zoom-controls {
-    left: 50% !important;
-    transform: translateX(-50%) !important;
+  /* 讓 dropdown 也跟卡片對齊，而不是滿版 */
+  select, .year-selector {
+    max-width: 100% !important;
+    width: 100% !important;
+    margin: 0 auto;
   }
+}
 
   /* 底部按鈕在電腦也保留（卡片寬度） */
   .footer-actions {
