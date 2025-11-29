@@ -631,34 +631,34 @@ html, body {
   }
 }
 
- /* 電腦版：圓鈕貼著卡片 */
 @media (min-width: 769px) {
 
-  /* 卡片變定位父層 */
+  /* 卡片成為定位父層（列表模式用） */
   #pageWrapper {
     position: relative !important;
   }
 
-  /* list / display-list 模式：圓鈕跟著卡片 */
+  /* ========== 列表 (display-list) 模式：圓鈕貼卡片 ========== */
   body.desktop-card-mode:not(.show-detail) #floatingButtons {
     position: absolute !important;
     top: 28px !important;
-
-    /* 圓鈕距離卡片右邊 24px（可改） */
-    right: -24px !important;  
-    z-index: 99999 !important;
-
+    right: -24px !important;      /* 卡片外側 24px，可調 */
     display: flex !important;
     flex-direction: column;
     gap: 14px;
+    z-index: 99999 !important;
   }
 
-  /* detail 模式（iframe 全螢幕）：圓鈕改貼螢幕右上 */
+  /* ========== DETAIL / iframe 模式：圓鈕仍貼卡片右邊 ========== */
   body.show-detail #floatingButtons {
     position: fixed !important;
     top: 28px !important;
-    right: 28px !important;
+
+    /* ★ 重點：卡片右邊 + 24px 外距離 */
+    left: calc(50% + 410px + 24px) !important;
+
     flex-direction: column !important;
+    z-index: 99999 !important;
   }
 }
    
