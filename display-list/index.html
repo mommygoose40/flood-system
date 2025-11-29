@@ -459,6 +459,46 @@ html, body {
   padding-right: 16px !important;
   box-sizing: border-box !important;
 }
+
+/* === 電腦版強制使用手機版寬度 === */
+@media (min-width: 769px) {
+  body {
+    display: flex;
+    justify-content: center;
+    background: #e6e9ef; /* 讓外側淡淡背景，看起來像 App */
+  }
+
+  #pageWrapper {
+    width: 450px !important;     /* 固定成手機寬度 */
+    min-height: 100vh;
+    background: white;
+    box-shadow: 0 0 18px rgba(0,0,0,0.15);
+    position: relative;
+  }
+
+  #listView,
+  #detailView {
+    left: 0 !important;
+    right: 0 !important;
+    width: 100% !important;
+  }
+}
+
+/* === 電腦版也要顯示 footer（不滿版）=== */
+@media (min-width: 769px) {
+  #globalFooter {
+    display: flex !important;
+    max-width: 450px !important; /* 不滿版，跟手機一樣寬度 */
+    margin: 0 auto !important;
+    left: 50%;
+    transform: translateX(-50%);
+  }
+
+  /* 讓 iframe 不會被 footer 擋到 */
+  #detailFrame {
+    height: calc(100% - 70px) !important;
+  }
+}
   </style>
 
   <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
