@@ -137,11 +137,6 @@
   display: none;
 }
 
-    #desktopBackBtn,
-#desktopHomeBtn {
-  display: none;
-}
-
 #listContainer {
   display: flex;
   justify-content: center;
@@ -403,112 +398,105 @@
   color: #fff;
 }
 
-    html, body {
+/* 電腦版隱藏 Footer */
+@media (min-width: 769px) {
+  #globalFooter {
+    display: none !important;
+  }
+}
+
+#pageWrapper {
+  padding-bottom: 0px; /* 預留 footer 空間 */
+}
+
+#detailView {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+
+  bottom: 70px;  /* ★ 同理 */
+  overflow-y: auto;
+}
+
+#globalFooter {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 70px;
+}
+
+html, body {
   height: 100%;
   overflow: hidden;   /* 關閉全頁滾動 */
 }
 
-/* =============================
-   電腦版專用（≥769px）
-   — 統一、完全不干擾手機 —
-   ============================= */
+#listView {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+
+  bottom: 70px;  /* ★ 不用 calc，直接讓它撐滿到 footer 上方 */
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+#listView {
+  padding: 0 16px 50px !important; /* 左右內距+底部留空 */
+  box-sizing: border-box;
+}
+
+.fakeSelectBtn {
+  height: 42px !important;
+  display: inline-flex;
+  align-items: center;
+}
+
+#globalFooter {
+  padding-left: 16px !important;
+  padding-right: 16px !important;
+  box-sizing: border-box !important;
+}
+
+/* === 電腦版強制使用手機版寬度 === */
 @media (min-width: 769px) {
-
-  /* 解除手機設定造成的 overflow 高度限制 */
-  html, body {
-    height: auto !important;
-    overflow: auto !important;
-    background: #f1f1f1 !important;
+  body {
+    display: flex;
+    justify-content: center;
+    background: #e6e9ef; /* 讓外側淡淡背景，看起來像 App */
   }
 
-  /* ========== List / 卡片版面 ========== */
-  body.desktop-card-mode {
-    background: #f1f1f1 !important;
-    display: flex !important;
-    justify-content: center !important;
-    padding: 40px 0 !important;
-  }
-
-  body.desktop-card-mode #pageWrapper {
-    max-width: 800px !important;
-    width: 100%;
+  #pageWrapper {
+    width: 450px !important;     /* 固定成手機寬度 */
+    min-height: 100vh;
     background: white;
-    border-radius: 12px;
-    padding: 24px 30px;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
-    margin: 0 auto;
+    box-shadow: 0 0 18px rgba(0,0,0,0.15);
+    position: relative;
   }
 
-  body.desktop-card-mode #listView {
-    position: static !important;
-    overflow: visible !important;
-    height: auto !important;
-    padding: 0 !important;
-  }
-
-  /* ========== DetailView 滿版 ========== */
+  #listView,
   #detailView {
-    position: fixed !important;
-    top: 0 !important;
     left: 0 !important;
     right: 0 !important;
-    bottom: 0 !important;
     width: 100% !important;
-    height: 100% !important;
-    margin: 0 !important;
-    padding: 0 !important;
-    overflow: hidden !important;
-    background: #fff !important;
-    z-index: 9990;
-  }
-
-  #detailFrame {
-    width: 100% !important;
-    height: 100% !important; /* 真滿版 */
-    border: none !important;
-    margin: 0 !important;
-    padding: 0 !important;
-  }
-
-  /* ========== 隱藏手機 footer ========== */
-  #globalFooter {
-    display: none !important;
-  }
-
-  /* ========== 電腦版按鈕（貼在卡片上） ========== */
-  #desktopBackBtn,
-  #desktopHomeBtn {
-    position: absolute;
-    top: -20px;
-    z-index: 9999;
-    padding: 10px 18px;
-    font-size: 15px;
-    border-radius: 8px;
-    border: 1px solid #ddd;
-    cursor: pointer;
-    background: white;
-    box-shadow: 0 2px 6px rgba(0,0,0,0.08);
-  }
-
-  /* 左右貼齊卡片 */
-  #desktopBackBtn {
-    left: 0;
-  }
-
-  #desktopHomeBtn {
-    right: 0;
-  }
-
-  #desktopBackBtn:hover,
-  #desktopHomeBtn:hover {
-    background: #f5f5f5;
   }
 }
 
-    @media (min-width: 769px) {
-  #desktopBackBtn,
-  #desktopHomeBtn {
-    display: block !important;
+/* === 電腦版也要顯示 footer（不滿版）=== */
+@media (min-width: 769px) {
+  #globalFooter {
+    display: flex !important;
+    max-width: 450px !important; /* 不滿版，跟手機一樣寬度 */
+    margin: 0 auto !important;
+    left: 50%;
+    transform: translateX(-50%);
+  }
+
+  /* 讓 iframe 不會被 footer 擋到 */
+  #detailFrame {
+    height: calc(100% - 70px) !important;
   }
 }
   </style>
@@ -517,10 +505,6 @@
 </head>
 
 <body>
-
-  <!-- 卡片外（不會被 detailView 蓋掉） -->
-  <button id="desktopBackBtn">返回</button>
-  <button id="desktopHomeBtn">回首頁</button>
 
   <div id="pageWrapper">
 
@@ -886,36 +870,46 @@ function openDetail(url) {
   const iframe = document.getElementById("detailFrame");
   const footer = document.getElementById("globalFooter");
 
-  // ★ 離開卡片模式，恢復滿版
-  document.body.classList.remove("desktop-card-mode");
-
   list.style.display = "none";
   detail.style.display = "block";
   iframe.src = url;
 
-  // ★ footer 一定要顯示
-  footer.style.display = "flex";
+  footer.style.display = "flex"; // 預設顯示 footer
 
   iframe.onload = () => {
     try {
       const doc = iframe.contentDocument;
-      const modal = doc.querySelector('#image-modal');
-      if (!modal) return;
 
+      // 先抓 modal（一定會存在，只是 display:none）
+      const modal = doc.querySelector('#image-modal');
+
+      // 保險檢查
+      if (!modal) {
+        console.warn("找不到 #image-modal，可能還沒載入");
+        return;
+      }
+
+      // ★★★ 監控 modal 的 style 是否改變（關鍵）
       const observer = new MutationObserver(() => {
-        // 照片開啟 → footer 隱藏
-        if (modal.style.display === "block") {
-          footer.style.display = "none";
-          iframe.style.height = "100%";
+
+        const isOpen = modal.style.display === "block";
+
+        if (isOpen) {
+          footer.style.display = "none";  // 進照片查看 → 隱藏 footer
         } else {
-          footer.style.display = "flex";
-          iframe.style.height = "calc(100% - 70px)";
+          footer.style.display = "flex";  // 離開照片查看 → 顯示 footer
         }
       });
 
-      observer.observe(modal, { attributes: true, attributeFilter: ["style"] });
+      // ★★★ 監控 #image-modal 的 style 變化
+      observer.observe(modal, {
+        attributes: true,
+        attributeFilter: ["style"]
+      });
 
-    } catch {}
+    } catch (err) {
+      console.warn('iframe 無法存取', err);
+    }
   };
 }
 
@@ -928,19 +922,15 @@ function backToList() {
   const detail = document.getElementById("detailView");
   const list = document.getElementById("listView");
 
+  // 1. 如果正在 iframe（detailView 開著） → 回列表
   if (detail.style.display === "block") {
     detail.style.display = "none";
     list.style.display = "block";
-
-    // ★ 回到列表 → 恢復卡片模式（電腦）
-    if (window.innerWidth >= 769) {
-      document.body.classList.add("desktop-card-mode");
-    }
-
     return;
   }
 
-  window.location.href = "/home";
+  // 2. 否則（本來就在列表）→ 回主選單
+  window.location.href = "/home";  // ← 這裡換成你的主選單頁
 }
 
 async function loadAdminRecords() {
@@ -1283,11 +1273,6 @@ function renderList(records) {
   }, 50); // 稍微延遲確保 DOM 完全渲染
 
   isInitialLoad = false;
-
-  // ★ 電腦版：listView 渲染完成 → 啟用卡片模式
-if (window.innerWidth >= 769) {
-  document.body.classList.add("desktop-card-mode");
-}
 
   debug("STEP3 完成：列表渲染成功");
 }
