@@ -1838,20 +1838,6 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 });
 
-  // 啟動 floating 圓鈕（只在電腦版）
-document.addEventListener("DOMContentLoaded", () => {
-  if (window.innerWidth >= 769) {
-    document.getElementById("floatingButtons").style.display = "flex";
-  }
-});
-
-  // 啟動圓鈕（電腦版）
-document.addEventListener("DOMContentLoaded", () => {
-  if (window.innerWidth >= 769) {
-    document.getElementById("floatingButtons").style.display = "flex";
-  }
-});
-
   window.addEventListener("message", (e) => {
   const fb = document.getElementById("floatingButtons");
   const footer = document.getElementById("globalFooter");
