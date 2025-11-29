@@ -1468,8 +1468,7 @@ function renderList(records) {
 
   isInitialLoad = false;
 
-  // 渲染完成後 → 手動隱藏
-document.getElementById("loadingMask").style.display = "none";
+  document.body.classList.remove("loading");
 
   debug("STEP3 完成：列表渲染成功");
 }
