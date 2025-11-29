@@ -88,14 +88,18 @@
 </footer>
 
 <script>
-/* ============================
-   讀取登入傳進來的參數
-============================ */
-const url = new URL(window.location.href);
+// ===== 讀取 localStorage 身份 =====
+let vid = localStorage.getItem("vid");
+let name = localStorage.getItem("name");
+let role = localStorage.getItem("role");
 
-const vid = localStorage.getItem("vid");
-const name = localStorage.getItem("name");
-const role = localStorage.getItem("role");
+// ===== 若身份不存在 → 回 login =====
+if (!vid || !name || !role) {
+  window.location.href = "https://liff.line.me/2007934728-q468EB12";
+}
+
+// ===== 讀取 URL 參數 =====
+const url = new URL(window.location.href);
 const unreg = url.searchParams.get("unreg");
 
 // 判斷是否在 LINE 中
