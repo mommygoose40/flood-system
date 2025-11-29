@@ -1067,12 +1067,10 @@ function openDetail(url) {
     fb.style.display = "none";
   } else {
     footer.style.display = "none";
-    fb.style.display = "flex";                // ← 電腦初始顯示圓鈕
     document.body.classList.add("show-detail");  // ← 啟動小圓鈕定位
   }
 
   if (window.innerWidth >= 769) {
-  if (!isPhotoOpened) fb.style.display = "flex";
 }
 
   // iframe 載入完成後執行
