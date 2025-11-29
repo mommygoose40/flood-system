@@ -98,6 +98,16 @@ const name = localStorage.getItem("name");
 const role = localStorage.getItem("role");
 const unreg = url.searchParams.get("unreg");
 
+// ========== 身份驗證 10 秒有效 ==========
+const AUTH_LIMIT = 10000; 
+const now = Date.now();
+const lastAuth = Number(localStorage.getItem("authTime") || 0);
+
+if (!lastAuth || now - lastAuth > AUTH_LIMIT) {
+  // 超過 10 秒 → 回登入頁重新驗證
+  location.href = "https://liff.line.me/2007934728-q468EB12";
+}
+
 // 判斷是否在 LINE 中
 function inLineApp() {
   return /Line/i.test(navigator.userAgent);
