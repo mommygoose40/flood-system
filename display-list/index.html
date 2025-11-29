@@ -873,6 +873,37 @@ html, body {
   }
 }
 
+    /* 電腦版：loadingMask 要永遠浮在最外層，不被卡片 flex 影響 */
+@media (min-width: 769px) {
+  #loadingMask {
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    width: 100vw !important;
+    height: 100vh !important;
+    z-index: 999999 !important;
+    display: flex !important;           /* ★ 關鍵：初始化就亮 */
+    justify-content: center !important;
+    align-items: center !important;
+  }
+
+  /* 防止 body.flex 壓縮 loadingMask */
+  body.desktop-card-mode {
+    position: relative !important;
+  }
+}
+
+    @media (min-width: 769px) {
+  body.desktop-card-mode #pageWrapper {
+    opacity: 0;               /* 一開始隱形 */
+  }
+
+  body.desktop-card-mode.loaded #pageWrapper {
+    opacity: 1;               /* main() 結束後出現 */
+    transition: opacity .25s;
+  }
+}
+    
   </style>
 
   <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
@@ -1264,6 +1295,9 @@ window.addEventListener("message", (e) => {
     footer.style.display = "flex";
     iframe.style.height = "calc(100% - 70px)"; // ★ 恢復
   }
+
+  // main() 完成最後一行加上：
+document.body.classList.add("loaded");
 });
 
 function openDetail(url) {
