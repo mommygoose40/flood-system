@@ -76,6 +76,16 @@ async function main() {
   logDebug("JS 已開始執行");
   logDebug("目前網址: " + window.location.href);
 
+  // ===== 判斷是否需要重新從 GAS 抓身份 =====
+  const GAS_CACHE_LIMIT = 15000; // 10 秒
+  const lastGasCheck = Number(localStorage.getItem("lastGasCheck") || 0);
+
+  if (lastGasCheck && (Date.now() - lastGasCheck) < GAS_CACHE_LIMIT) {
+    logDebug("距離上次 GAS 驗證 < 10 秒 → 使用快取，不重抓 GAS");
+    window.location.href = "https://flood-system.vercel.app/home";
+    return;
+  }
+
   try {
     logDebug("開始 liff.init");
     await liff.init({ liffId: LIFF_ID });
@@ -123,10 +133,9 @@ async function main() {
   localStorage.setItem("nickname", nickname || "");
   localStorage.setItem("role", role || "");
 
-  // 加這一行：記錄登入時間（用於 10 秒快取）
-  localStorage.setItem("authTime", Date.now());
+  // ★ 記錄「上一次成功抓 GAS 身份」的時間
+  localStorage.setItem("lastGasCheck", Date.now());
 
-  logDebug("已註冊，導向 /home");
   window.location.href = "https://flood-system.vercel.app/home";
   return;
 }
