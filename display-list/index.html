@@ -465,13 +465,15 @@ html, body {
     display: none;
   }
 
-/* ============================================================
+/* ============================================================================
    電腦版（≥769px）
-   最終穩定版：小圓鈕以 iframe 位置為準（右上角固定）
-   ============================================================ */
+   完整重整後版本：卡片模式 + detailView 滿版 + loadingMask + 小圓鈕貼卡片
+   ============================================================================ */
 @media (min-width: 769px) {
 
-  /* ====== 全域：解除手機限制 ====== */
+  /* ------------------------------------------------------------
+     全域設定（解除手機限制）
+     ------------------------------------------------------------ */
   html, body {
     height: auto !important;
     overflow: auto !important;
@@ -479,41 +481,50 @@ html, body {
     overflow-x: hidden !important;
   }
 
-  /* ====== 卡片模式容器 ====== */
+
+  /* ------------------------------------------------------------
+     卡片模式（pageWrapper）
+     ------------------------------------------------------------ */
   body.desktop-card-mode {
     background: #f1f1f1 !important;
     display: flex !important;
     justify-content: center !important;
     padding: 40px 0 !important;
     position: relative !important;
-    overflow: visible !important;
   }
 
-  body.desktop-card-mode #pageWrapper {
+  /* 卡片本體 */
+  #pageWrapper {
     max-width: 820px !important;
     width: 100%;
-    background: white;
+    background: #fff;
     border-radius: 12px;
     padding: 24px 30px;
     box-shadow: 0 4px 14px rgba(0,0,0,0.10);
-    position: relative !important;
+    position: relative !important; /* 重要：圓鈕定位需要 */
+    margin: 0 auto !important;
   }
 
-  /* listView → 回到一般流式排版 */
-  body.desktop-card-mode #listView {
+  /* listView 回到正常流動 */
+  #listView {
     position: static !important;
     height: auto !important;
     overflow: visible !important;
     padding: 0 !important;
   }
 
-  /* ====== detailView 滿版 ====== */
+
+  /* ------------------------------------------------------------
+     detailView：滿版 iframe 顯示
+     ------------------------------------------------------------ */
   #detailView {
     position: fixed !important;
     inset: 0 !important;
     z-index: 9995 !important;
     background: white !important;
     overflow: hidden !important;
+    width: 100% !important;
+    height: 100% !important;
   }
 
   #detailFrame {
@@ -524,12 +535,18 @@ html, body {
     padding: 0 !important;
   }
 
-  /* ====== 手機 footer 在電腦版隱藏 ====== */
+
+  /* ------------------------------------------------------------
+     手機版 footer → 電腦版永遠不顯示
+     ------------------------------------------------------------ */
   #globalFooter {
     display: none !important;
   }
 
-  /* ====== 電腦版兩顆「卡片 header 按鈕」 ====== */
+
+  /* ------------------------------------------------------------
+     電腦版回上一頁 / 回首頁 按鈕 （在卡片上方）
+     ------------------------------------------------------------ */
   #desktopBackBtn,
   #desktopHomeBtn {
     display: inline-block !important;
@@ -546,25 +563,33 @@ html, body {
     box-shadow: 0 2px 6px rgba(0,0,0,0.08);
   }
 
-  #desktopBackBtn { left: calc(50% - 410px); }
-  #desktopHomeBtn { right: calc(50% - 350px); }
+  /* 對齊卡片左右 */
+  #desktopBackBtn  { left:  calc(50% - 410px); }
+  #desktopHomeBtn  { right: calc(50% - 410px); }
 
   #desktopBackBtn:hover,
   #desktopHomeBtn:hover {
     background: #f5f5f5;
   }
 
-  /* ============================================================
-     ★★★ 小圓鈕（以 iframe 的位置為準 → 右上角固定）★★★
-     ============================================================ */
+
+  /* ------------------------------------------------------------
+     「小圓鈕」統一位置（display-list + iframe）
+     目標：永遠貼卡片右側，兩模式完全一致
+     ------------------------------------------------------------ */
+
   #floatingButtons {
     position: fixed !important;
+
     top: 28px !important;
-    right: 28px !important;
+
+    /* ★★★★★ 重要：卡片半寬 410px + 外距 24px */
+    left: calc(50% + 410px + 24px) !important;
 
     display: flex !important;
-    flex-direction: column;     /* 上：主頁，下：回上一頁 */
-    gap: 14px;
+    flex-direction: column !important;
+    gap: 14px !important;
+
     z-index: 100000 !important;
   }
 
@@ -584,7 +609,7 @@ html, body {
   }
 
   .circle-btn:hover {
-    background: rgba(255,255,255,1);
+    background: #fff;
     transform: translateY(-2px);
     box-shadow: 0 6px 14px rgba(0,0,0,0.22);
   }
@@ -595,24 +620,25 @@ html, body {
     stroke: #333;
   }
 
-  /* 移除舊的 column-reverse，避免位置跳動 */
+  /* show-detail 也用同一位置（禁止覆蓋） */
   body.show-detail #floatingButtons {
     position: fixed !important;
     top: 28px !important;
-    right: 28px !important;
-    flex-direction: column !important; /* 不反轉 */
+    left: calc(50% + 410px + 24px) !important;
+    flex-direction: column !important;
   }
 
-  /* ============================================================
-     LoadingMask（灰幕，立即顯示，不模糊、不延遲）
-     ============================================================ */
+
+  /* ------------------------------------------------------------
+     LoadingMask：灰幕，不模糊、不延遲
+     ------------------------------------------------------------ */
   #loadingMask {
     position: fixed !important;
     inset: 0 !important;
     width: 100vw !important;
     height: 100vh !important;
 
-    background: rgba(0,0,0,0.35) !important; /* 灰幕 */
+    background: rgba(0,0,0,0.35) !important;
 
     z-index: 999999 !important;
     display: none !important;
@@ -623,42 +649,6 @@ html, body {
 
   body.loading #loadingMask {
     display: flex !important;
-  }
-
-  /* 你不要 filter → 完全移除 */
-  body.desktop-card-mode.loading #pageWrapper {
-    filter: none !important;
-  }
-}
-
-@media (min-width: 769px) {
-
-  /* 卡片成為定位父層（列表模式用） */
-  #pageWrapper {
-    position: relative !important;
-  }
-
-  /* ========== 列表 (display-list) 模式：圓鈕貼卡片 ========== */
-  body.desktop-card-mode:not(.show-detail) #floatingButtons {
-    position: absolute !important;
-    top: 28px !important;
-    right: -24px !important;      /* 卡片外側 24px，可調 */
-    display: flex !important;
-    flex-direction: column;
-    gap: 14px;
-    z-index: 99999 !important;
-  }
-
-  /* ========== DETAIL / iframe 模式：圓鈕仍貼卡片右邊 ========== */
-  body.show-detail #floatingButtons {
-    position: fixed !important;
-    top: 28px !important;
-
-    /* ★ 重點：卡片右邊 + 24px 外距離 */
-    left: calc(50% + 410px + 24px) !important;
-
-    flex-direction: column !important;
-    z-index: 99999 !important;
   }
 }
    
