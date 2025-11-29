@@ -1191,46 +1191,52 @@ function openDetail(url) {
   const detail = document.getElementById("detailView");
   const iframe = document.getElementById("detailFrame");
   const footer = document.getElementById("globalFooter");
+  const fb = document.getElementById("floatingButtons");
 
   list.style.display = "none";
   detail.style.display = "block";
   iframe.src = url;
 
-  footer.style.display = "flex"; // 預設顯示 footer
+  // ★ 手機 → 顯示 footer；電腦 → 隱藏 footer、顯示圓鈕
+  if (window.innerWidth < 769) {
+    footer.style.display = "flex";
+    fb.style.display = "none";
+  } else {
+    footer.style.display = "none";
+    fb.style.display = "flex";
+    document.body.classList.add("show-detail");
+  }
 
   iframe.onload = () => {
     try {
       const doc = iframe.contentDocument;
-
-      // 先抓 modal（一定會存在，只是 display:none）
       const modal = doc.querySelector('#image-modal');
 
-      // 保險檢查
       if (!modal) {
-        console.warn("找不到 #image-modal，可能還沒載入");
+        console.warn("找不到 #image-modal");
         return;
       }
 
-      // ★★★ 監控 modal 的 style 是否改變（關鍵）
       const observer = new MutationObserver(() => {
-
         const isOpen = modal.style.display === "block";
 
-        if (isOpen) {
-          footer.style.display = "none";  // 進照片查看 → 隱藏 footer
-        } else {
-          footer.style.display = "flex";  // 離開照片查看 → 顯示 footer
+        // 手機：顯示/隱藏 footer
+        if (window.innerWidth < 769) {
+          footer.style.display = isOpen ? "none" : "flex";
+          return;
         }
+
+        // 電腦：顯示/隱藏圓鈕
+        fb.style.display = isOpen ? "none" : "flex";
       });
 
-      // ★★★ 監控 #image-modal 的 style 變化
       observer.observe(modal, {
         attributes: true,
         attributeFilter: ["style"]
       });
 
     } catch (err) {
-      console.warn('iframe 無法存取', err);
+      console.warn("iframe 無法存取", err);
     }
   };
 }
@@ -1243,16 +1249,23 @@ function isPhotoPage(url) {
 function backToList() {
   const detail = document.getElementById("detailView");
   const list = document.getElementById("listView");
+  const fb = document.getElementById("floatingButtons");
 
-  // 1. 如果正在 iframe（detailView 開著） → 回列表
   if (detail.style.display === "block") {
     detail.style.display = "none";
     list.style.display = "block";
+
+    document.body.classList.remove("show-detail");
+
+    // 電腦版回列表 → 圓鈕貼卡片邊
+    if (window.innerWidth >= 769) {
+      fb.style.display = "flex";
+    }
+
     return;
   }
 
-  // 2. 否則（本來就在列表）→ 回主選單
-  window.location.href = "/home";  // ← 這裡換成你的主選單頁
+  window.location.href = "/home";
 }
 
 async function loadAdminRecords() {
@@ -2019,6 +2032,13 @@ window.addEventListener("message", (e) => {
 
   if (e.data.action === "PHOTO_CLOSE") {
     if (window.innerWidth >= 769) fb.style.display = "flex";
+  }
+});
+
+  // 啟動圓鈕（電腦版）
+document.addEventListener("DOMContentLoaded", () => {
+  if (window.innerWidth >= 769) {
+    document.getElementById("floatingButtons").style.display = "flex";
   }
 });
   
