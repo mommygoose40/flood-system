@@ -961,6 +961,7 @@ let shouldKeepMask = false;
 let restoredOnce = false;
 let isInitialLoad = true;
 let globalRecords = [];
+let isPhotoOpened = false;
 
 // === 防止回上一頁重新初始化（BFCache 支援） ===
 window.addEventListener("pageshow", function (event) {
@@ -1069,6 +1070,10 @@ function openDetail(url) {
     fb.style.display = "flex";                // ← 電腦初始顯示圓鈕
     document.body.classList.add("show-detail");  // ← 啟動小圓鈕定位
   }
+
+  if (window.innerWidth >= 769) {
+  if (!isPhotoOpened) fb.style.display = "flex";
+}
 
   // iframe 載入完成後執行
   iframe.onload = () => {
@@ -1883,32 +1888,32 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 });
 
-// 電腦 / 手機 查看照片 → 隱藏圓鈕 ＋ 隱藏 footer
 window.addEventListener("message", (e) => {
   const fb = document.getElementById("floatingButtons");
   const footer = document.getElementById("globalFooter");
   const iframe = document.getElementById("detailFrame");
 
-  // === 查看照片 ===
   if (e.data.action === "PHOTO_OPEN") {
+    isPhotoOpened = true;
+
     // 手機 footer
     footer.style.display = "none";
     iframe.style.height = "100%";
 
-    // 電腦圓鈕
+    // 電腦圓鈕隱藏
     if (window.innerWidth >= 769) fb.style.display = "none";
   }
 
-  // === 關閉照片 ===
   if (e.data.action === "PHOTO_CLOSE") {
+    isPhotoOpened = false;
+
     // 手機 footer
     if (window.innerWidth < 769) {
       footer.style.display = "flex";
     }
-
     iframe.style.height = "calc(100% - 70px)";
 
-    // 電腦圓鈕回來
+    // 電腦圓鈕顯示（但前提：不是照片模式）
     if (window.innerWidth >= 769) fb.style.display = "flex";
   }
 });
