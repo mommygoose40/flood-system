@@ -469,12 +469,11 @@ html, body {
 
 /* ============================================================
    電腦版（≥769px）
-   整理後版本：卡片模式 + detailView 滿版 + 浮動圓鈕 +
-   loadingMask 灰幕（不模糊、不亮度、不延遲）
+   最終穩定版：小圓鈕以 iframe 位置為準（右上角固定）
    ============================================================ */
 @media (min-width: 769px) {
 
-  /* ============= 全域設定（解除手機限制） ============= */
+  /* ====== 全域：解除手機限制 ====== */
   html, body {
     height: auto !important;
     overflow: auto !important;
@@ -482,7 +481,7 @@ html, body {
     overflow-x: hidden !important;
   }
 
-  /* ============= 卡片模式主體 ============= */
+  /* ====== 卡片模式容器 ====== */
   body.desktop-card-mode {
     background: #f1f1f1 !important;
     display: flex !important;
@@ -502,7 +501,7 @@ html, body {
     position: relative !important;
   }
 
-  /* listView 在電腦版改回正常流動 */
+  /* listView → 回到一般流式排版 */
   body.desktop-card-mode #listView {
     position: static !important;
     height: auto !important;
@@ -510,18 +509,13 @@ html, body {
     padding: 0 !important;
   }
 
-  /* ============= detailView：滿版顯示 ============= */
+  /* ====== detailView 滿版 ====== */
   #detailView {
     position: fixed !important;
-    top: 0 !important;
-    left: 0 !important;
-    right: 0 !important;
-    bottom: 0 !important;
-    background: white !important;
+    inset: 0 !important;
     z-index: 9995 !important;
+    background: white !important;
     overflow: hidden !important;
-    width: 100% !important;
-    height: 100% !important;
   }
 
   #detailFrame {
@@ -532,12 +526,12 @@ html, body {
     padding: 0 !important;
   }
 
-  /* ============= 隱藏手機 footer ============= */
+  /* ====== 手機 footer 在電腦版隱藏 ====== */
   #globalFooter {
     display: none !important;
   }
 
-  /* ============= 回首頁 / 返回 按鈕 ============= */
+  /* ====== 電腦版兩顆「卡片 header 按鈕」 ====== */
   #desktopBackBtn,
   #desktopHomeBtn {
     display: inline-block !important;
@@ -562,15 +556,18 @@ html, body {
     background: #f5f5f5;
   }
 
-  /* ============= 浮動圓鈕 ============= */
+  /* ============================================================
+     ★★★ 小圓鈕（以 iframe 的位置為準 → 右上角固定）★★★
+     ============================================================ */
   #floatingButtons {
     position: fixed !important;
-    top: 140px !important;
-    right: calc(50% - 500px) !important; 
-    display: flex;
-    flex-direction: column;
-    gap: 16px;
-    z-index: 99999 !important;
+    top: 28px !important;
+    right: 28px !important;
+
+    display: flex !important;
+    flex-direction: column;     /* 上：主頁，下：回上一頁 */
+    gap: 14px;
+    z-index: 100000 !important;
   }
 
   .circle-btn {
@@ -600,38 +597,42 @@ html, body {
     stroke: #333;
   }
 
-  /* detail 模式 → 圓鈕靠右上 */
+  /* 移除舊的 column-reverse，避免位置跳動 */
   body.show-detail #floatingButtons {
     position: fixed !important;
     top: 28px !important;
-    right: calc(50% - 500px) !important;
-    flex-direction: column-reverse;
+    right: 28px !important;
+    flex-direction: column !important; /* 不反轉 */
   }
 
-  /* ============= 電腦版 LoadingMask（灰幕 + 置中） ============= */
+  /* ============================================================
+     LoadingMask（灰幕，立即顯示，不模糊、不延遲）
+     ============================================================ */
   #loadingMask {
     position: fixed !important;
     inset: 0 !important;
     width: 100vw !important;
     height: 100vh !important;
-    background: rgba(0,0,0,0.35) !important; /* 灰色遮罩 */
-    z-index: 999999 !important;
 
-    display: none !important;  /* 預設不出現 */
+    background: rgba(0,0,0,0.35) !important; /* 灰幕 */
+
+    z-index: 999999 !important;
+    display: none !important;
+
     justify-content: center !important;
     align-items: center !important;
   }
 
-  /* 載入中 → 顯示灰幕 */
   body.loading #loadingMask {
     display: flex !important;
   }
 
-  /* 完全拿掉你不想要的模糊、亮度、透明 */
+  /* 你不要 filter → 完全移除 */
   body.desktop-card-mode.loading #pageWrapper {
     filter: none !important;
   }
 }
+
     
   </style>
 
