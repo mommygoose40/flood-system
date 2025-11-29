@@ -460,22 +460,23 @@ html, body {
   box-sizing: border-box !important;
 }
 
-/* === 電腦版：DisplayList 變成卡片效果 === */
+/* === 電腦版修正：解除滿版鎖定，讓卡片樣式恢復 === */
 @media (min-width: 769px) {
-  
-  /* 外層背景改成灰色並置中卡片 */
-  body {
-    background: #f1f1f1;
-    display: flex;
-    justify-content: center;
-    padding: 40px 0;
+
+  html, body {
+    height: auto !important;         /* 解除 100% 高度鎖定 */
+    overflow: auto !important;       /* 允許滾動 → 卡片效果才能出現 */
   }
 
-  /* 把整個頁面的內容放進一張「卡片」 */
-  #app,   /* 你的外層容器 ID，如果不是 #app，換成你的最外層 div */
-  .main-container,
-  .display-wrapper {
-    /* 你 DisplayList 的最外層元素是誰就改哪一個 */
+  body {
+    background: #f1f1f1 !important;  /* 灰色背景 */
+    display: flex !important;
+    justify-content: center !important;
+    padding: 40px 0 !important;
+  }
+
+  /* 把 listView 包成卡片 */
+  #pageWrapper {
     max-width: 800px !important;
     width: 100%;
     background: white;
@@ -483,22 +484,20 @@ html, body {
     padding: 20px 24px;
     box-shadow: 0 4px 12px rgba(0,0,0,0.08);
     margin: 0 auto;
+    height: auto !important;
   }
 
-  /* 讓 dropdown 也跟卡片對齊，而不是滿版 */
-  select, .year-selector {
-    max-width: 100% !important;
-    width: 100% !important;
-    margin: 0 auto;
+  /* 解除內層滾動，改用外層滾動 */
+  #listView {
+    position: static !important;
+    height: auto !important;
+    overflow: visible !important;
+    padding: 0 !important;
   }
-}
 
-  /* 底部按鈕在電腦也保留（卡片寬度） */
-  .footer-actions {
-    display: flex !important;
-    width: 800px !important;  /* 和 container 同寬 */
-    max-width: 800px !important;
-    margin: 20px auto 0 auto !important;
+  /* footer 在電腦版隱藏（你原本需求） */
+  #globalFooter {
+    display: none !important;
   }
 }
   </style>
