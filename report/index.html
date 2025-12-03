@@ -5,30 +5,82 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 <title>防汛通報系統</title>
 <script src="https://static.line-scdn.net/liff/edge/versions/2.22.3/sdk.js"></script>
-<!-- Firebase SDK -->
-  <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-app.js";
-    import { getAnalytics } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-analytics.js";
-    import { getStorage, ref, uploadBytesResumable, getDownloadURL } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-storage.js";
+// Firebase SDK
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-app.js";
+  import { getAnalytics } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-analytics.js";
+  // **新导入：Firebase Authentication**
+  import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-auth.js";
+  import { getStorage, ref, uploadBytesResumable, getDownloadURL } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-storage.js";
 
-    // Firebase 設定
-    const firebaseConfig = {
-  apiKey: "AIzaSyA4IZ6yZxlOuIjarWmUtIHGyLk84056K2Q",
-  authDomain: "reportsystem-c5fc7.firebaseapp.com",
-  projectId: "reportsystem-c5fc7",
-  storageBucket: "reportsystem-c5fc7.firebasestorage.app",
-  messagingSenderId: "845064058181",
-  appId: "1:845064058181:web:31d2f0fa6dfed084befa2c",
-  measurementId: "G-EDQM0LWQWH"
-};
+  // Firebase 設定
+  const firebaseConfig = {
+    apiKey: "AIzaSyA4IZ6yZxlOuIjarWmUtIHGyLk84056K2Q",
+    authDomain: "reportsystem-c5fc7.firebaseapp.com",
+    projectId: "reportsystem-c5fc7",
+    storageBucket: "reportsystem-c5fc7.firebasestorage.app",
+    messagingSenderId: "845064058181",
+    appId: "1:845064058181:web:31d2f0fa6dfed084befa2c",
+    measurementId: "G-EDQM0LWQWH"
+  };
 
-    // 初始化 Firebase
-    const app = initializeApp(firebaseConfig);
-    const storage = getStorage(app);
+  // 初始化 Firebase
+  const app = initializeApp(firebaseConfig);
+  const analytics = getAnalytics(app); // 如果需要
+  // **新：初始化 Authentication 服务**
+  const auth = getAuth(app);
+  const storage = getStorage(app);
 
-    // 將 Firebase 功能暴露給全局使用
-    window.firebaseStorage = { getStorage, ref, uploadBytesResumable, getDownloadURL, storage };
-  </script>
+  // **这是一个示例函数，演示如何先登录再进行 Storage 操作**
+  async function performStorageOperation(file) {
+    try {
+      // 1. 检查是否有用户登录，如果没有，则尝试匿名登录
+      if (!auth.currentUser) {
+        console.log("没有用户登录，尝试匿名登录...");
+        await signInAnonymously(auth);
+        console.log("匿名登录成功！当前用户UID:", auth.currentUser.uid);
+      } else {
+        console.log("已有用户登录。当前用户UID:", auth.currentUser.uid);
+      }
+
+      // 2. 现在用户已经登录（匿名用户），可以安全地执行 Storage 操作了
+      const storageRef = ref(storage, `uploads/${file.name}`); // 假设上传到 uploads 文件夹
+      const uploadTask = uploadBytesResumable(storageRef, file);
+
+      uploadTask.on('state_changed',
+        (snapshot) => {
+          // 处理上传进度
+          const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+          console.log('上传进度 ' + progress + '% 完成');
+        },
+        (error) => {
+          // 处理上传失败
+          console.error("文件上传失败:", error);
+          // 这里会显示更具体的 Storage 错误，例如 'storage/unauthorized'
+        },
+        () => {
+          // 上传成功后，获取下载URL
+          getDownloadURL(uploadTask.snapshot.ref).then((downloadURL) => {
+            console.log('文件可用下载URL:', downloadURL);
+          });
+        }
+      );
+
+    } catch (error) {
+      console.error("执行 Storage 操作前发生错误 (例如匿名登录失败):", error);
+      // 检查这里的错误，可能是 'auth/operation-not-allowed' 如果匿名登录在控制台未开启
+    }
+  }
+
+  // 暴露必要的 Firebase 功能，以便在其他脚本中使用
+  window.firebase = {
+    app,
+    analytics,
+    auth, // 暴露 auth
+    storage,
+    performStorageOperation // 暴露示例操作函数
+  };
+</script>
 <style>
 /* === 基本排版設定 === */
 body {
