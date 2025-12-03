@@ -113,6 +113,7 @@ let vid = localStorage.getItem("vid");
 let name = localStorage.getItem("name");
 let role = localStorage.getItem("role");
 let nickname = localStorage.getItem("nickname");
+let patrolLock = false; // 防止二次點擊
 
 // 判斷是否在 LINE 中
 function inLineApp() {
@@ -169,6 +170,11 @@ function updatePatrolButton() {
   } else {
     btn.textContent = "開始巡視";
   }
+
+  // 每次載入頁面時，自動恢復可點擊狀態
+  btn.style.pointerEvents = "auto";
+  btn.style.opacity = "1";
+  patrolLock = false;
 }
 
 /* ============================
@@ -186,7 +192,23 @@ function go(page) {
 }
 
 function goPatrol() {
+
+  if (patrolLock) return;  // 已進入點擊狀態 → 不再接受點擊
+  patrolLock = true;
+
+  const btn = document.getElementById("patrolBtn");
+  btn.style.pointerEvents = "none";   // 防止再次點擊
+  btn.style.opacity = "0.5";          // 顯示已禁用狀態
+
+  // 你的巡視邏輯（例如切換頁面）
   location.href = "/patrol";
+
+  // 若真的需要保險，也可以延遲重新啟用（通常不需要）
+  // setTimeout(() => {
+  //   patrolLock = false;
+  //   btn.style.pointerEvents = "auto";
+  //   btn.style.opacity = "1";
+  // }, 3000);
 }
 
 /* ============================
