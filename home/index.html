@@ -226,27 +226,25 @@ window.onload = function () {
   }
 };
 
-  /* ============================
-   全站按鈕防連點：所有 .btn 自動套用
+/* ============================
+   所有 .btn 自動「防止二次點擊」
 ============================ */
-document.querySelectorAll('.btn').forEach(btn => {
-  btn.addEventListener('click', function (e) {
+document.addEventListener("DOMContentLoaded", () => {
+  document.querySelectorAll(".btn").forEach(btn => {
+    btn.addEventListener("click", function (e) {
 
-    if (globalClickLock) {
-      e.stopImmediatePropagation(); // 阻止其他 click 邏輯
-      e.preventDefault();
-      return;
-    }
+      // 已被禁用 → 阻止第二次點擊
+      if (btn.dataset.clicked === "1") {
+        e.stopImmediatePropagation();
+        e.preventDefault();
+        return;
+      }
 
-    globalClickLock = true;
-
-    // 視覺上把所有按鈕禁用
-    document.querySelectorAll('.btn').forEach(b => {
-      b.style.pointerEvents = "none";
-      b.style.opacity = "0.5";
+      // 第一次點擊 → 標記為已使用
+      btn.dataset.clicked = "1";
+      btn.style.pointerEvents = "none";
+      btn.style.opacity = "0.5";   // 視覺灰掉
     });
-
-    // 你的原本 onClick 邏輯依然會正常執行
   });
 });
 
