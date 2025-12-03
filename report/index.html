@@ -2323,19 +2323,52 @@ function toggleDisasterTypes() {
     });
   });
 
-/* === Firebase 上傳 === */
-async function compressImage(file){
-  return new Promise(res=>{
-    const img=new Image();
-    img.onload=()=>{
-      const c=document.createElement('canvas');
-      const scale=Math.min(1,1280/img.width);
-      c.width=img.width*scale;c.height=img.height*scale;
-      c.getContext('2d').drawImage(img,0,0,c.width,c.height);
-      c.toBlob(b=>res(new File([b],'photo.jpg',{type:'image/jpeg'})),'image/jpeg',0.7);
-    };
-    img.src=URL.createObjectURL(file);
-  });
+// === Firebase 上傳 (修改後) ===
+async function uploadToFirebaseOnce(file, path) {
+  // 1. 从新的全局对象 window.firebase 中获取 auth 和 Storage 相关的函数和实例
+  const { auth, storage, ref, uploadBytesResumable, getDownloadURL } = window.firebase;
+
+  try {
+    // 2. 确保用户已登录（或尝试匿名登录）
+    if (!auth.currentUser) {
+      console.log("uploadToFirebaseOnce: 没有用户登录，尝试匿名登录...");
+      await window.firebase.auth.signInAnonymously(auth); // 使用 window.firebase.auth.signInAnonymously
+      console.log("uploadToFirebaseOnce: 匿名登录成功！当前用户UID:", auth.currentUser.uid);
+    } else {
+      console.log("uploadToFirebaseOnce: 已有用户登录。当前用户UID:", auth.currentUser.uid);
+    }
+
+    // 3. 执行 Storage 操作
+    const storageRef = ref(storage, path); // storage 实例现在是 window.firebase.storage
+    const task = uploadBytesResumable(storageRef, file);
+
+    return new Promise((resolve, reject) => {
+      task.on(
+        'state_changed',
+        // 进度回调（你之前设置为 null，可以保持）
+        null,
+        // 错误回调
+        (error) => {
+          console.error("Firebase 上传任务发生错误:", error);
+          reject(error); // 拒绝 Promise，并传递错误
+        },
+        // 完成回调
+        async () => {
+          try {
+            const downloadURL = await getDownloadURL(task.snapshot.ref);
+            resolve(downloadURL); // 解决 Promise，并传递下载URL
+          } catch (error) {
+            console.error("获取下载URL失败:", error);
+            reject(error); // 获取下载URL失败也应拒绝 Promise
+          }
+        }
+      );
+    });
+  } catch (error) {
+    // 捕获匿名登录或初始化过程中的任何错误
+    console.error("uploadToFirebaseOnce 函数执行前发生错误:", error);
+    throw error; // 重新抛出错误，让调用者知道
+  }
 }
 
 function addTranscribeLog(msg) {
