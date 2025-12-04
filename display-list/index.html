@@ -509,16 +509,6 @@ body.photo-open #floatingButtons {
   }
 }
 
-    /* =========================================================
-   Desktop（min-width:769px） - 隱藏載入中的卡片與小圓鈕
-   =========================================================*/
-@media (min-width: 769px) {
-  /* 隱藏載入中的卡片 */
-  #pageWrapper {
-    display: block !important;
-  }
-}
-
 </style>
 
   <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
@@ -868,8 +858,6 @@ function debug(msg) {
   document.getElementById("text-error").style.display = "none";
   document.getElementById("text-error-format").style.display = "none";
   document.getElementById("text-error-notfound").style.display = "none";
-
-  document.getElementById("pageWrapper").style.display = "none"; // 隱藏卡片
 }
 
 async function main() {
