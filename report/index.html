@@ -2674,5 +2674,44 @@ function writeString(view, offset, str) {
 function closeWindowSafe() {
   window.location.href = "https://flood-system.vercel.app/home";  // 替換成你的主選單頁
 }
+
+  window.addEventListener("pageshow", function (event) {
+  if (event.persisted || performance.getEntriesByType("navigation")[0].type === "back_forward") {
+    console.log("Returned to report page → reset form");
+    clearReportForm();
+    window.scrollTo(0, 0);
+  }
+});
+
+  function clearReportForm() {
+  // 清空文字
+  const summary = document.getElementById('summary');
+  if (summary) summary.value = "";
+
+  // 清空單選/多選
+  document.querySelectorAll('input[type="radio"], input[type="checkbox"]').forEach(el => {
+    el.checked = false;
+  });
+
+  // 自訂欄位
+  const otherCompanion = document.getElementById('otherCompanionName');
+  if (otherCompanion) otherCompanion.value = "";
+
+  const otherDisaster = document.getElementById('otherDisasterText');
+  if (otherDisaster) otherDisaster.value = "";
+
+  // 照片
+  if (window.photos) photos.length = 0;
+  const thumbs = document.getElementById("thumbs");
+  if (thumbs) thumbs.innerHTML = "";
+
+  // 音檔
+  window.audioBlob = null;
+
+  // 清掉舊 report ID
+  window.currentReportId = null;
+
+  console.log("Form reset completed");
+}
 </script>
 </body>
