@@ -509,6 +509,49 @@ body.photo-open #floatingButtons {
   }
 }
 
+    /* =========================================================
+   Desktop（min-width:769px） - 隱藏載入中的卡片與小圓鈕
+   =========================================================*/
+@media (min-width: 769px) {
+
+  /* 當 loadingMask 顯示時，隱藏卡片和小圓鈕 */
+  #loadingMask {
+    position: fixed !important;
+    inset: 0 !important;
+    width: 100vw !important;
+    height: 100vh !important;
+    background: rgba(0, 0, 0, 0.35) !important;
+    justify-content: center !important;
+    align-items: center !important;
+    z-index: 9998 !important;  /* 確保 z-index 高於其他元素 */
+  }
+
+  #pageWrapper {
+    visibility: visible !important; /* 預設顯示 */
+    opacity: 1 !important;
+    transition: visibility 0.3s ease, opacity 0.3s ease;
+  }
+
+  /* 在 loading 時隱藏卡片 */
+  #loadingMask[style*="display: flex"] ~ #pageWrapper {
+    visibility: hidden !important;
+    opacity: 0 !important;
+  }
+
+  /* 小圓鈕 */
+  #floatingButtons {
+    visibility: visible !important; /* 預設顯示 */
+    opacity: 1 !important;
+    transition: visibility 0.3s ease, opacity 0.3s ease;
+  }
+
+  /* 在 loading 時隱藏小圓鈕 */
+  #loadingMask[style*="display: flex"] ~ #floatingButtons {
+    visibility: hidden !important;
+    opacity: 0 !important;
+  }
+}
+
 </style>
 
   <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
