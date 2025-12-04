@@ -504,6 +504,62 @@ body.photo-open #floatingButtons {
 /* 補丁 3：按鈕 hover 指標 */
 #btnTeam, #btnSelf { cursor:pointer; }
 
+/* ========================================
+   Desktop Mode - Adjust loading mask and detail view
+   =========================================*/
+@media (min-width: 769px) {
+
+  /* 確保 loadingMask 層級高於其他元素 */
+  #loadingMask {
+    position: fixed !important;
+    inset: 0 !important;
+    background: rgba(0, 0, 0, 0.35) !important;
+    display: none !important;  /* 先隱藏 */
+    justify-content: center !important;
+    align-items: center !important;
+    z-index: 9998 !important;  /* 確保在最上層顯示 */
+    font-size: 28px;
+    color: white;
+  }
+
+  /* 確保 detailView 在 loadingMask 顯示後可見 */
+  #detailView {
+    position: fixed !important;
+    inset: 0 !important;
+    background: white !important;
+    overflow: hidden !important;
+    width: 100% !important;
+    height: 100% !important;
+    display: none !important;  /* 默認隱藏 */
+    z-index: 9999 !important; /* 確保顯示在最上層 */
+  }
+
+  /* 隱藏浮動按鈕的邏輯 */
+  #floatingButtons {
+    position: fixed !important;
+    top: 50px !important;
+    left: calc(50% + 410px + 60px) !important;
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 14px !important;
+    z-index: 100000 !important;
+  }
+
+  /* 隱藏全螢幕下拉選單 */
+  #fullDropdownMask {
+    position: fixed;
+    inset: 0;
+    height: 100vh;
+    width: 100vw;
+    background: rgba(0, 0, 0, 0.45);
+    z-index: 99999;
+    display: none;
+    justify-content: center;
+    align-items: center;
+    padding: 30px;
+  }
+}
+
 </style>
 
   <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
@@ -843,9 +899,9 @@ function debug(msg) {
       1. 初始化：登入 LIFF 並取得資料
   -------------------------------------------*/
   function showLoading() {
-  document.body.classList.add("loading");  // ★ 電腦版卡片隱藏用
-
   document.getElementById("loadingMask").style.display = "flex";
+  document.getElementById("detailView").style.display = "none";  // 載入中時隱藏詳細頁
+  document.body.classList.add("loading");  // ★ 電腦版卡片隱藏用
 
   document.getElementById("text-loading").style.display = "block";
   document.getElementById("text-update").style.display = "none";
@@ -853,6 +909,13 @@ function debug(msg) {
   document.getElementById("text-error").style.display = "none";
   document.getElementById("text-error-format").style.display = "none";
   document.getElementById("text-error-notfound").style.display = "none";
+}
+
+  // 隱藏 loading，顯示詳細頁面
+function hideLoading() {
+  document.getElementById("loadingMask").style.display = "none";
+  document.getElementById("detailView").style.display = "block"; // 顯示詳細頁面
+  document.body.classList.remove("loading");  // 取消 loading 顯示
 }
 
 async function main() {
@@ -870,17 +933,20 @@ if (!globalVid) {
   if (globalRole === "管理員") {
     viewMode = "admin";
     await loadAdminRecords();
+    hideLoading();  // 資料載入完成後隱藏 loading
     return;
   }
 
   if (globalRole === "大隊長") {
     viewMode = "team";
     await loadRecordList("team");
+    hideLoading();  // 資料載入完成後隱藏 loading
     return;
   }
 
   viewMode = "self";
   await loadRecordList("self");
+  hideLoading();  // 資料載入完成後隱藏 loading
 }
 
 function openDetail(url) {
