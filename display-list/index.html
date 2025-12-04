@@ -256,31 +256,31 @@
 
 /* Dropdown mask */
 #fullDropdownMask {
-  position: fixed;
-  inset: 0; 
-  /* 移除 height:100vh; 和 width:100vw; 讓 inset: 0 完全主導 */
-  overflow:hidden;
-  background: rgba(0,0,0,0.45);
-  z-index: 100000; /* 保持高 z-index */
-  display: none;
-  justify-content: center;
-  align-items: center;
-  padding: 0; /* 修正：將 padding: 30px 改為 0，讓內部的 Panel 去處理邊距 */
+  position: fixed;
+  inset: 0;
+  height:100vh;
+  width:100vw;
+  overflow:hidden;
+  background: rgba(0,0,0,0.45);
+  z-index: 99999;
+  display: none;
+  justify-content: center;
+  align-items: center;
+  padding: 30px;
 }
-/* 由於您已經設定了 inset: 0， height:100vh 和 width:100vw 其實可以移除，但保留無妨。 */
-
-/* 彈出卡片（讓它自己處理內部的邊距和最大高度） */
+    
 #fullDropdownPanel {
-  width: 92%;
-  max-width: 520px;
-  max-height: calc(100vh - 60px); /* 修正：讓 max-height 考慮視窗邊距，避免內容被切掉 */
-  background: #fff;
-  border-radius: 20px;
-  padding: 14px 0;
-  overflow-y: auto;
-  box-shadow: 0 6px 26px rgba(0,0,0,0.3);
+  width:92%;
+  max-width:520px;
+  max-height:calc(100vh - 60px);
+  overflow-y:auto;
+  -webkit-overflow-scrolling:touch;
+  background:#fff;
+  border-radius:20px;
+  padding:14px 0;
+  box-shadow:0 6px 26px rgba(0,0,0,0.3);
 }
-
+    
 /* 標題（微縮） */
 .panel-title {
   font-size: 20px;       /* 原本 22 → 現在 20 */
