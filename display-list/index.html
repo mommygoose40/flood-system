@@ -495,8 +495,6 @@ body.photo-open #floatingButtons {
   z-index: 9998 !important;  /* 確保 z-index 高於其他元素 */
 }
 
-/* 修正 pageWrapper 寬度，並確保不影響 loadingMask 顯示 */
-@media (min-width: 769px) {
   #pageWrapper {
     max-width: 820px !important;
     width: 100% !important;
@@ -506,6 +504,17 @@ body.photo-open #floatingButtons {
     padding: 24px 30px !important;
     box-shadow: 0 4px 14px rgba(0, 0, 0, 0.10) !important;
     position: relative !important;  /* 確保此容器位於內容層 */
+  }
+
+  /* 電腦版 detailView → 視窗內顯示 */
+  #detailView {
+    position:fixed !important;
+    inset:0 !important;
+    z-index:9999 !important;
+    background:white !important;
+    overflow:hidden !important;
+    width:100% !important;
+    height:100% !important;
   }
 }
 
