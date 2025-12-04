@@ -6,30 +6,29 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
   <style>
-
-/* ====== 基礎樣式（Mobile First） ====== */
+/* =========================================================
+   Mobile（預設樣式）
+   =========================================================*/
 body {
   font-family: Arial, sans-serif;
   background: #f5f8ff;
   padding: 16px;
-  height: 100%;
-  overflow: hidden; /* mobile 鎖背景 */
 }
-
 h2 {
   text-align: center;
   margin-bottom: 24px;
 }
 
-/* 年/月/日 區塊 */
+/* 區塊 */
 .year-block, .month-block, .day-block {
   border: 1px solid #d0d7e2;
   border-radius: 8px;
   background: white;
-  overflow: hidden;
   margin-bottom: 14px;
+  overflow: hidden;
 }
 
+/* Header */
 .header {
   padding: 12px 16px;
   background: #e8eef8;
@@ -39,21 +38,43 @@ h2 {
   justify-content: space-between;
   align-items: center;
 }
-
 .toggle-icon svg {
   width: 26px;
   height: 26px;
   color: #333;
 }
-
 .header + .content {
   margin-top: 4px;
 }
 
+/* 展開內容 */
 .content {
   display: none;
   padding: 0 16px 12px;
   margin-top: 6px;
+}
+.year-block > .content,
+.month-block > .content,
+.day-block > .content {
+  padding-top: 10px;
+}
+
+/* 紀錄 */
+.record {
+  display: flex;
+  align-items: center;
+  font-size: 18px;
+  padding: 10px 0;
+  border-bottom: 1px solid #eee;
+  gap: 6px;
+  cursor: pointer;
+}
+.record:last-child {
+  border-bottom: none;
+}
+.day-block .record,
+.month-block .record {
+  font-size: 20px;
 }
 
 .status-dot {
@@ -63,27 +84,11 @@ h2 {
   background-color: #E53935;
 }
 
-.block-open { margin-bottom: 12px !important; }
-
-.year-block > .content,
-.month-block > .content,
-.day-block > .content {
-  padding-top: 10px;
+.block-open {
+  margin-bottom: 12px !important;
 }
 
-.record {
-  display: flex;
-  align-items: center;
-  font-size: 20px;
-  padding: 10px 0;
-  border-bottom: 1px solid #eee;
-  gap: 6px;
-  cursor: pointer;
-}
-
-.record:last-child { border-bottom: none; }
-
-/* ===== Loading Mask ===== */
+/* Loading */
 #loadingMask {
   position: fixed;
   inset: 0;
@@ -96,7 +101,6 @@ h2 {
   font-size: 28px;
   color: white;
 }
-
 .spinner {
   width: 40px;
   height: 40px;
@@ -106,200 +110,297 @@ h2 {
   animation: spin 1s linear infinite;
   margin-bottom: 14px;
 }
-
-@keyframes spin { from { transform: rotate(0); } to { transform: rotate(360deg); } }
-
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
 .loadingText { display: none; }
 
-/* ===== List View ===== */
-#listView {
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 70px;
-  overflow-y: auto;
-  -webkit-overflow-scrolling: touch;
-  padding: 0 16px 50px !important;
-  box-sizing: border-box;
-}
-
-#pageWrapper { padding-bottom: 0; }
-
-/* ===== Footer ===== */
-#globalFooter {
-  position: fixed;
-  bottom: 0; left: 0; width: 100%;
-  height: 70px;
-  background: #f8f8f8;
+/* list container */
+#listContainer {
   display: flex;
-  gap: 12px;
   justify-content: center;
   align-items: center;
-  padding: 0 16px;
-  box-shadow: 0 -2px 6px rgba(0,0,0,0.12);
-  z-index: 9999;
-  box-sizing: border-box !important;
+  flex-direction: column;
 }
 
-.gray-btn, .blue-btn {
-  flex: 1;
-  height: 48px;
+#switchArea {
+  display: flex;
+  justify-content: space-between;
+  text-align: center;
+  margin-top:10px;
+  margin-bottom:18px;
+}
+
+/* Admin Filter */
+#adminFilterArea select { font-size: 20px; padding: 6px; }
+#adminFilterArea label { font-size: 20px; }
+
+#adminFilterArea div {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: nowrap;
+  white-space: nowrap;
+}
+
+/* Search 按鈕 */
+#adminSearchBtn, #viewFullRecords {
+  padding: 8px 14px;
   font-size: 20px;
-  border-radius: 10px;
   border: none;
+  color: white;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  flex: none !important;
+  width: auto !important;
+  display: inline-block;
 }
+#adminSearchBtn {
+  background: #0b5ed7;
+  width: 110px !important;
+  margin: 0 auto !important;
+  display: block !important;
+}
+#adminSearchBtn:hover { background: #0a58ca; transform: translateY(-1px); }
+#viewFullRecords { background:#28a745; }
+#viewFullRecords:hover { background:#218838; transform:translateY(-1px); }
 
-.gray-btn { background:#e0e0e0; color:#333; }
-.blue-btn { background:#0b5ed7; color:#fff; }
-
-/* ===== 偽下拉選單 ===== */
+/* Fake Select */
 .fakeSelectBtn {
   font-size: 20px;
   padding: 4px 12px;
   border: 1px solid #888;
   border-radius: 4px;
   background: #fff;
+  color: #333;
+  cursor: pointer;
   display: inline-flex;
   align-items: center;
   justify-content: space-between;
   min-width: 110px;
-  cursor: pointer;
   height: 42px !important;
   box-sizing: border-box;
 }
-
 .fakeSelectBtn span { font-weight: normal !important; }
-
 .fakeSelectBtn .arrow {
   display: inline-block;
   width: 18px;
   height: 18px;
+  font-size: 18px;
+  line-height: 18px;
+  margin-left: 6px;
   flex-shrink: 0;
 }
 
 .timeRow {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap:10px;
 }
+.timeRow .fakeSelectBtn {
+  padding: 0 12px;
+  display: flex;
+  align-items: center;
+}
+.tilde { font-size:20px; line-height:1; padding:0 2px; }
 
-.tilde { font-size:20px; padding:0 2px; }
-
-/* ===== 全螢幕偽下拉遮罩（包含補丁合併） ===== */
+/* Dropdown mask */
 #fullDropdownMask {
   position: fixed;
   inset: 0;
+  height:100vh;
+  width:100vw;
+  overflow:hidden;
   background: rgba(0,0,0,0.45);
   z-index: 99999;
   display: none;
   justify-content: center;
   align-items: center;
   padding: 30px;
-  width: 100vw;
-  height: 100vh;
-  overflow: hidden;
 }
-
 #fullDropdownPanel {
-  width: 92%;
-  max-width: 520px;
-  max-height: calc(100vh - 60px);
+  width:92%;
+  max-width:520px;
+  max-height:calc(100vh - 60px);
+  overflow-y:auto;
+  -webkit-overflow-scrolling:touch;
   background:#fff;
-  border-radius: 20px;
-  padding: 14px 0;
-  overflow-y: auto;
-  -webkit-overflow-scrolling: touch;
-  box-shadow: 0 6px 26px rgba(0,0,0,0.3);
+  border-radius:20px;
+  padding:14px 0;
+  box-shadow:0 6px 26px rgba(0,0,0,0.3);
 }
 
+/* 下拉內容 */
 .panel-title {
-  font-size: 20px;
-  font-weight: bold;
-  padding: 0 20px 14px;
-  margin-bottom: 6px;
-  border-bottom: 1px solid #eee;
+  font-size:20px;
+  font-weight:bold;
+  padding:0 20px 14px;
+  margin-bottom:6px;
+  border-bottom:1px solid #eee;
 }
-
 .panel-options .option {
-  padding: 14px 20px;
-  font-size: 20px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  border-bottom: 1px solid #f2f2f2;
-  cursor: pointer;
-  color: #222;
+  padding:14px 20px;
+  font-size:20px;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  border-bottom:1px solid #f2f2f2;
+  cursor:pointer;
+  color:#222;
+}
+.panel-options .option:active { background:white !important; }
+
+.radio-circle {
+  width:22px;
+  height:22px;
+  border-radius:50%;
+  border:2px solid #777;
+  display:flex;
+  justify-content:center;
+  align-items:center;
+}
+.radio-circle.selected { border-color:#0b5ed7; }
+.radio-circle.selected::after {
+  content:"";
+  width:10px;
+  height:10px;
+  background:#0b5ed7;
+  border-radius:50%;
 }
 
 .option.selected { background:#eef5ff !important; }
-
-.radio-circle {
-  width:22px; height:22px;
+.option.selected::after {
+  content:"";
+  width:10px;
+  height:10px;
+  background:#0b5ed7;
   border-radius:50%;
-  border:2px solid #777;
-  display:flex; justify-content:center; align-items:center;
+  display:inline-block;
 }
 
-.radio-circle.selected { border-color:#0b5ed7; }
+/* Global Footer */
+#globalFooter {
+  position:fixed;
+  bottom:0;
+  left:0;
+  width:100%;
+  height:70px;
+  background:#f8f8f8;
+  display:flex;
+  gap:12px;
+  justify-content:center;
+  align-items:center;
+  padding:0 16px;
+  box-shadow:0 -2px 6px rgba(0,0,0,0.12);
+  z-index:9999;
+  box-sizing:border-box !important;
+}
+.gray-btn, .blue-btn {
+  flex:1;
+  height:48px;
+  font-size:20px;
+  border-radius:10px;
+  border:none;
+}
+.gray-btn { background:#e0e0e0; color:#333; }
+.blue-btn { background:#0b5ed7; color:#fff; }
 
-.radio-circle.selected::after {
-  content:""; width:10px; height:10px;
-  background:#0b5ed7; border-radius:50%;
+/* Page wrapper */
+#pageWrapper { padding-bottom:0; }
+
+/* detailView */
+#detailView {
+  position:absolute;
+  top:0; left:0; right:0;
+  bottom:70px;
+  overflow-y:auto;
 }
 
-/* ===== Desktop First（≥769px） ===== */
-@media (min-width:769px){
+/* body full lock */
+html, body {
+  height:100%;
+  overflow:hidden;
+}
 
-  #globalFooter { display:none !important; }
+/* listView */
+#listView {
+  position:absolute;
+  top:0; left:0; right:0;
+  bottom:70px;
+  overflow-y:auto;
+  -webkit-overflow-scrolling:touch;
+  padding:0 16px 50px !important;
+  box-sizing:border-box;
+}
+
+/* PC 版按鈕隱藏 */
+#desktopBackBtn, #desktopHomeBtn { display:none; }
+
+
+/* =========================================================
+   Desktop（min-width:769px）
+   =========================================================*/
+@media (min-width: 769px) {
 
   html, body {
     height:auto !important;
     overflow:auto !important;
-    background:#f1f1f1 !important;
     overflow-x:hidden !important;
+    background:#f1f1f1 !important;
   }
 
+  #globalFooter { display:none !important; }
+
+  /* Card 模式 */
   body.desktop-card-mode {
     background:#f1f1f1 !important;
     display:flex !important;
     justify-content:center !important;
     padding:40px 0 !important;
+    position:relative !important;
   }
 
   #pageWrapper {
     max-width:820px !important;
-    width:100%;
     background:#fff;
     border-radius:12px;
     padding:24px 30px;
     box-shadow:0 4px 14px rgba(0,0,0,0.10);
     position:relative !important;
+    margin:0 auto !important;
   }
 
   #listView {
-    position: static !important;
+    position:static !important;
     height:auto !important;
     overflow:visible !important;
     padding:0 !important;
   }
 
-  /* 桌機 detailView 原樣修正（你要求不滿版時可調整） */
+  /* 電腦版 detailView → 視窗內顯示 */
   #detailView {
     position:fixed !important;
     inset:0 !important;
-    background:white !important;
-    overflow:auto !important;
     z-index:9995 !important;
+    background:white !important;
+    overflow:hidden !important;
+    width:100% !important;
+    height:100% !important;
   }
 
   #detailFrame {
     width:100% !important;
     height:100% !important;
     border:none !important;
+    margin:0 !important;
+    padding:0 !important;
   }
 
-  #desktopBackBtn, #desktopHomeBtn {
+  /* 電腦版返回 / 首頁 */
+  #desktopBackBtn,
+  #desktopHomeBtn {
     display:inline-block !important;
     position:fixed !important;
     top:80px !important;
@@ -310,11 +411,18 @@ h2 {
     border:1px solid #ddd;
     background:white;
     cursor:pointer;
+    box-shadow:0 2px 6px rgba(0,0,0,0.08);
   }
 
-  #desktopBackBtn { left:calc(50% - 410px); }
-  #desktopHomeBtn { right:calc(50% - 410px); }
+  #desktopBackBtn  { left: calc(50% - 410px); }
+  #desktopHomeBtn  { right:calc(50% - 410px); }
 
+  #desktopBackBtn:hover,
+  #desktopHomeBtn:hover {
+    background:#f5f5f5;
+  }
+
+  /* 小圓鈕 */
   #floatingButtons {
     position:fixed !important;
     top:50px !important;
@@ -324,14 +432,56 @@ h2 {
     gap:14px !important;
     z-index:100000 !important;
   }
+  .circle-btn {
+    width:54px;
+    height:54px;
+    border-radius:50%;
+    border:1px solid #ccc;
+    background:rgba(255,255,255,0.92);
+    backdrop-filter:blur(6px);
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    cursor:pointer;
+    box-shadow:0 4px 12px rgba(0,0,0,0.18);
+    transition:all 0.2s ease;
+  }
+  .circle-btn:hover {
+    background:#fff;
+    transform:translateY(-2px);
+    box-shadow:0 6px 14px rgba(0,0,0,0.22);
+  }
+  .circle-btn svg {
+    width:26px;
+    height:26px;
+    stroke:#333;
+  }
+
+  body.show-detail #floatingButtons {
+    position:fixed !important;
+    top:50px !important;
+    left:calc(50% + 410px + 60px) !important;
+  }
+
+  /* Loading 修正 */
+  #loadingMask {
+    position:fixed !important;
+    inset:0 !important;
+    width:100vw !important;
+    height:100vh !important;
+    background:rgba(0,0,0,0.35) !important;
+    display:none !important;
+    justify-content:center !important;
+    align-items:center !important;
+  }
 }
 
-/* ===== Photo Open 狀態隱藏浮動按鈕 ===== */
+/* 額外補丁：照片瀏覽隱藏小圓鈕 */
 body.photo-open #floatingButtons {
   display:none !important;
 }
 
-/* ===== 按鈕 Hover 指標 ===== */
+/* 補丁 3：按鈕 hover 指標 */
 #btnTeam, #btnSelf { cursor:pointer; }
 
 </style>
