@@ -340,159 +340,138 @@ html, body {
 
 
 /* =========================================================
-   Desktop（min-width:769px） - 調整後
+   Desktop（min-width:769px）
    =========================================================*/
 @media (min-width: 769px) {
 
   html, body {
-    height: auto !important;
-    overflow: auto !important;
-    overflow-x: hidden !important;
-    background: #f1f1f1 !important;
+    height:auto !important;
+    overflow:auto !important;
+    overflow-x:hidden !important;
+    background:#f1f1f1 !important;
   }
 
-  #globalFooter {
-    display: none !important;
-  }
+  #globalFooter { display:none !important; }
 
   /* Card 模式 */
   body.desktop-card-mode {
-    background: #f1f1f1 !important;
-    display: flex !important;
-    justify-content: center !important;
-    padding: 40px 0 !important;
-    position: relative !important;
+    background:#f1f1f1 !important;
+    display:flex !important;
+    justify-content:center !important;
+    padding:40px 0 !important;
+    position:relative !important;
   }
 
   #pageWrapper {
-    max-width: 820px !important;
-    width: 100% !important;
-    margin: 0px auto 20px auto !important; /* 增加 top margin 並設置 bottom margin */
-    background: #fff !important;
-    border-radius: 12px !important;
-    padding: 24px 30px !important;
-    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.10) !important;
-    position: relative !important;
+    max-width:820px !important;
+    background:#fff;
+    border-radius:12px;
+    padding:24px 30px;
+    box-shadow:0 4px 14px rgba(0,0,0,0.10);
+    position:relative !important;
+    margin:0 auto !important;
   }
 
   #listView {
-    position: static !important;
-    height: auto !important;
-    overflow: visible !important;
-    padding: 0 !important;
-    margin-top: 20px !important; /* 增加 margin 來避免遮擋 */
+    position:static !important;
+    height:auto !important;
+    overflow:visible !important;
+    padding:0 !important;
   }
 
-  /* 確保 loadingMask 顯示在最上層 */
-  #loadingMask {
-    position: fixed !important;
-    inset: 0 !important;
-    background: rgba(0, 0, 0, 0.35) !important;
-    display: flex !important;
-    justify-content: center !important;
-    align-items: center !important;
-    z-index: 9998 !important; /* 確保 z-index 高於 listView，但低於 detailView */
-    font-size: 28px;
-    color: white;
-  }
-
-  /* detailView */
+  /* 電腦版 detailView → 視窗內顯示 */
   #detailView {
-    position: fixed !important;
-    inset: 0 !important;
-    background: white !important;
-    overflow: hidden !important;
-    z-index: 9999 !important; /* 確保 detailView 顯示在 loadingMask 之上 */
-    width: 100% !important;
-    height: 100% !important;
+    position:fixed !important;
+    inset:0 !important;
+    z-index:9999 !important;
+    background:white !important;
+    overflow:hidden !important;
+    width:100% !important;
+    height:100% !important;
   }
 
   #detailFrame {
-    width: 100% !important;
-    height: 100% !important;
-    border: none !important;
-    margin: 0 !important;
-    padding: 0 !important;
+    width:100% !important;
+    height:100% !important;
+    border:none !important;
+    margin:0 !important;
+    padding:0 !important;
   }
 
   /* 電腦版返回 / 首頁 */
-  #desktopBackBtn, #desktopHomeBtn {
-    display: inline-block !important;
-    position: fixed !important;
-    top: 80px !important;
-    z-index: 10050 !important;
-    padding: 10px 18px;
-    font-size: 15px;
-    border-radius: 8px;
-    border: 1px solid #ddd;
-    background: white;
-    cursor: pointer;
-    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+  #desktopBackBtn,
+  #desktopHomeBtn {
+    display:inline-block !important;
+    position:fixed !important;
+    top:80px !important;
+    z-index:10050 !important;
+    padding:10px 18px;
+    font-size:15px;
+    border-radius:8px;
+    border:1px solid #ddd;
+    background:white;
+    cursor:pointer;
+    box-shadow:0 2px 6px rgba(0,0,0,0.08);
   }
 
-  #desktopBackBtn {
-    left: calc(50% - 410px);
-  }
-  #desktopHomeBtn {
-    right: calc(50% - 410px);
-  }
+  #desktopBackBtn  { left: calc(50% - 410px); }
+  #desktopHomeBtn  { right:calc(50% - 410px); }
 
   #desktopBackBtn:hover,
   #desktopHomeBtn:hover {
-    background: #f5f5f5;
+    background:#f5f5f5;
   }
 
   /* 小圓鈕 */
   #floatingButtons {
-    position: fixed !important;
-    top: 50px !important;
-    left: calc(50% + 410px + 60px) !important;
-    display: flex !important;
-    flex-direction: column !important;
-    gap: 14px !important;
-    z-index: 100000 !important;
+    position:fixed !important;
+    top:50px !important;
+    left:calc(50% + 410px + 60px) !important;
+    display:flex !important;
+    flex-direction:column !important;
+    gap:14px !important;
+    z-index:100000 !important;
   }
   .circle-btn {
-    width: 54px;
-    height: 54px;
-    border-radius: 50%;
-    border: 1px solid #ccc;
-    background: rgba(255, 255, 255, 0.92);
-    backdrop-filter: blur(6px);
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    cursor: pointer;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.18);
-    transition: all 0.2s ease;
+    width:54px;
+    height:54px;
+    border-radius:50%;
+    border:1px solid #ccc;
+    background:rgba(255,255,255,0.92);
+    backdrop-filter:blur(6px);
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    cursor:pointer;
+    box-shadow:0 4px 12px rgba(0,0,0,0.18);
+    transition:all 0.2s ease;
   }
-
   .circle-btn:hover {
-    background: #fff;
-    transform: translateY(-2px);
-    box-shadow: 0 6px 14px rgba(0, 0, 0, 0.22);
+    background:#fff;
+    transform:translateY(-2px);
+    box-shadow:0 6px 14px rgba(0,0,0,0.22);
   }
   .circle-btn svg {
-    width: 26px;
-    height: 26px;
-    stroke: #333;
+    width:26px;
+    height:26px;
+    stroke:#333;
   }
 
   body.show-detail #floatingButtons {
-    position: fixed !important;
-    top: 50px !important;
-    left: calc(50% + 410px + 60px) !important;
+    position:fixed !important;
+    top:50px !important;
+    left:calc(50% + 410px + 60px) !important;
   }
 
-  /* 修正 loading 顯示，確保其在頂層顯示 */
+  /* Loading 修正 */
   #loadingMask {
-    position: fixed !important;
-    inset: 0 !important;
-    background: rgba(0, 0, 0, 0.35) !important;
-    display: flex !important;
-    justify-content: center !important;
-    align-items: center !important;
-    z-index: 9998 !important; /* 確保它的 z-index 高於所有元素 */
+    position:fixed !important;
+    inset:0 !important;
+    width:100vw !important;
+    height:100vh !important;
+    background:rgba(0,0,0,0.35) !important;
+    justify-content:center !important;
+    align-items:center !important;
   }
 }
 
@@ -504,59 +483,29 @@ body.photo-open #floatingButtons {
 /* 補丁 3：按鈕 hover 指標 */
 #btnTeam, #btnSelf { cursor:pointer; }
 
-/* ========================================
-   Desktop Mode - Adjust loading mask and detail view
-   =========================================*/
+    /* 確保 loadingMask 始終顯示在最上層 */
+#loadingMask {
+  position: fixed !important;
+  inset: 0 !important;
+  width: 100vw !important;
+  height: 100vh !important;
+  background: rgba(0, 0, 0, 0.35) !important;
+  justify-content: center !important;
+  align-items: center !important;
+  z-index: 9998 !important;  /* 確保 z-index 高於其他元素 */
+}
+
+/* 修正 pageWrapper 寬度，並確保不影響 loadingMask 顯示 */
 @media (min-width: 769px) {
-
-  /* 確保 loadingMask 層級高於其他元素 */
-  #loadingMask {
-    position: fixed !important;
-    inset: 0 !important;
-    background: rgba(0, 0, 0, 0.35) !important;
-    display: none !important;  /* 先隱藏 */
-    justify-content: center !important;
-    align-items: center !important;
-    z-index: 9998 !important;  /* 確保在最上層顯示 */
-    font-size: 28px;
-    color: white;
-  }
-
-  /* 確保 detailView 在 loadingMask 顯示後可見 */
-  #detailView {
-    position: fixed !important;
-    inset: 0 !important;
-    background: white !important;
-    overflow: hidden !important;
+  #pageWrapper {
+    max-width: 820px !important;
     width: 100% !important;
-    height: 100% !important;
-    display: none !important;  /* 默認隱藏 */
-    z-index: 9999 !important; /* 確保顯示在最上層 */
-  }
-
-  /* 隱藏浮動按鈕的邏輯 */
-  #floatingButtons {
-    position: fixed !important;
-    top: 50px !important;
-    left: calc(50% + 410px + 60px) !important;
-    display: flex !important;
-    flex-direction: column !important;
-    gap: 14px !important;
-    z-index: 100000 !important;
-  }
-
-  /* 隱藏全螢幕下拉選單 */
-  #fullDropdownMask {
-    position: fixed;
-    inset: 0;
-    height: 100vh;
-    width: 100vw;
-    background: rgba(0, 0, 0, 0.45);
-    z-index: 99999;
-    display: none;
-    justify-content: center;
-    align-items: center;
-    padding: 30px;
+    margin: 0px auto 20px auto !important;  /* 增加 top margin 並設置 bottom margin */
+    background: #fff !important;
+    border-radius: 12px !important;
+    padding: 24px 30px !important;
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.10) !important;
+    position: relative !important;  /* 確保此容器位於內容層 */
   }
 }
 
@@ -899,9 +848,9 @@ function debug(msg) {
       1. 初始化：登入 LIFF 並取得資料
   -------------------------------------------*/
   function showLoading() {
-  document.getElementById("loadingMask").style.display = "flex";
-  document.getElementById("detailView").style.display = "none";  // 載入中時隱藏詳細頁
   document.body.classList.add("loading");  // ★ 電腦版卡片隱藏用
+
+  document.getElementById("loadingMask").style.display = "flex";
 
   document.getElementById("text-loading").style.display = "block";
   document.getElementById("text-update").style.display = "none";
@@ -909,13 +858,6 @@ function debug(msg) {
   document.getElementById("text-error").style.display = "none";
   document.getElementById("text-error-format").style.display = "none";
   document.getElementById("text-error-notfound").style.display = "none";
-}
-
-  // 隱藏 loading，顯示詳細頁面
-function hideLoading() {
-  document.getElementById("loadingMask").style.display = "none";
-  document.getElementById("detailView").style.display = "block"; // 顯示詳細頁面
-  document.body.classList.remove("loading");  // 取消 loading 顯示
 }
 
 async function main() {
@@ -933,20 +875,17 @@ if (!globalVid) {
   if (globalRole === "管理員") {
     viewMode = "admin";
     await loadAdminRecords();
-    hideLoading();  // 資料載入完成後隱藏 loading
     return;
   }
 
   if (globalRole === "大隊長") {
     viewMode = "team";
     await loadRecordList("team");
-    hideLoading();  // 資料載入完成後隱藏 loading
     return;
   }
 
   viewMode = "self";
   await loadRecordList("self");
-  hideLoading();  // 資料載入完成後隱藏 loading
 }
 
 function openDetail(url) {
