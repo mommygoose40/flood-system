@@ -651,11 +651,7 @@ html, body {
     display: flex !important;
   }
 }
-    
-   body.photo-open #floatingButtons {
-  display: none !important;
-}
-
+   
   </style>
 
   <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
@@ -965,7 +961,6 @@ let shouldKeepMask = false;
 let restoredOnce = false;
 let isInitialLoad = true;
 let globalRecords = [];
-let isPhotoOpened = false;
 
 // === 防止回上一頁重新初始化（BFCache 支援） ===
 window.addEventListener("pageshow", function (event) {
@@ -1035,32 +1030,75 @@ if (!globalVid) {
   await loadRecordList("self");
 }
 
+window.addEventListener("message", (e) => {
+  const footer = document.getElementById("globalFooter");
+  const iframe = document.getElementById("detailFrame");
+
+  if (e.data.action === "PHOTO_OPEN") {
+    footer.style.display = "none";
+    iframe.style.height = "100%";   // ★ 滿版
+  }
+
+  if (e.data.action === "PHOTO_CLOSE") {
+    footer.style.display = "flex";
+    iframe.style.height = "calc(100% - 70px)"; // ★ 恢復
+  }
+
+  // main() 完成最後一行加上：
+document.body.classList.add("loaded");
+});
+
 function openDetail(url) {
   const list   = document.getElementById("listView");
   const detail = document.getElementById("detailView");
   const iframe = document.getElementById("detailFrame");
   const footer = document.getElementById("globalFooter");
-  const fb     = document.getElementById("floatingButtons");
+  const fb     = document.getElementById("floatingButtons");   // ← 正確變數
 
-  // 進入 DetailView
+  // 切換畫面
   list.style.display = "none";
   detail.style.display = "block";
   iframe.src = url;
 
-  // 初始 footer / 小圓鈕顯示規則
+  // 手機 vs 電腦的 footer/圓鈕設定
   if (window.innerWidth < 769) {
-    footer.style.display = "flex";   // 手機 → footer 要出現
-    fb.style.display = "none";       // 手機不顯示小圓鈕
+    footer.style.display = "flex";
+    fb.style.display = "none";
   } else {
-    footer.style.display = "none";        // 電腦 → footer 不用
-    fb.style.display = "flex";            // 電腦顯示小圓鈕
-    document.body.classList.add("show-detail");
+    footer.style.display = "none";
+    fb.style.display = "flex";                // ← 電腦初始顯示圓鈕
+    document.body.classList.add("show-detail");  // ← 啟動小圓鈕定位
   }
 
-  // 不再使用 MutationObserver（照片頁會用 postMessage）
+  // iframe 載入完成後執行
   iframe.onload = () => {
-    // 若 detail 內部要執行初始化，可以放這裡
-    // 但不需要偵測 modal.style.display
+    try {
+      const doc   = iframe.contentDocument;
+      const modal = doc.querySelector('#image-modal');  // 照片查看視窗
+
+      if (!modal) return;
+
+      // 監控查看照片的顯示狀態
+      const observer = new MutationObserver(() => {
+        const isOpen = modal.style.display === "block";
+
+        if (window.innerWidth < 769) {
+          // 手機：照片開啟時隱藏 footer
+          footer.style.display = isOpen ? "none" : "flex";
+        } else {
+          // 電腦：照片開啟時隱藏小圓鈕
+          fb.style.display = isOpen ? "none" : "flex";
+        }
+      });
+
+      observer.observe(modal, {
+        attributes: true,
+        attributeFilter: ["style"]
+      });
+
+    } catch (err) {
+      console.warn("iframe 無法存取內容", err);
+    }
   };
 }
 
@@ -1838,23 +1876,47 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 });
 
-  window.addEventListener("message", (e) => {
+  // 啟動 floating 圓鈕（只在電腦版）
+document.addEventListener("DOMContentLoaded", () => {
+  if (window.innerWidth >= 769) {
+    document.getElementById("floatingButtons").style.display = "flex";
+  }
+});
+
+// 電腦 / 手機 查看照片 → 隱藏圓鈕 ＋ 隱藏 footer
+window.addEventListener("message", (e) => {
   const fb = document.getElementById("floatingButtons");
   const footer = document.getElementById("globalFooter");
   const iframe = document.getElementById("detailFrame");
 
+  // === 查看照片 ===
   if (e.data.action === "PHOTO_OPEN") {
-    document.body.classList.add("photo-open");
-
+    // 手機 footer
     footer.style.display = "none";
     iframe.style.height = "100%";
+
+    // 電腦圓鈕
+    if (window.innerWidth >= 769) fb.style.display = "none";
   }
 
+  // === 關閉照片 ===
   if (e.data.action === "PHOTO_CLOSE") {
-    document.body.classList.remove("photo-open");
+    // 手機 footer
+    if (window.innerWidth < 769) {
+      footer.style.display = "flex";
+    }
 
-    if (window.innerWidth < 769) footer.style.display = "flex";
     iframe.style.height = "calc(100% - 70px)";
+
+    // 電腦圓鈕回來
+    if (window.innerWidth >= 769) fb.style.display = "flex";
+  }
+});
+
+  // 啟動圓鈕（電腦版）
+document.addEventListener("DOMContentLoaded", () => {
+  if (window.innerWidth >= 769) {
+    document.getElementById("floatingButtons").style.display = "flex";
   }
 });
   
