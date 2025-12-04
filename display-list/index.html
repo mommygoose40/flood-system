@@ -1,37 +1,26 @@
-<!DOCTYPE html>
-<html lang="zh-TW">
-<head>
-  <meta charset="UTF-8">
-  <title>防汛通報系統</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<style>
 
-  <style>
-    /* =========================================
-   Global 基礎設定
-========================================= */
-html, body {
-  margin: 0;
-  padding: 0;
+/* ====== 基礎樣式（Mobile First） ====== */
+body {
   font-family: Arial, sans-serif;
   background: #f5f8ff;
+  padding: 16px;
   height: 100%;
-  overflow: hidden;               /* 手機環境保持原本設定 */
+  overflow: hidden; /* mobile 鎖背景 */
 }
 
-/* =========================================
-   區塊展開/列表樣式
-========================================= */
 h2 {
   text-align: center;
   margin-bottom: 24px;
 }
 
+/* 年/月/日 區塊 */
 .year-block, .month-block, .day-block {
   border: 1px solid #d0d7e2;
   border-radius: 8px;
   background: white;
-  margin-bottom: 14px;
   overflow: hidden;
+  margin-bottom: 14px;
 }
 
 .header {
@@ -44,37 +33,50 @@ h2 {
   align-items: center;
 }
 
+.toggle-icon svg {
+  width: 26px;
+  height: 26px;
+  color: #333;
+}
+
 .header + .content {
-  margin-top: 6px;
+  margin-top: 4px;
 }
 
 .content {
   display: none;
   padding: 0 16px 12px;
+  margin-top: 6px;
+}
+
+.status-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background-color: #E53935;
+}
+
+.block-open { margin-bottom: 12px !important; }
+
+.year-block > .content,
+.month-block > .content,
+.day-block > .content {
+  padding-top: 10px;
 }
 
 .record {
   display: flex;
   align-items: center;
-  font-size: 18px;
+  font-size: 20px;
   padding: 10px 0;
   border-bottom: 1px solid #eee;
   gap: 6px;
   cursor: pointer;
 }
 
-.record:last-child {
-  border-bottom: none;
-}
+.record:last-child { border-bottom: none; }
 
-.day-block .record,
-.month-block .record {
-  font-size: 20px;
-}
-
-/* =========================================
-   Loading Mask
-========================================= */
+/* ===== Loading Mask ===== */
 #loadingMask {
   position: fixed;
   inset: 0;
@@ -83,9 +85,9 @@ h2 {
   flex-direction: column;
   justify-content: center;
   align-items: center;
-  z-index: 99999;
-  color: white;
+  z-index: 9999;
   font-size: 28px;
+  color: white;
 }
 
 .spinner {
@@ -98,1456 +100,231 @@ h2 {
   margin-bottom: 14px;
 }
 
-@keyframes spin {
-  0%   { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
+@keyframes spin { from { transform: rotate(0); } to { transform: rotate(360deg); } }
+
+.loadingText { display: none; }
+
+/* ===== List View ===== */
+#listView {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 70px;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  padding: 0 16px 50px !important;
+  box-sizing: border-box;
 }
 
-/* =========================================
-   管理過濾區
-========================================= */
-#switchArea {
+#pageWrapper { padding-bottom: 0; }
+
+/* ===== Footer ===== */
+#globalFooter {
+  position: fixed;
+  bottom: 0; left: 0; width: 100%;
+  height: 70px;
+  background: #f8f8f8;
   display: flex;
-  justify-content: space-between;
-  margin: 10px 0 18px;
-}
-
-#adminFilterArea label,
-#adminFilterArea select {
-  font-size: 20px;
-}
-
-#adminFilterArea div {
-  display: flex;
+  gap: 12px;
+  justify-content: center;
   align-items: center;
-  gap: 6px;
-  white-space: nowrap;
+  padding: 0 16px;
+  box-shadow: 0 -2px 6px rgba(0,0,0,0.12);
+  z-index: 9999;
+  box-sizing: border-box !important;
 }
 
-#adminSearchBtn, #viewFullRecords {
-  padding: 8px 14px;
+.gray-btn, .blue-btn {
+  flex: 1;
+  height: 48px;
   font-size: 20px;
+  border-radius: 10px;
   border: none;
-  border-radius: 8px;
-  cursor: pointer;
-  color: white;
-  display: inline-block;
-  width: auto !important;
 }
 
-#adminSearchBtn { background: #0b5ed7; }
-#viewFullRecords { background: #28a745; }
+.gray-btn { background:#e0e0e0; color:#333; }
+.blue-btn { background:#0b5ed7; color:#fff; }
 
-#adminSearchBtn:hover   { background: #0a58ca; }
-#viewFullRecords:hover { background: #218838; }
-
-/* =========================================
-   偽下拉按鈕
-========================================= */
+/* ===== 偽下拉選單 ===== */
 .fakeSelectBtn {
   font-size: 20px;
   padding: 4px 12px;
   border: 1px solid #888;
   border-radius: 4px;
   background: #fff;
-  cursor: pointer;
   display: inline-flex;
   align-items: center;
+  justify-content: space-between;
   min-width: 110px;
-  height: 42px;
+  cursor: pointer;
+  height: 42px !important;
+  box-sizing: border-box;
 }
 
+.fakeSelectBtn span { font-weight: normal !important; }
+
 .fakeSelectBtn .arrow {
+  display: inline-block;
   width: 18px;
   height: 18px;
-  font-size: 18px;
-  margin-left: 6px;
   flex-shrink: 0;
 }
 
-/* =========================================
-   偽下拉選單 遮罩 + Panel（整合＋iPhone 修復）
-========================================= */
+.timeRow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.tilde { font-size:20px; padding:0 2px; }
+
+/* ===== 全螢幕偽下拉遮罩（包含補丁合併） ===== */
 #fullDropdownMask {
   position: fixed;
   inset: 0;
-  width: 100vw;
-  height: 100vh;
   background: rgba(0,0,0,0.45);
+  z-index: 99999;
   display: none;
   justify-content: center;
   align-items: center;
-  padding: 0;
-  overflow: hidden;  /* iPhone 修正 */
-  z-index: 99999;
+  padding: 30px;
+  width: 100vw;
+  height: 100vh;
+  overflow: hidden;
 }
 
 #fullDropdownPanel {
   width: 92%;
   max-width: 520px;
   max-height: calc(100vh - 60px);
-  overflow-y: auto;
-  background: white;
+  background:#fff;
   border-radius: 20px;
   padding: 14px 0;
+  overflow-y: auto;
   -webkit-overflow-scrolling: touch;
   box-shadow: 0 6px 26px rgba(0,0,0,0.3);
 }
 
 .panel-title {
+  font-size: 20px;
+  font-weight: bold;
   padding: 0 20px 14px;
   margin-bottom: 6px;
   border-bottom: 1px solid #eee;
-  font-size: 20px;
-  font-weight: bold;
 }
 
 .panel-options .option {
   padding: 14px 20px;
   font-size: 20px;
-  border-bottom: 1px solid #f2f2f2;
-  cursor: pointer;
   display: flex;
   justify-content: space-between;
-}
-
-.option.selected {
-  background: #eef5ff !important;
-}
-
-/* =========================================
-   Footer（手機顯示，桌機隱藏）
-========================================= */
-#globalFooter {
-  position: fixed;
-  bottom: 0;
-  left: 0;
-  width: 100%;
-  height: 70px;
-  padding: 0 16px;
-  box-sizing: border-box;
-  background: #f8f8f8;
-  display: flex;
-  gap: 12px;
-  justify-content: center;
   align-items: center;
-  box-shadow: 0 -2px 6px rgba(0,0,0,0.12);
-  z-index: 9999;
+  border-bottom: 1px solid #f2f2f2;
+  cursor: pointer;
+  color: #222;
 }
 
-.gray-btn, .blue-btn {
-  flex: 1;
-  height: 48px;
-  border-radius: 10px;
-  border: none;
-  font-size: 20px;
+.option.selected { background:#eef5ff !important; }
+
+.radio-circle {
+  width:22px; height:22px;
+  border-radius:50%;
+  border:2px solid #777;
+  display:flex; justify-content:center; align-items:center;
 }
 
-.gray-btn { background: #e0e0e0; color: #333; }
-.blue-btn { background: #0b5ed7; color: #fff; }
+.radio-circle.selected { border-color:#0b5ed7; }
 
-/* =========================================
-   Mobile: List & Detail 區域
-========================================= */
-#listView, #detailView {
-  position: absolute;
-  inset: 0;
-  bottom: 70px; /* 避開 footer */
-  overflow-y: auto;
-  -webkit-overflow-scrolling: touch;
-  padding: 0 16px 50px;
-  box-sizing: border-box;
+.radio-circle.selected::after {
+  content:""; width:10px; height:10px;
+  background:#0b5ed7; border-radius:50%;
 }
 
-/* =========================================
-   Desktop 重新整合（卡片模式）
-========================================= */
+/* ===== Desktop First（≥769px） ===== */
 @media (min-width:769px){
 
-  html, body {
-    height: auto !important;
-    overflow: auto !important;
-    background: #f1f1f1 !important;
-  }
+  #globalFooter { display:none !important; }
 
-  #globalFooter {
-    display: none !important;
+  html, body {
+    height:auto !important;
+    overflow:auto !important;
+    background:#f1f1f1 !important;
+    overflow-x:hidden !important;
   }
 
   body.desktop-card-mode {
-    display: flex;
-    justify-content: center;
-    padding: 40px 0;
+    background:#f1f1f1 !important;
+    display:flex !important;
+    justify-content:center !important;
+    padding:40px 0 !important;
   }
 
   #pageWrapper {
-    max-width: 820px;
-    width: 100%;
-    background: white;
-    border-radius: 12px;
-    padding: 24px 30px;
-    box-shadow: 0 4px 14px rgba(0,0,0,0.1);
-    position: relative;
+    max-width:820px !important;
+    width:100%;
+    background:#fff;
+    border-radius:12px;
+    padding:24px 30px;
+    box-shadow:0 4px 14px rgba(0,0,0,0.10);
+    position:relative !important;
   }
 
   #listView {
     position: static !important;
-    height: auto !important;
-    inset: auto !important;
-    overflow: visible !important;
-    padding: 0 !important;
+    height:auto !important;
+    overflow:visible !important;
+    padding:0 !important;
   }
 
-  /* ★ detailView = 卡片內顯示（依你需求修正） */
+  /* 桌機 detailView 原樣修正（你要求不滿版時可調整） */
   #detailView {
-    position: static !important;
-    height: auto !important;
-    overflow: auto !important;
-    padding: 0 !important;
+    position:fixed !important;
+    inset:0 !important;
+    background:white !important;
+    overflow:auto !important;
+    z-index:9995 !important;
   }
 
   #detailFrame {
-    width: 100%;
-    border: none;
-    height: auto !important;
-    min-height: 800px;
+    width:100% !important;
+    height:100% !important;
+    border:none !important;
   }
 
-  /* 小圓鈕永遠貼卡片右側 */
+  #desktopBackBtn, #desktopHomeBtn {
+    display:inline-block !important;
+    position:fixed !important;
+    top:80px !important;
+    z-index:10050 !important;
+    padding:10px 18px;
+    font-size:15px;
+    border-radius:8px;
+    border:1px solid #ddd;
+    background:white;
+    cursor:pointer;
+  }
+
+  #desktopBackBtn { left:calc(50% - 410px); }
+  #desktopHomeBtn { right:calc(50% - 410px); }
+
   #floatingButtons {
-    position: fixed;
-    top: 50px;
-    left: calc(50% + 410px + 40px);
-    display: flex;
-    flex-direction: column;
-    gap: 14px;
-    z-index: 100000;
+    position:fixed !important;
+    top:50px !important;
+    left:calc(50% + 410px + 60px) !important;
+    display:flex !important;
+    flex-direction:column !important;
+    gap:14px !important;
+    z-index:100000 !important;
   }
 }
 
-/* =========================================
-   其它
-========================================= */
-#btnTeam, #btnSelf {
-  cursor: pointer;
-}
-  </style>
-
-  <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
-</head>
-
-<body>
-
-  <div id="pageWrapper">
-
-    <!-- 電腦版卡片邊邊圓鈕 -->
-<div id="floatingButtons" style="display:none;">
-  <button class="circle-btn" onclick="handleClosePage()">
-    <!-- 房子 icon -->
-    <svg fill="none" viewBox="0 0 24 24" stroke-width="2">
-      <path d="M3 9.5L12 3l9 6.5V21a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1V9.5z"/>
-    </svg>
-  </button>
-
-  <button class="circle-btn" onclick="backToList()">
-    <!-- 左箭頭 icon -->
-    <svg fill="none" viewBox="0 0 24 24" stroke-width="2">
-      <path d="M15 6l-6 6 6 6" />
-    </svg>
-  </button>
-</div>
-
-<div id="listView" style="display:block;">
-
-
-    <!-- 這個 div 用來顯示所有的日誌 -->
-<!--
-  <div id="debugLog" style="position: fixed; bottom: 0; left: 0; width: 100%; background-color: rgba(0, 0, 0, 0.7); color: white; font-size: 14px; padding: 10px; overflow-y: auto; max-height: 200px;"></div>
--->
-
-<div id="loadingMask">
-  <div class="spinner"></div>
-
-  <div id="text-loading" class="loadingText">載入中…</div>
-  <div id="text-update" class="loadingText">資料更新中，請耐心等候…</div>
-  <div id="text-init" class="loadingText">資料初始化中，請耐心等候…</div>
-
-  <!-- 錯誤訊息預留（可選） -->
-  <div id="text-error" class="loadingText">無法連線到資料來源</div>
-  <div id="text-error-format" class="loadingText">資料格式錯誤，請聯絡管理員</div>
-  <div id="text-error-notfound" class="loadingText">找不到您的志工資料</div>
-</div>
-
-<h2 id="pageTitle" style="display:block;">回報紀錄</h2>
-
-<div id="switchArea" style="
-  display:none;
-  text-align:center;
-  margin-top:10px;
-  margin-bottom:18px;
-">
-  <button id="btnTeam" style="
-  padding:6px 16px;
-  font-size:22px;
-  border:2px solid #0b5ed7;
-  background:#0b5ed7;
-  color:white;
-  border-radius:6px;
-  margin-right:6px;
-">大隊紀錄</button>
-
-<button id="btnSelf" style="
-  padding:6px 16px;
-  font-size:22px;
-  border:2px solid #0b5ed7;
-  background:white;
-  color:#0b5ed7;
-  border-radius:6px;
-">我的紀錄</button>
-</div>
-
-<div id="adminFilterArea" style="display:none; padding:12px;">
-
-  <!-- 大隊 -->
-  <div style="margin-bottom:12px;">
-    <label>大隊：</label>
-
-    <!-- 原生 select：保留給 JS 用（hidden 不會被看到） -->
-    <select id="adminTeamSelect" style="display:none;">
-      <option value="全部">全部</option>
-      <option value="1">第1大隊</option>
-      <option value="2">第2大隊</option>
-      <option value="3">第3大隊</option>
-      <option value="4">第4大隊</option>
-      <option value="5">第5大隊</option>
-      <option value="6">第6大隊</option>
-      <option value="7">第7大隊</option>
-      <option value="8">第8大隊</option>
-      <option value="9">第9大隊</option>
-      <option value="10">第10大隊</option>
-    </select>
-
-    <!-- 偽下拉 UI -->
-    <button class="fakeSelectBtn" onclick="openDropdown('team')">
-  <span id="teamText">全部</span>
-  <span class="arrow">▾</span>
-</button>
-  </div>
-
-  <!-- 範圍 -->
-  <div style="margin-bottom:12px;">
-    <label>範圍：</label>
-
-    <select id="adminDayRange" style="display:none;">
-      <option value="3" selected>最近 3 天</option>
-      <option value="7">最近 7 天</option>
-      <option value="14">最近 14 天</option>
-    </select>
-
-    <button class="fakeSelectBtn" onclick="openDropdown('range')">
-  <span id="rangeText">最近 3 天</span>
-  <span class="arrow">▾</span>
-</button>
-  </div>
-
-  <!-- 時間 -->
-  <div style="margin-bottom:12px;">
-    <label>時間：</label>
-
-    <select id="timeStart" style="display:none;">
-      <option value="00:00">00:00</option>
-      <option value="01:00">01:00</option>
-      <option value="02:00">02:00</option>
-      <option value="03:00">03:00</option>
-      <option value="04:00">04:00</option>
-      <option value="05:00">05:00</option>
-      <option value="06:00">06:00</option>
-      <option value="07:00">07:00</option>
-      <option value="08:00">08:00</option>
-      <option value="09:00">09:00</option>
-      <option value="10:00">10:00</option>
-      <option value="11:00">11:00</option>
-      <option value="12:00">12:00</option>
-      <option value="13:00">13:00</option>
-      <option value="14:00">14:00</option>
-      <option value="15:00">15:00</option>
-      <option value="16:00">16:00</option>
-      <option value="17:00">17:00</option>
-      <option value="18:00">18:00</option>
-      <option value="19:00">19:00</option>
-      <option value="20:00">20:00</option>
-      <option value="21:00">21:00</option>
-      <option value="22:00">22:00</option>
-      <option value="23:00">23:00</option>
-    </select>
-
-    <select id="timeEnd" style="display:none;">
-      <option value="00:59">00:59</option>
-      <option value="01:59">01:59</option>
-      <option value="02:59">02:59</option>
-      <option value="03:59">03:59</option>
-      <option value="04:59">04:59</option>
-      <option value="05:59">05:59</option>
-      <option value="06:59">06:59</option>
-      <option value="07:59">07:59</option>
-      <option value="08:59">08:59</option>
-      <option value="09:59">09:59</option>
-      <option value="10:59">10:59</option>
-      <option value="11:59">11:59</option>
-      <option value="12:59">12:59</option>
-      <option value="13:59">13:59</option>
-      <option value="14:59">14:59</option>
-      <option value="15:59">15:59</option>
-      <option value="16:59">16:59</option>
-      <option value="17:59">17:59</option>
-      <option value="18:59">18:59</option>
-      <option value="19:59">19:59</option>
-      <option value="20:59">20:59</option>
-      <option value="21:59">21:59</option>
-      <option value="22:59">22:59</option>
-      <option value="23:59" selected>23:59</option>
-    </select>
-
-    <div id="timeWrapper" class="timeRow">
-  <button class="fakeSelectBtn timeBtn" onclick="openDropdown('timeStart')">
-    <span id="timeStartText">00:00</span>
-    <span class="arrow">▾</span>
-  </button>
-
-  <span class="tilde">～</span>
-
-  <button class="fakeSelectBtn timeBtn" onclick="openDropdown('timeEnd')">
-    <span id="timeEndText">23:59</span>
-    <span class="arrow">▾</span>
-  </button>
-</div>
-  </div>
-
-  <!-- 類型 -->
-  <div style="margin-bottom:12px;">
-    <label>類型：</label>
-
-    <select id="adminTypeSelect" style="display:none;">
-      <option value="全部">全部</option>
-      <option value="平時">平時</option>
-      <option value="災中">災中</option>
-      <option value="其他">其他</option>
-    </select>
-
-    <button class="fakeSelectBtn" onclick="openDropdown('type')">
-  <span id="typeText">全部</span>
-  <span class="arrow">▾</span>
-</button>
-  </div>
-
-
-  <!-- 搜尋 -->
-  <div style="text-align:center; margin-top:20px;">
-    <button id="adminSearchBtn" class="searchBtn">搜尋</button>
-</div>
-
-</div>
-
-<!-- 全螢幕偽下拉選單（這段貼這裡） -->
-<div id="fullDropdownMask">
-  <div id="fullDropdownPanel">
-    <div class="panel-title" id="panelTitle"></div>
-    <div class="panel-options" id="panelOptions"></div>
-  </div>
-</div>
-
-<div id="centerSpinner" style="
-  display:none;
-  width:100%;
-  padding:40px 0;
-  justify-content:center;
-  align-items:center;
-  flex-direction:column;
-">
-  <div class="spinner"></div>
-  <div style="font-size:22px; color:#666; margin-top:10px;">載入中...</div>
-</div>
-
-<!-- 清單真正呈現的地方，一開始先隱藏 -->
-<div id="listContainer" style="display: none;"></div>
-
-</div>
-
-<!-- == DetailView 覆蓋層 == -->
-<div id="detailView" style="
-  display:none;
-  position:fixed;
-  top:0;
-  left:0;
-  width:100%;
-  height:100%;
-  background:#fff;
-  z-index:9998;
-  overflow:hidden;   /* 保證不出現白邊 */
-  padding:0;
-  margin:0;
-">
-
-  <!-- == 無邊距 iframe == -->
-  <iframe id="detailFrame"
-    sandbox="allow-scripts allow-same-origin allow-top-navigation-by-user-activation"
-    style="
-      position:absolute;
-      top:0;
-      left:0;
-      width:100%;
-      height:calc(100% - 70px);
-      border:0;
-      padding:0;
-      margin:0;
-      display:block;
-      background:#fff;
-">
-</iframe>
-</div>
-
-<div style="height:15px"></div>
-
-</div>   <!-- pageWrapper 結束 -->
-
-
-  <!-- 電腦版小圓鈕 -->
-<!--
-  <div id="floatingButtons" style="display:none;">
-  <button class="circle-btn" onclick="backToList()">返</button>
-  <button class="circle-btn" onclick="handleClosePage()">主</button>
-</div>
--->
-  
-<div id="globalFooter">
-  <button class="gray-btn" onclick="backToList()">回上一頁</button>
-  <button class="gray-btn" onclick="handleClosePage()">回主選單</button>
-</div>
-
-<script>
-
-  const VOLUNTEER_API_URL = "https://script.google.com/macros/s/AKfycbxiGSG5hSMO6We-C6cyEJZLgf4Rnbjp-6w9Tmb0qfF9VM6JB4YGEMqj3QRfTzg7Czpc/exec"; 
-const REPORT_GAS_URL = "https://script.google.com/macros/s/AKfycbxl3TC9aFxOZCm46KfTe5-sRsJxUKcdsaO1RqrjYniYJqWecoEdp6MvUoPNKwCnmZcTBw/exec";
-
-let globalAdminRecords = [];   // 管理員一次抓全部後存在這邊
-let adminViewDays = 3;        // 預設抓最近兩週，可改 30
-let globalNickname = "";
-let globalRole = "";
-let globalTeam = "";
-let globalName = "";  // ★ 必須補這行
-let viewMode = "team";  // self = 看自己, team = 看大隊
-let shouldKeepMask = false;
-let restoredOnce = false;
-let isInitialLoad = true;
-let globalRecords = [];
-let isPhotoOpened = false;
-
-// === 防止回上一頁重新初始化（BFCache 支援） ===
-window.addEventListener("pageshow", function (event) {
-  if (event.persisted) {
-    console.log("BFCache restore → 不執行 main()");
-    return;
-  }
-});
-
-main();
-
-function debug(msg) {
-  try {
-    const box = document.getElementById("debugLog");
-    if (box) {
-      // 這裡添加新的日誌
-      box.textContent += msg + "\n";
-      box.scrollTop = box.scrollHeight;  // 滾動到最新的日誌位置
-    }
-    console.log(msg);  // 依然在控制台打印
-  } catch (e) {
-    console.error("Debug log error: ", e);
-  }
+/* ===== Photo Open 狀態隱藏浮動按鈕 ===== */
+body.photo-open #floatingButtons {
+  display:none !important;
 }
 
-  /* ------------------------------------------
-      1. 初始化：登入 LIFF 並取得資料
-  -------------------------------------------*/
-  function showLoading() {
-  document.body.classList.add("loading");  // ★ 電腦版卡片隱藏用
+/* ===== 按鈕 Hover 指標 ===== */
+#btnTeam, #btnSelf { cursor:pointer; }
 
-  document.getElementById("loadingMask").style.display = "flex";
-
-  document.getElementById("text-loading").style.display = "block";
-  document.getElementById("text-update").style.display = "none";
-  document.getElementById("text-init").style.display = "none";
-  document.getElementById("text-error").style.display = "none";
-  document.getElementById("text-error-format").style.display = "none";
-  document.getElementById("text-error-notfound").style.display = "none";
-}
-
-async function main() {
-  showLoading();  // ★ 這裡顯示載入中...
-
-  globalVid      = localStorage.getItem("vid") || "";
-globalName     = localStorage.getItem("name") || "";
-globalTeam     = localStorage.getItem("team") || "";
-globalRole     = localStorage.getItem("role") || "志工";
-
-if (!globalVid) {
-  debug("錯誤：localStorage 內沒有 vid，無法查詢資料");
-}
-
-  if (globalRole === "管理員") {
-    viewMode = "admin";
-    await loadAdminRecords();
-    return;
-  }
-
-  if (globalRole === "大隊長") {
-    viewMode = "team";
-    await loadRecordList("team");
-    return;
-  }
-
-  viewMode = "self";
-  await loadRecordList("self");
-}
-
-function openDetail(url) {
-  const list   = document.getElementById("listView");
-  const detail = document.getElementById("detailView");
-  const iframe = document.getElementById("detailFrame");
-  const footer = document.getElementById("globalFooter");
-  const fb     = document.getElementById("floatingButtons");
-
-  // 進入 DetailView
-  list.style.display = "none";
-  detail.style.display = "block";
-  iframe.src = url;
-
-  // 初始 footer / 小圓鈕顯示規則
-  if (window.innerWidth < 769) {
-    footer.style.display = "flex";   // 手機 → footer 要出現
-    fb.style.display = "none";       // 手機不顯示小圓鈕
-  } else {
-    footer.style.display = "none";        // 電腦 → footer 不用
-    fb.style.display = "flex";            // 電腦顯示小圓鈕
-    document.body.classList.add("show-detail");
-  }
-
-  // 不再使用 MutationObserver（照片頁會用 postMessage）
-  iframe.onload = () => {
-    // 若 detail 內部要執行初始化，可以放這裡
-    // 但不需要偵測 modal.style.display
-  };
-}
-
-// ★★★ 統一照片頁偵測邏輯
-function isPhotoPage(url) {
-  return /photo|image|img|picture|gallery/i.test(url);
-}
-
-function backToList() {
-  const detail = document.getElementById("detailView");
-  const list = document.getElementById("listView");
-  const fb = document.getElementById("floatingButtons");
-
-  if (detail.style.display === "block") {
-    detail.style.display = "none";
-    list.style.display = "block";
-
-    document.body.classList.remove("show-detail");
-
-    // 電腦版回列表 → 圓鈕貼卡片邊
-    if (window.innerWidth >= 769) {
-      fb.style.display = "flex";
-    }
-
-    return;
-  }
-
-  window.location.href = "/home";
-}
-
-async function loadAdminRecords() {
-
-  const url = `${REPORT_GAS_URL}?action=listAdminFull&days=30`;
-
-  let json;
-  try {
-    const res = await fetch(url);
-    const text = await res.text();
-    json = JSON.parse(text);
-  } catch (e) {
-    document.getElementById("listContainer").innerHTML = "管理員資料載入失敗";
-    shouldKeepMask = false;
-    document.getElementById("loadingMask").style.display = "none";
-    return;
-  }
-
-  globalAdminRecords = json.records || [];
-
-  const filtered = filterAdminRecords();
-  renderList(filtered);
-
-  // ★ renderList 結束後，關掉大 loading
-  if (shouldKeepMask) {
-    shouldKeepMask = false;
-    document.getElementById("loadingMask").style.display = "none";
-  }
-
-  isInitialLoad = false;   // ★ 第一次載入結束
-}
-
-  /* ------------------------------------------
-      3. 從 GAS 取得回報記錄（未來串 API）
-  -------------------------------------------*/
-  async function loadRecordList(mode = "self") {
-  if (!globalVid) {
-    debug("錯誤：沒有 vid 無法查詢");
-    document.getElementById("loadingMask").style.display = "none";
-    return;
-  }
-
-  let url = "";
-
-  if (mode === "self") {
-    url = `${REPORT_GAS_URL}?action=listMyReports&vid=${encodeURIComponent(globalVid)}`;
-  } else if (mode === "team") {
-    url = `${REPORT_GAS_URL}?action=listTeamReports&team=${encodeURIComponent(globalTeam)}`;
-  }
-
-  debug("發送 API 請求，URL: " + url); // 打印 API 請求的 URL
-
-  const res = await fetch(url);
-  const text = await res.text();
-  const json = JSON.parse(text);
-
-  debug("返回的資料: " + JSON.stringify(json)); // 打印 API 返回的資料
-
-  globalRecords = json.records || [];
-  renderList(globalRecords);
-}
-
-  if (shouldKeepMask) {
-    shouldKeepMask = false;
-    document.getElementById("loadingMask").style.display = "none";
-  }
-
-  updateSwitchUI();
-
-  /* ------------------------------------------
-      4. 渲染「年度 → 月份 → 日期 → 紀錄」
-  -------------------------------------------*/
-  function normalizeDate(dateStr) {
-  // 若是 ISO 格式：2025-11-11T16:00:00.000Z
-  if (dateStr.includes("T")) {
-    const d = new Date(dateStr);
-    const yyyy = d.getFullYear();
-    const mm = String(d.getMonth() + 1).padStart(2, "0");
-    const dd = String(d.getDate()).padStart(2, "0");
-    return `${yyyy}/${mm}/${dd}`;
-  }
-  return dateStr; // 若本來就是 yyyy/mm/dd
-}
-
-function filterAdminRecords() {
-  let records = [...globalAdminRecords];
-
-  // 1. 篩選大隊
-let targetTeam = document.getElementById("adminTeamSelect")?.value;
-
-// iOS hidden select = "" → 必須補救
-if (!targetTeam) {
-  targetTeam = document.getElementById("teamText").innerText || "全部";
-}
-
-if (targetTeam !== "全部") {
-  records = records.filter(r => (r.所屬大隊 + "") === targetTeam);
-}
-
-  // 2. 範圍篩選（重要：從下拉選單讀取）
-  const dayRangeSelect = document.getElementById("adminDayRange");
-  let selectedDays = dayRangeSelect?.value;
-if (!selectedDays) selectedDays = document.getElementById("rangeText").innerText.replace("最近 ", "").replace(" 天", "");
-  adminViewDays = Number(selectedDays);
-  
-  console.log("篩選天數:", adminViewDays); // 除錯用
-  
-  const now = new Date();
-  const cutoff = new Date(now.getTime() - adminViewDays * 24 * 60 * 60 * 1000);
-
-  records = records.filter(r => {
-    let ds = normalizeDate(r.日期);
-    const recordDate = new Date(ds);
-    return recordDate >= cutoff;
-  });
-
-  // 3. 篩選通報類型
-  let targetType = document.getElementById("adminTypeSelect")?.value || "全部";
-  if (targetType !== "全部") {
-    records = records.filter(r => {
-      const type = (r.通報類型 || "").trim();
-      return type === targetType;
-    });
-  }
-
-  // 4. 時間篩選
-  const start = document.getElementById("timeStart")?.value || "00:00";
-const end   = document.getElementById("timeEnd")?.value || "23:59";
-
-const [startHour, startMinute] = start.split(":").map(Number);
-const [endHour, endMinute] = end.split(":").map(Number);
-
-const startTotal = startHour * 60 + startMinute;
-const endTotal = endHour * 60 + endMinute;
-
-records = records.filter(r => {
-  const link = r.詳細紀錄 || "";
-  const match = link.match(/report_(\d+)/);
-  if (!match) return false;
-
-  const t = parseInt(match[1], 10);
-  const d = new Date(t);
-  const h = d.getHours();
-  const m = d.getMinutes();
-  
-  const recordTotal = h * 60 + m;
-
-  if (startTotal <= endTotal) {
-    return recordTotal >= startTotal && recordTotal <= endTotal;
-  } else {
-    return recordTotal >= startTotal || recordTotal <= endTotal;
-  }
-});
-
-  console.log("篩選後筆數:", records.length); // 除錯用
-  return records;
-}
-
-function renderList(records) {
-  const container = document.getElementById("listContainer");
-  const spinner = document.getElementById("centerSpinner");
-  const mask = document.getElementById("loadingMask");
-
-  // 初始化時隱藏列表和 spinner，保持載入中遮罩
-  container.style.display = "none";
-  spinner.style.display = "none";
-
-  // 管理員模式：確保篩選區域顯示
-  if (globalRole === "管理員" && viewMode === "admin") {
-    document.getElementById("adminFilterArea").style.display = "block";
-  } else {
-    document.getElementById("adminFilterArea").style.display = "none";
-  }
-
-  // 只有在切換模式時才顯示小 spinner
-  if (!isInitialLoad) {
-    spinner.style.display = "flex";
-    container.style.display = "none";
-  } else {
-    spinner.style.display = "none";
-  }
-
-  // ⭐⭐⭐ 管理員前端快篩：只在 admin 模式下執行 ⭐⭐⭐
-  if (globalRole === "管理員" && viewMode === "admin") {
-    if (globalAdminRecords.length > 0) {
-      let targetTeam = document.getElementById("adminTeamSelect")?.value || "全部";
-      if (targetTeam !== "全部") {
-        records = records.filter(r => (r.所屬大隊 + "") === targetTeam);
-      }
-
-      const now = new Date();
-      const cutoff = new Date(now.getTime() - adminViewDays * 24 * 60 * 60 * 1000);
-
-      records = records.filter(r => {
-        let ds = normalizeDate(r.日期);
-        return new Date(ds) >= cutoff;
-      });
-    }
-  } else {
-    document.getElementById("adminFilterArea").style.display = "none";
-  }
-
-  let finalRecords = records;
-
-  globalRecords = records;
-
-  debug("STEP3: globalTeam = " + globalTeam);
-
-  debug("STEP3: 進入 renderList，顯示筆數=" + finalRecords.length);
-
-  container.innerHTML = "";
-
-  const now2 = new Date();
-  const currentYear = now2.getFullYear() - 1911;
-  const currentMonth = now2.getMonth() + 1;
-
-  const grouped = {};
-  for (let m = 1; m <= 12; m++) grouped[m] = {};
-
-  finalRecords.forEach(r => {
-    const normalized = normalizeDate(r.日期);
-    debug("STEP3-日期修正：" + r.日期 + " → " + normalized);
-
-    const dateParts = normalized.split("/");
-    const m = parseInt(dateParts[1], 10);
-    const d = parseInt(dateParts[2], 10);
-
-    if (!grouped[m][d]) grouped[m][d] = [];
-    grouped[m][d].push(r);
-  });
-
-  debug("STEP3-1: 日期分組完成");
-
-  const yearBlock = createBlock(`${currentYear} 年`, "year");
-  const yearContent = yearBlock.querySelector(".content");
-
-  const months = Object.keys(grouped)
-    .map(m => parseInt(m, 10))
-    .filter(m => Object.keys(grouped[m]).length > 0)
-    .filter(m => m <= currentMonth)
-    .sort((a, b) => b - a);
-
-  debug("STEP3-2 顯示月份排列 = " + months.join(", "));
-
-  months.forEach(month => {
-    const monthBlock = createBlock(`${month} 月`, "month");
-    const monthContent = monthBlock.querySelector(".content");
-
-    const days = Object.keys(grouped[month]).sort((a, b) => b - a);
-
-    if (days.length === 0) {
-      const emptyDiv = document.createElement("div");
-      emptyDiv.className = "record";
-      emptyDiv.textContent = "本月無巡視紀錄";
-      monthContent.appendChild(emptyDiv);
-    } else {
-      days.forEach(day => {
-        const dayBlock = createBlock(`${day} 日`, "day");
-        const dayContent = dayBlock.querySelector(".content");
-
-        grouped[month][day].forEach(record => {
-          const div = document.createElement("div");
-          div.className = "record";
-
-          let hh = "--", mm = "--";
-
-          try {
-            const match = record.詳細紀錄.match(/report_(\d+)/);
-            if (match) {
-              const t = parseInt(match[1], 10);
-              const dateObj = new Date(t);
-
-              hh = String(dateObj.getHours()).padStart(2, "0");
-              mm = String(dateObj.getMinutes()).padStart(2, "0");
-            }
-          } catch (e) {
-            console.warn("無法解析時間：", record.詳細紀錄);
-          }
-
-          const status = (record.狀態 || "").trim();
-          const isAbnormal = status === "異常";
-
-          const timeText = document.createElement("span");
-          timeText.textContent = `${hh}:${mm}｜${status}`;
-          div.appendChild(timeText);
-
-          if ((viewMode === "team" || viewMode === "admin") && record.回報者 && record.回報者.trim()) {
-            const nameSpan = document.createElement("span");
-            nameSpan.textContent = `｜${record.回報者}`;
-            div.appendChild(nameSpan);
-          }
-
-          if (isAbnormal) {
-            const dot = document.createElement("span");
-            dot.className = "status-dot";
-            div.appendChild(dot);
-          }
-
-          div.onclick = () => {
-            openDetail(record.詳細紀錄);
-          };
-
-          dayContent.appendChild(div);
-        });
-
-        monthContent.appendChild(dayBlock);
-      });
-    }
-
-    yearContent.appendChild(monthBlock);
-  });
-
-  container.appendChild(yearBlock);
-
-  // --- 渲染完成 ---
-  document.getElementById("loadingMask").style.display = "none";
-  container.style.display = "block";
-
-  if (spinner) spinner.style.display = "none";
-
-  if (globalRole === "大隊長" || globalRole === "管理員") {
-    document.getElementById("switchArea").style.display = "block";
-  }
-
-  updateSwitchUI();
-  document.getElementById("pageTitle").style.display = "block";
-
-  // ★★★ 關鍵修改：確保狀態恢復只在第一次渲染時執行，且時機正確
-  setTimeout(() => {
-    if (!restoredOnce) {
-      restoreListState();
-      restoredOnce = true;
-    } else {
-      // 非第一次渲染時，自動展開年份區塊
-      const yearHeader = document.querySelector('.year-block .header');
-      if (yearHeader && yearHeader.nextElementSibling.style.display !== 'block') {
-        yearHeader.click();
-      }
-    }
-  }, 50); // 稍微延遲確保 DOM 完全渲染
-
-  isInitialLoad = false;
-
-  document.body.classList.remove("loading");
-
-  debug("STEP3 完成：列表渲染成功");
-}
-
-function saveListState() {
-  // 取得所有展開的區塊
-  const opened = [];
-
-  document.querySelectorAll(".year-block, .month-block, .day-block").forEach(block => {
-    const content = block.querySelector(".content");
-    if (content && content.style.display === "block") {
-      opened.push(block.querySelector(".header span").textContent.trim());
-    }
-  });
-
-  const state = {
-    openedBlocks: opened,
-    scroll: window.scrollY
-  };
-
-  localStorage.setItem("cleanListState", JSON.stringify(state));
-}
-
-function restoreListState() {
-  const cache = localStorage.getItem("cleanListState");
-  if (!cache) return;
-
-  const state = JSON.parse(cache);
-  const opened = state.openedBlocks || [];
-
-  // 恢復展開
-  opened.forEach(text => {
-    const headers = document.querySelectorAll(".header span");
-    headers.forEach(h => {
-      if (h.textContent.trim() === text) {
-        const block = h.closest(".year-block, .month-block, .day-block");
-        const content = block.querySelector(".content");
-        const icon = block.querySelector(".toggle-icon");
-
-        content.style.display = "block";
-        icon.innerHTML = `
-          <svg width="40" height="40" viewBox="0 0 24 24">
-            <path fill="#666" d="M5 16l7-8 7 8z"/>
-          </svg>`;
-      }
-    });
-  });
-
-  // 恢復捲動位置
-  setTimeout(() => {
-    window.scrollTo(0, state.scroll || 0);
-  }, 10);
-}
-
-  /* ------------------------------------------
-      5. 工具：建立可收合區塊
-  -------------------------------------------*/
-  function createBlock(title, level) {
-  const block = document.createElement("div");
-  block.className = level + "-block";
-
-  const header = document.createElement("div");
-  header.className = "header";
-
-  const titleSpan = document.createElement("span");
-  titleSpan.textContent = title;
-
-  // ▼（預設收起用）
-  const icon = document.createElement("span");
-  icon.className = "toggle-icon";
-  icon.innerHTML = `
-  <svg width="40" height="40" viewBox="0 0 24 24">
-    <path fill="#666" d="M5 8l7 8 7-8z"/>
-  </svg>
-`;
-
-  const content = document.createElement("div");
-  content.className = "content";
-  content.style.display = "none";
-
-  header.appendChild(titleSpan);
-  header.appendChild(icon);
-
-  header.onclick = () => {
-  const willOpen = content.style.display !== "block";
-
-  content.style.display = willOpen ? "block" : "none";
-
-  icon.innerHTML = willOpen
-    ? `<svg width="40" height="40" viewBox="0 0 24 24">
-         <path fill="#666" d="M5 16l7-8 7 8z"/>  <!-- 向上 -->
-       </svg>`
-    : `<svg width="40" height="40" viewBox="0 0 24 24">
-         <path fill="#666" d="M5 8l7 8 7-8z"/>  <!-- 向下 -->
-       </svg>`;
-};
-
-  block.appendChild(header);
-  block.appendChild(content);
-
-  return block;
-}
-
-document.getElementById("btnSelf").onclick = function () {
-  viewMode = "self";
-  
-  // 立即更新按鈕樣式
-  updateSwitchUI();
-  
-  // 隱藏管理員篩選區域
-  document.getElementById("adminFilterArea").style.display = "none";
-
-  // 顯示載入中
-  renderLoadingInList();
-  
-  // 載入個人紀錄
-  loadRecordList("self");
-};
-
-document.getElementById("btnTeam").onclick = async function () {
-  // 大隊長 → 讀自己的大隊
-  if (globalRole === "大隊長") {
-    viewMode = "team";
-    updateSwitchUI(); // 立即更新按鈕樣式
-    document.getElementById("adminFilterArea").style.display = "none";
-    renderLoadingInList();
-    loadRecordList("team");
-    return;
-  }
-
-  // 管理員 → Admin 模式
-  if (globalRole === "管理員") {
-    viewMode = "admin";
-    updateSwitchUI(); // 立即更新按鈕樣式
-    renderLoadingInList();
-
-    // 如果還沒有管理員資料，先載入
-    if (globalAdminRecords.length === 0) {
-      await loadAdminRecords();
-    } else {
-      // 如果已經有資料，直接顯示篩選和渲染
-      document.getElementById("adminFilterArea").style.display = "block";
-      const filtered = filterAdminRecords();
-      renderList(filtered);
-    }
-  }
-};
-
-document.getElementById("adminSearchBtn").onclick = () => {
-  if (viewMode !== "admin") return;
-
-  // 顯示載入中
-  renderLoadingInList();
-
-  // 使用現有資料進行前端篩選
-  setTimeout(() => {
-    const filtered = filterAdminRecords();
-    renderList(filtered);
-  }, 100); // 稍微延遲讓載入動畫顯示
-};
-
-// 按鈕視覺切換
-function updateSwitchUI() {
-  const btnSelf = document.getElementById("btnSelf");
-  const btnTeam = document.getElementById("btnTeam");
-
-  // 重置所有按鈕樣式
-  btnSelf.style.background = "white";
-  btnSelf.style.color = "#0b5ed7";
-  btnTeam.style.background = "white";
-  btnTeam.style.color = "#0b5ed7";
-
-  // 根據當前模式設定激活狀態
-  if (viewMode === "self") {
-    btnSelf.style.background = "#0b5ed7";
-    btnSelf.style.color = "white";
-  } else if (viewMode === "team" || viewMode === "admin") {
-    btnTeam.style.background = "#0b5ed7";
-    btnTeam.style.color = "white";
-  }
-
-  // ★★★ 在這裡加入即可 ★★★
-  applyAdminButtonFix();
-}
-
-function applyAdminButtonFix() {
-  const btnSelf = document.getElementById("btnSelf");
-
-  // 只在「管理員 + admin 模式」下啟動
-  if (globalRole === "管理員" && viewMode === "admin") {
-
-    // 按鈕文字
-    btnSelf.textContent = "歷史報表";
-
-    // ----- 未選中狀態（白底綠框） -----
-    btnSelf.style.background = "white";
-    btnSelf.style.color = "#28a745";
-    btnSelf.style.border = "2px solid #28a745";
-
-    // hover（還是白底，只是顏色微變）
-    btnSelf.onmouseover = () => {
-      btnSelf.style.background = "#f1fdf1";
-    };
-    btnSelf.onmouseout = () => {
-      // 若目前仍未選中 → 回到白底綠字
-      if (viewMode === "admin") {
-        btnSelf.style.background = "white";
-        btnSelf.style.color = "#28a745";
-      }
-    };
-
-    // ----- 點擊後變成選中狀態（綠底白字） -----
-    btnSelf.onclick = () => {
-      // 綠底白字
-      btnSelf.style.background = "#28a745";
-      btnSelf.style.color = "white";
-
-      // 立即開啟歷史報表
-      window.open(
-        "https://docs.google.com/spreadsheets/d/1GEjlfTy73kgZnMYrM0AHjnYIs1EPLIOQLCqsEE8BMAw/edit?gid=0#gid=0",
-        "_blank"
-      );
-    };
-  }
-}
-
-function showLoadingMask() {
-  document.getElementById("loadingMask").style.display = "flex";
-}
-
-function renderLoadingInList() {
-  const container = document.getElementById("listContainer");
-  const spinner = document.getElementById("centerSpinner");
-
-  container.style.display = "none";
-  spinner.style.display = "flex";
-
-  // 不要顯示大遮罩
-  document.getElementById("loadingMask").style.display = "none";
-}
-
-// 查看完整紀錄按鈕事件
-/*document.getElementById("viewFullRecords").onclick = function() {
-  window.open("https://docs.google.com/spreadsheets/d/1GEjlfTy73kgZnMYrM0AHjnYIs1EPLIOQLCqsEE8BMAw/edit?gid=0#gid=0", "_blank");
-};*/
-
-// 彈窗資料表
-const dropdownData = {
-  team: {
-    title: "選擇大隊",
-    target: "teamText",
-    input: "adminTeamSelect",
-    options: [
-      {value:"全部", text:"全部"},
-      {value:"1", text:"第1大隊"},
-      {value:"2", text:"第2大隊"},
-      {value:"3", text:"第3大隊"},
-      {value:"4", text:"第4大隊"},
-      {value:"5", text:"第5大隊"},
-      {value:"6", text:"第6大隊"},
-      {value:"7", text:"第7大隊"},
-      {value:"8", text:"第8大隊"},
-      {value:"9", text:"第9大隊"},
-      {value:"10", text:"第10大隊"},
-    ]
-  },
-
-  range: {
-    title: "選擇範圍",
-    target: "rangeText",
-    input: "adminDayRange",
-    options: [
-      {value:"3", text:"最近 3 天"},
-      {value:"7", text:"最近 7 天"},
-      {value:"14", text:"最近 14 天"}
-    ]
-  },
-
-  type: {
-    title: "選擇類型",
-    target: "typeText",
-    input: "adminTypeSelect",
-    options: [
-      {value:"全部", text:"全部"},
-      {value:"平時", text:"平時"},
-      {value:"災中", text:"災中"},
-      {value:"其他", text:"其他"}
-    ]
-  },
-
-  timeStart: {
-    title: "開始時間",
-    target: "timeStartText",
-    input: "timeStart",
-    options: Array.from({length:24}).map((_,i)=>({
-      value: `${String(i).padStart(2,'0')}:00`,
-      text: `${String(i).padStart(2,'0')}:00`
-    }))
-  },
-
-  timeEnd: {
-    title: "結束時間",
-    target: "timeEndText",
-    input: "timeEnd",
-    options: Array.from({length:24}).map((_,i)=>({
-      value: `${String(i).padStart(2,'0')}:59`,
-      text: `${String(i).padStart(2,'0')}:59`
-    }))
-  }
-};
-
-// 開啟
-function openDropdown(type){
-  const info = dropdownData[type];
-  if (!info) return;
-
-  document.getElementById("panelTitle").textContent = info.title;
-
-  const box = document.getElementById("panelOptions");
-  box.innerHTML = "";
-
-  const currentSelectedValue = document.getElementById(info.input).value;
-
-  info.options.forEach(opt => {
-    const div = document.createElement("div");
-    div.className = "option";
-    div.textContent = opt.text;
-
-    // 若與 select 目前的值相同 → 套用選取樣式
-    if (opt.value == currentSelectedValue) {
-      div.classList.add("selected");
-    }
-
-    div.onclick = () => {
-  document.getElementById(info.target).textContent = opt.text;
-  document.getElementById(info.input).value = opt.value;
-
-  // 清掉所有選取狀態
-  document.querySelectorAll(".option").forEach(o => {
-    o.classList.remove("selected");
-  });
-
-  // ☆☆☆ 一次加 selected → 藍底＋藍點同一個 frame 一起亮
-  div.classList.add("selected");
-
-  // 增加人眼可辨識的延遲（150–180ms）
-  setTimeout(() => {
-    closeDropdown();
-  }, 180);
-};
-
-    box.appendChild(div);
-  });
-
-  document.getElementById("fullDropdownMask").style.display = "flex";
-  lockBodyScroll();
-}
-
-function closeDropdown(){
-  document.getElementById("fullDropdownMask").style.display = "none";
-  unlockBodyScroll();
-}
-
-/* 點黑底關閉 */
-document.getElementById("fullDropdownMask").addEventListener("click", function(e){
-  if (e.target.id === "fullDropdownMask") closeDropdown();
-});
-
-let scrollTopCache = 0;
-
-function lockBodyScroll() {
-  scrollTopCache = window.scrollY || document.documentElement.scrollTop;
-  document.body.style.position = "absolute";
-  document.body.style.top = `-${scrollTopCache}px`;
-  document.body.style.left = "0";
-  document.body.style.right = "0";
-  document.body.style.overflow = "hidden";
-}
-
-function unlockBodyScroll() {
-  document.body.style.position = "";
-  document.body.style.top = "";
-  document.body.style.left = "";
-  document.body.style.right = "";
-  document.body.style.overflow = "";
-  window.scrollTo(0, scrollTopCache);
-}
-
-  /*
-alert("adminTeamSelect:", document.getElementById("adminTeamSelect"));
-alert("viewFullRecords:", document.getElementById("viewFullRecords"));
-alert("fullDropdownMask:", document.getElementById("fullDropdownMask"));
-*/
-
-function handleClosePage() {
-  window.location.href = "/home";  // 替換成你的主選單頁
-}
-
-/* ===== 電腦版自動進入卡片模式 ===== */
-document.addEventListener("DOMContentLoaded", () => {
-  if (window.innerWidth >= 769) {
-    document.body.classList.add("desktop-card-mode");
-  }
-});
-
-  // 啟動 floating 圓鈕（只在電腦版）
-document.addEventListener("DOMContentLoaded", () => {
-  if (window.innerWidth >= 769) {
-    document.getElementById("floatingButtons").style.display = "flex";
-  }
-});
-
-  // 啟動圓鈕（電腦版）
-document.addEventListener("DOMContentLoaded", () => {
-  if (window.innerWidth >= 769) {
-    document.getElementById("floatingButtons").style.display = "flex";
-  }
-});
-
-  window.addEventListener("message", (e) => {
-  const fb = document.getElementById("floatingButtons");
-  const footer = document.getElementById("globalFooter");
-  const iframe = document.getElementById("detailFrame");
-
-  if (e.data.action === "PHOTO_OPEN") {
-    document.body.classList.add("photo-open");
-
-    footer.style.display = "none";
-    iframe.style.height = "100%";
-  }
-
-  if (e.data.action === "PHOTO_CLOSE") {
-    document.body.classList.remove("photo-open");
-
-    if (window.innerWidth < 769) footer.style.display = "flex";
-    iframe.style.height = "calc(100% - 70px)";
-  }
-});
-  
-</script>
-
-</body>
-</html> 
+</style>
