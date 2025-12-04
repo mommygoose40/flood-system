@@ -6,52 +6,54 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
   <style>
-    body {
-      font-family: Arial, sans-serif;
-      background: #f5f8ff;
-      padding: 16px;
-    }
-
-    h2 {
-      text-align: center;
-      margin-bottom: 24px;
-    }
-
-    .year-block, .month-block, .day-block {
-      border: 1px solid #d0d7e2;
-      border-radius: 8px;
-      background: white;
-      margin-bottom: 4px;
-      overflow: hidden;
-    }
-
-    .header {
-      padding: 12px 16px;
-      background: #e8eef8;
-      cursor: pointer;
-      font-size: 22px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
-
-    .toggle-icon svg {
-  width: 26px;
-  height: 26px;
-  color: #333;
+    /* =========================================
+   Global 基礎設定
+========================================= */
+html, body {
+  margin: 0;
+  padding: 0;
+  font-family: Arial, sans-serif;
+  background: #f5f8ff;
+  height: 100%;
+  overflow: hidden;               /* 手機環境保持原本設定 */
 }
 
-/* 展開後 header 的下方要留距離 */
+/* =========================================
+   區塊展開/列表樣式
+========================================= */
+h2 {
+  text-align: center;
+  margin-bottom: 24px;
+}
+
+.year-block, .month-block, .day-block {
+  border: 1px solid #d0d7e2;
+  border-radius: 8px;
+  background: white;
+  margin-bottom: 14px;
+  overflow: hidden;
+}
+
+.header {
+  padding: 12px 16px;
+  background: #e8eef8;
+  cursor: pointer;
+  font-size: 22px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
 .header + .content {
-  margin-top: 4px;
+  margin-top: 6px;
 }
 
-    .content {
-      display: none;
-      padding: 0 16px 12px;
-    }
+.content {
+  display: none;
+  padding: 0 16px 12px;
+}
 
-    .record {
+.record {
   display: flex;
   align-items: center;
   font-size: 18px;
@@ -61,50 +63,18 @@
   cursor: pointer;
 }
 
-    .record:last-child {
-      border-bottom: none;
-    }
-
-    /* 讓所有區塊之間保持距離 */
-.year-block, .month-block, .day-block {
-  margin-bottom: 14px;
+.record:last-child {
+  border-bottom: none;
 }
 
-/* 讓展開的內容不會緊貼 header */
-.content {
-  margin-top: 6px;
-}
-
-.status-dot {
-  width: 10px;
-  height: 10px;
-  border-radius: 50%;
-  background-color: #E53935;
-}
-
-/* === 修正展開後的區塊間距 === */
-/* 展開後的外框保留較大空隙 */
-.block-open {
-  margin-bottom: 12px !important;
-}
-
-/* 讓展開後的 content 有內距，避免黏住 */
-.year-block > .content,
-.month-block > .content,
-.day-block > .content {
-  padding-top: 10px;
-}
-
-/* 日期展開後的紀錄字體加大 */
-.day-block .record {
-  font-size: 20px;   /* 你可改成 20 / 24 */
-}
-
-/* 本月無巡視紀錄 字體與一般紀錄一致 */
+.day-block .record,
 .month-block .record {
   font-size: 20px;
 }
 
+/* =========================================
+   Loading Mask
+========================================= */
 #loadingMask {
   position: fixed;
   inset: 0;
@@ -113,9 +83,9 @@
   flex-direction: column;
   justify-content: center;
   align-items: center;
-  z-index: 9999;
-  font-size: 28px;
+  z-index: 99999;
   color: white;
+  font-size: 28px;
 }
 
 .spinner {
@@ -129,34 +99,21 @@
 }
 
 @keyframes spin {
-  from { transform: rotate(0deg); }
-  to   { transform: rotate(360deg); }
+  0%   { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
 }
 
-.loadingText {
-  display: none;
-}
-
-#listContainer {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  flex-direction: column;
-}
-
+/* =========================================
+   管理過濾區
+========================================= */
 #switchArea {
   display: flex;
-  justify-content: space-between;  /* 左右排列 */
-  text-align: center;
-  margin-top:10px;
-  margin-bottom:18px;
+  justify-content: space-between;
+  margin: 10px 0 18px;
 }
 
+#adminFilterArea label,
 #adminFilterArea select {
-  font-size: 20px;
-  padding: 6px;
-}
-#adminFilterArea label {
   font-size: 20px;
 }
 
@@ -164,218 +121,116 @@
   display: flex;
   align-items: center;
   gap: 6px;
-  flex-wrap: nowrap;   /* ⭐ 不允許換行 */
-  white-space: nowrap;   /* 🔥 完整禁止換行 */
+  white-space: nowrap;
 }
 
 #adminSearchBtn, #viewFullRecords {
-  padding: 8px 14px; /* 更小 */
-  font-size: 20px;   /* 更小 */
+  padding: 8px 14px;
+  font-size: 20px;
   border: none;
-  color: white;
   border-radius: 8px;
   cursor: pointer;
-  transition: all 0.2s ease;
-  flex: none !important;   /* 不要被撐大 */
-  width: auto !important;  /* 自動縮 */
-  display: inline-block;   /* 不要佔滿 */
+  color: white;
+  display: inline-block;
+  width: auto !important;
 }
 
-#adminSearchBtn {
-  background: #0b5ed7;
-  width: 110px !important; /* ★ 小一點 */
-  margin: 0 auto !important;
-  display: block !important;
-}
+#adminSearchBtn { background: #0b5ed7; }
+#viewFullRecords { background: #28a745; }
 
-#adminSearchBtn:hover {
-  background: #0a58ca;
-  transform: translateY(-1px);
-}
+#adminSearchBtn:hover   { background: #0a58ca; }
+#viewFullRecords:hover { background: #218838; }
 
-#viewFullRecords {
-  background: #28a745;
-}
-
-#viewFullRecords:hover {
-  background: #218838;
-  transform: translateY(-1px);
-}
-
-/* 偽下拉按鈕 */
+/* =========================================
+   偽下拉按鈕
+========================================= */
 .fakeSelectBtn {
   font-size: 20px;
   padding: 4px 12px;
   border: 1px solid #888;
   border-radius: 4px;
   background: #fff;
-  color: #333;
   cursor: pointer;
   display: inline-flex;
   align-items: center;
-  justify-content: space-between;
   min-width: 110px;
-  box-sizing: border-box;
+  height: 42px;
 }
 
-/* 偽下拉選單內文字改成同色 */
-.fakeSelectBtn span {
-  font-weight: normal !important;
-}
-
-/* 固定箭頭，不隨字體比例變形 */
 .fakeSelectBtn .arrow {
-  display: inline-block;
   width: 18px;
   height: 18px;
   font-size: 18px;
-  line-height: 18px;
-  text-align: center;
   margin-left: 6px;
-  flex-shrink: 0; /* ⭐ 不要被擠壓變形 */
+  flex-shrink: 0;
 }
 
-.timeRow {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
-.timeRow .fakeSelectBtn {
-  height: 42px;
-  padding: 0 12px;
-  display: flex;
-  align-items: center;
-}
-
-.tilde {
-  font-size: 20px;
-  line-height: 1;
-  padding: 0 2px;
-}
-
-/* 黑色遮罩 */
+/* =========================================
+   偽下拉選單 遮罩 + Panel（整合＋iPhone 修復）
+========================================= */
 #fullDropdownMask {
   position: fixed;
   inset: 0;
+  width: 100vw;
+  height: 100vh;
   background: rgba(0,0,0,0.45);
-  z-index: 99999;
   display: none;
   justify-content: center;
   align-items: center;
-  padding: 30px;         /* 四周留白 */
+  padding: 0;
+  overflow: hidden;  /* iPhone 修正 */
+  z-index: 99999;
 }
 
-/* 彈出卡片（升級版：更高、更大） */
 #fullDropdownPanel {
-  width: 92%;            /* 卡片更寬，但不滿版 */
-  max-width: 520px;      /* 大螢幕上仍然不會太大 */
-  max-height: 95%;       /* 🔥 卡片可變更大（原本 60% → 75%） */
-  background: #fff;
+  width: 92%;
+  max-width: 520px;
+  max-height: calc(100vh - 60px);
+  overflow-y: auto;
+  background: white;
   border-radius: 20px;
   padding: 14px 0;
-  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
   box-shadow: 0 6px 26px rgba(0,0,0,0.3);
 }
 
-/* 標題（微縮） */
 .panel-title {
-  font-size: 20px;       /* 原本 22 → 現在 20 */
-  font-weight: bold;
   padding: 0 20px 14px;
   margin-bottom: 6px;
   border-bottom: 1px solid #eee;
+  font-size: 20px;
+  font-weight: bold;
 }
 
-/* 選項（微縮） */
 .panel-options .option {
-  padding: 14px 20px;    /* 原本 18px → 14px */
-  font-size: 20px;       /* 原本 22px → 20px */
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
+  padding: 14px 20px;
+  font-size: 20px;
   border-bottom: 1px solid #f2f2f2;
   cursor: pointer;
-  color: #222;
-}
-
-/* 點擊回饋 */
-.panel-options .option:active {
-  background: #f7f7f7;
-}
-
-/* 單選圓圈（微縮） */
-.radio-circle {
-  width: 22px;           /* 原 24 → 22 */
-  height: 22px;
-  border-radius: 50%;
-  border: 2px solid #777;
   display: flex;
-  justify-content: center;
-  align-items: center;
+  justify-content: space-between;
 }
 
-.radio-circle.selected {
-  border-color: #0b5ed7;
-}
-
-.radio-circle.selected::after {
-  content: "";
-  width: 10px;           /* 原 12 → 10 */
-  height: 10px;
-  background: #0b5ed7;
-  border-radius: 50%;
-}
-
-.searchBtn {
-  padding: 10px 18px;
-  font-size: 20px;
-  background: #0b5ed7;
-  color: white;
-  border: none;
-  border-radius: 8px;
-  display: inline-block;     /* 🔥 讓按鈕寬度回到正常 */
-  width: auto;               /* 🔥 取消 flex 的影響 */
-  margin: 0 auto;            /* 🔥 水平置中 */
-}
-
-/* 完全去除手機觸控高亮 */
-.fakeSelectBtn,
-.panel-options .option {
-  -webkit-tap-highlight-color: transparent !important;
-}
-
-/* 禁用按下時變色 */
-.panel-options .option:active {
-  background: white !important;
-}
-
-/* 被選取的選項高亮 */
 .option.selected {
   background: #eef5ff !important;
 }
 
-.option.selected::after {
-  content: "";
-  width: 10px;
-  height: 10px;
-  background: #0b5ed7;
-  border-radius: 50%;
-  display: inline-block;
-}
-
+/* =========================================
+   Footer（手機顯示，桌機隱藏）
+========================================= */
 #globalFooter {
   position: fixed;
   bottom: 0;
   left: 0;
   width: 100%;
   height: 70px;
+  padding: 0 16px;
+  box-sizing: border-box;
   background: #f8f8f8;
   display: flex;
   gap: 12px;
   justify-content: center;
   align-items: center;
-  padding: 0 16px;
   box-shadow: 0 -2px 6px rgba(0,0,0,0.12);
   z-index: 9999;
 }
@@ -383,310 +238,96 @@
 .gray-btn, .blue-btn {
   flex: 1;
   height: 48px;
-  font-size: 20px;
   border-radius: 10px;
   border: none;
+  font-size: 20px;
 }
 
-.gray-btn {
-  background: #e0e0e0;
-  color: #333;
-}
+.gray-btn { background: #e0e0e0; color: #333; }
+.blue-btn { background: #0b5ed7; color: #fff; }
 
-.blue-btn {
-  background: #0b5ed7;
-  color: #fff;
-}
-
-/* 電腦版隱藏 Footer */
-@media (min-width: 769px) {
-  #globalFooter {
-    display: none !important;
-  }
-}
-
-#pageWrapper {
-  padding-bottom: 0px; /* 預留 footer 空間 */
-}
-
-#detailView {
+/* =========================================
+   Mobile: List & Detail 區域
+========================================= */
+#listView, #detailView {
   position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-
-  bottom: 70px;  /* ★ 同理 */
-  overflow-y: auto;
-}
-
-#globalFooter {
-  position: fixed;
-  bottom: 0;
-  left: 0;
-  width: 100%;
-  height: 70px;
-}
-
-html, body {
-  height: 100%;
-  overflow: hidden;   /* 關閉全頁滾動 */
-}
-
-#listView {
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-
-  bottom: 70px;  /* ★ 不用 calc，直接讓它撐滿到 footer 上方 */
+  inset: 0;
+  bottom: 70px; /* 避開 footer */
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
-}
-
-#listView {
-  padding: 0 16px 50px !important; /* 左右內距+底部留空 */
+  padding: 0 16px 50px;
   box-sizing: border-box;
 }
 
-.fakeSelectBtn {
-  height: 42px !important;
-  display: inline-flex;
-  align-items: center;
-}
+/* =========================================
+   Desktop 重新整合（卡片模式）
+========================================= */
+@media (min-width:769px){
 
-#globalFooter {
-  padding-left: 16px !important;
-  padding-right: 16px !important;
-  box-sizing: border-box !important;
-}
-
-#desktopBackBtn,
-  #desktopHomeBtn {
-    display: none;
-  }
-
-/* ============================================================================
-   電腦版（≥769px）
-   完整重整後版本：卡片模式 + detailView 滿版 + loadingMask + 小圓鈕貼卡片
-   ============================================================================ */
-@media (min-width: 769px) {
-
-  /* ------------------------------------------------------------
-     全域設定（解除手機限制）
-     ------------------------------------------------------------ */
   html, body {
     height: auto !important;
     overflow: auto !important;
     background: #f1f1f1 !important;
-    overflow-x: hidden !important;
   }
 
-
-  /* ------------------------------------------------------------
-     卡片模式（pageWrapper）
-     ------------------------------------------------------------ */
-  body.desktop-card-mode {
-    background: #f1f1f1 !important;
-    display: flex !important;
-    justify-content: center !important;
-    padding: 40px 0 !important;
-    position: relative !important;
-  }
-
-  /* 卡片本體 */
-  #pageWrapper {
-    max-width: 820px !important;
-    width: 100%;
-    background: #fff;
-    border-radius: 12px;
-    padding: 24px 30px;
-    box-shadow: 0 4px 14px rgba(0,0,0,0.10);
-    position: relative !important; /* 重要：圓鈕定位需要 */
-    margin: 0 auto !important;
-  }
-
-  /* listView 回到正常流動 */
-  #listView {
-    position: static !important;
-    height: auto !important;
-    overflow: visible !important;
-    padding: 0 !important;
-  }
-
-
-  /* ------------------------------------------------------------
-     detailView：滿版 iframe 顯示
-     ------------------------------------------------------------ */
-  #detailView {
-    position: fixed !important;
-    inset: 0 !important;
-    z-index: 9995 !important;
-    background: white !important;
-    overflow: hidden !important;
-    width: 100% !important;
-    height: 100% !important;
-  }
-
-  #detailFrame {
-    width: 100% !important;
-    height: 100% !important;
-    border: none !important;
-    margin: 0 !important;
-    padding: 0 !important;
-  }
-
-
-  /* ------------------------------------------------------------
-     手機版 footer → 電腦版永遠不顯示
-     ------------------------------------------------------------ */
   #globalFooter {
     display: none !important;
   }
 
-
-  /* ------------------------------------------------------------
-     電腦版回上一頁 / 回首頁 按鈕 （在卡片上方）
-     ------------------------------------------------------------ */
-  #desktopBackBtn,
-  #desktopHomeBtn {
-    display: inline-block !important;
-    position: fixed !important;
-    top: 80px !important;
-    z-index: 10050 !important;
-
-    padding: 10px 18px;
-    font-size: 15px;
-    border-radius: 8px;
-    border: 1px solid #ddd;
-    background: white;
-    cursor: pointer;
-    box-shadow: 0 2px 6px rgba(0,0,0,0.08);
-  }
-
-  /* 對齊卡片左右 */
-  #desktopBackBtn  { left:  calc(50% - 410px); }
-  #desktopHomeBtn  { right: calc(50% - 410px); }
-
-  #desktopBackBtn:hover,
-  #desktopHomeBtn:hover {
-    background: #f5f5f5;
-  }
-
-
-  /* ------------------------------------------------------------
-     「小圓鈕」統一位置（display-list + iframe）
-     目標：永遠貼卡片右側，兩模式完全一致
-     ------------------------------------------------------------ */
-
-  #floatingButtons {
-    position: fixed !important;
-
-    top: 50px !important;
-
-    /* ★★★★★ 重要：卡片半寬 410px + 外距 24px */
-    left: calc(50% + 410px + 60px) !important;
-
-    display: flex !important;
-    flex-direction: column !important;
-    gap: 14px !important;
-
-    z-index: 100000 !important;
-  }
-
-  .circle-btn {
-    width: 54px;
-    height: 54px;
-    border-radius: 50%;
-    border: 1px solid #ccc;
-    background: rgba(255,255,255,0.92);
-    backdrop-filter: blur(6px);
+  body.desktop-card-mode {
     display: flex;
     justify-content: center;
-    align-items: center;
-    cursor: pointer;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.18);
-    transition: all 0.2s ease;
+    padding: 40px 0;
   }
 
-  .circle-btn:hover {
-    background: #fff;
-    transform: translateY(-2px);
-    box-shadow: 0 6px 14px rgba(0,0,0,0.22);
+  #pageWrapper {
+    max-width: 820px;
+    width: 100%;
+    background: white;
+    border-radius: 12px;
+    padding: 24px 30px;
+    box-shadow: 0 4px 14px rgba(0,0,0,0.1);
+    position: relative;
   }
 
-  .circle-btn svg {
-    width: 26px;
-    height: 26px;
-    stroke: #333;
+  #listView {
+    position: static !important;
+    height: auto !important;
+    inset: auto !important;
+    overflow: visible !important;
+    padding: 0 !important;
   }
 
-  /* show-detail 也用同一位置（禁止覆蓋） */
-  body.show-detail #floatingButtons {
-    position: fixed !important;
-    top: 50px !important;
-    left: calc(50% + 410px + 60px) !important;
-    flex-direction: column !important;
-  }
-
-
-  /* ------------------------------------------------------------
-     LoadingMask：灰幕，不模糊、不延遲
-     ------------------------------------------------------------ */
-  #loadingMask {
-    position: fixed !important;
-    inset: 0 !important;
-    width: 100vw !important;
-    height: 100vh !important;
-
-    background: rgba(0,0,0,0.35) !important;
-
-    z-index: 999999 !important;
-    display: none !important;
-
-    justify-content: center !important;
-    align-items: center !important;
-  }
-
-  body.loading #loadingMask {
-    display: flex !important;
-  }
-}
-    
-   body.photo-open #floatingButtons {
-  display: none !important;
-}
-
-    /***************************************************
- * 補丁 1：iPhone 偽下拉遮罩不滿版修正
- ***************************************************/
-#fullDropdownMask {
-  position: fixed;
-  inset: 0;
-  height: 100vh;
-  width: 100vw;
-  overflow: hidden;
-}
-
-#fullDropdownPanel {
-  max-height: calc(100vh - 60px);
-  overflow-y: auto;
-  -webkit-overflow-scrolling: touch;
-}
-
-
-/***************************************************
- * 補丁 2：桌機版 detailView 內容載不出修正
- ***************************************************/
-@media (min-width: 769px) {
+  /* ★ detailView = 卡片內顯示（依你需求修正） */
   #detailView {
+    position: static !important;
+    height: auto !important;
     overflow: auto !important;
+    padding: 0 !important;
+  }
+
+  #detailFrame {
+    width: 100%;
+    border: none;
+    height: auto !important;
+    min-height: 800px;
+  }
+
+  /* 小圓鈕永遠貼卡片右側 */
+  #floatingButtons {
+    position: fixed;
+    top: 50px;
+    left: calc(50% + 410px + 40px);
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    z-index: 100000;
   }
 }
 
-
-/***************************************************
- * 補丁 3：按鈕 hover 指標
- ***************************************************/
+/* =========================================
+   其它
+========================================= */
 #btnTeam, #btnSelf {
   cursor: pointer;
 }
