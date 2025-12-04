@@ -4,7 +4,6 @@
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 <title>防汛通報系統</title>
-<script src="https://static.line-scdn.net/liff/edge/versions/2.22.3/sdk.js"></script>
 <!-- Firebase SDK -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-app.js";
@@ -681,29 +680,6 @@ input[type="text"]:focus {
 
 <script>
 const WEB_APP_URL='https://script.google.com/macros/s/AKfycbxl3TC9aFxOZCm46KfTe5-sRsJxUKcdsaO1RqrjYniYJqWecoEdp6MvUoPNKwCnmZcTBw/exec';
-
-// =============================
-// LIFF 初始化（不登入、不抓 profile）
-// =============================
-liff.init({ liffId: '2007934728-xN6aOL3D' })
-.then(() => {
-
-  // 若是從 LIFF 入口帶 redirect → 直接導向
-  const params = new URLSearchParams(location.search);
-  const redirect = params.get("redirect");
-  if (redirect) {
-    window.location.href = redirect;
-    return;
-  }
-
-  // 進到這裡代表沒有 redirect → 直接進報告頁即可
-  // （不登入、不取 profile、不做任何動作）
-  console.log("LIFF 初始化完成（不登入模式）");
-  
-})
-.catch(err => {
-  console.error("LIFF init 錯誤：", err);
-});
 
 const otherCheck = document.getElementById('otherCompanion');
   const wrap = document.getElementById('otherCompanionWrap');
