@@ -254,31 +254,29 @@
   padding: 0 2px;
 }
 
-/* Dropdown mask */
+/* 黑色遮罩 */
 #fullDropdownMask {
   position: fixed;
   inset: 0;
-  height:100vh;
-  width:100vw;
-  overflow:hidden;
   background: rgba(0,0,0,0.45);
   z-index: 99999;
   display: none;
   justify-content: center;
   align-items: center;
-  padding: 30px;
+  padding: 30px;         /* 四周留白 */
+
 }
-    
+
+/* 彈出卡片（升級版：更高、更大） */
 #fullDropdownPanel {
-  width:92%;
-  max-width:520px;
-  max-height:calc(100vh - 60px);
-  overflow-y:auto;
-  -webkit-overflow-scrolling:touch;
-  background:#fff;
-  border-radius:20px;
-  padding:14px 0;
-  box-shadow:0 6px 26px rgba(0,0,0,0.3);
+  width: 92%;            /* 卡片更寬，但不滿版 */
+  max-width: 520px;      /* 大螢幕上仍然不會太大 */
+  max-height: 95%;       /* 🔥 卡片可變更大（原本 60% → 75%） */
+  background: #fff;
+  border-radius: 20px;
+  padding: 14px 0;
+  overflow-y: auto;
+  box-shadow: 0 6px 26px rgba(0,0,0,0.3);
 }
     
 /* 標題（微縮） */
