@@ -2247,18 +2247,37 @@ function toggleDisasterTypes() {
     });
   });
 
-/* === Firebase 上傳 === */
-async function compressImage(file){
-  return new Promise(res=>{
-    const img=new Image();
-    img.onload=()=>{
-      const c=document.createElement('canvas');
-      const scale=Math.min(1,1280/img.width);
-      c.width=img.width*scale;c.height=img.height*scale;
-      c.getContext('2d').drawImage(img,0,0,c.width,c.height);
-      c.toBlob(b=>res(new File([b],'photo.jpg',{type:'image/jpeg'})),'image/jpeg',0.7);
+/* === Firebase 上傳（加 Debug 版） === */
+async function compressImage(file) {
+  addLog(`compressImage() 呼叫，file = ${file ? '有檔案' : 'undefined'}`);
+
+  return new Promise(res => {
+    const img = new Image();
+
+    img.onload = () => {
+      addLog(`compressImage() 圖片讀取成功，原始尺寸 ${img.width}x${img.height}`);
+
+      const c = document.createElement('canvas');
+      const scale = Math.min(1, 1280 / img.width);
+
+      c.width = img.width * scale;
+      c.height = img.height * scale;
+
+      addLog(`compressImage() 壓縮後尺寸 ${c.width}x${c.height}`);
+
+      c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
+
+      c.toBlob(b => {
+        addLog(`compressImage() 壓縮完成，Blob size=${b.size}`);
+        res(new File([b], 'photo.jpg', { type: 'image/jpeg' }));
+      }, 'image/jpeg', 0.7);
     };
-    img.src=URL.createObjectURL(file);
+
+    img.onerror = (e) => {
+      addLog(`compressImage() 圖片讀取失敗`);
+    };
+
+    img.src = URL.createObjectURL(file);
   });
 }
 
@@ -2361,17 +2380,40 @@ function hideUploadModal() {
   unlockScroll();
 }
 
-// === Firebase 上傳 ===
+/* === Firebase 單次上傳（加 Debug 版） === */
 async function uploadToFirebaseOnce(file, path) {
+  addLog(`uploadToFirebaseOnce() 呼叫，path=${path}, file=${file ? '有' : '無'}`);
+
   const { ref, uploadBytesResumable, getDownloadURL } = window.firebaseStorage;
   const storageRef = ref(window.firebaseStorage.storage, path);
+  addLog(`建立 storageRef 成功: ${path}`);
+
   const task = uploadBytesResumable(storageRef, file);
+  addLog(`uploadBytesResumable 已啟動`);
+
   return new Promise((resolve, reject) => {
     task.on(
       'state_changed',
-      null,
-      reject,
-      async () => resolve(await getDownloadURL(task.snapshot.ref))
+
+      /* progress (略過顯示) */
+      snap => {
+        const pct = (snap.bytesTransferred / snap.totalBytes) * 100;
+        addLog(`上傳進度 ${pct.toFixed(1)}%`);
+      },
+
+      /* error */
+      err => {
+        addLog(`上傳錯誤: ${err.message}`);
+        reject(err);
+      },
+
+      /* 完成 */
+      async () => {
+        addLog(`上傳完成，取得下載網址中…`);
+        const url = await getDownloadURL(task.snapshot.ref);
+        addLog(`上傳成功 URL=${url}`);
+        resolve(url);
+      }
     );
   });
 }
@@ -2392,70 +2434,69 @@ function smoothProgress(target) {
   }, 60);
 }
 
-/* === 提交表單 === */
+/* === 提交表單（加 Debug 版） === */
 async function submitForm() {
+
+  addLog("=== submitForm() 開始 ===");
+
+  addLog(`photos.length = ${photos.length}`);
+  if (photos.length > 0) {
+    addLog(`photos[0] = ${JSON.stringify(photos[0])}`);
+  }
+
+  addLog(`audioBlob = ${audioBlob ? '存在' : '不存在'}`);
+
   const summary = document.getElementById('summary').value.trim();
   const disaster = document.querySelector('input[name="disaster"]:checked')?.value || '';
   const abnormal = disaster === '異常';
-  const types = Array.from(document.querySelectorAll('input[name="disasterType"]:checked'))
-    .map(e => e.value).join(',');
+
   const timestamp = Date.now();
-  const reportId = `report_${timestamp}`;
-  window.currentReportId = reportId;
+  const rid = `report_${timestamp}`;
+  window.currentReportId = rid;
 
-  // 取得 localStorage 的志工資料 // ★新增
-  const volunteerId   = localStorage.getItem("vid")   || "";
-  const volunteerName = localStorage.getItem("name") || "";
-  const team          = localStorage.getItem("team")          || "";
-
-  // 表單資料檢查
-  const reportType = document.querySelector('input[name="patrolType"]:checked')?.value || '';
-  if (!reportType) {
-    showWarningAlert('請選擇通報類型');
-    return;
-  }
-
-  const companionsChecked = Array.from(document.querySelectorAll('input[name="companions"]:checked'))
-    .map(e => e.value);
-  const otherCompanionName = document.getElementById('otherCompanionName')?.value.trim() || '';
-
-  if (companionsChecked.includes('其他') && !otherCompanionName) {
-    showWarningAlert('請輸入同行志工姓名');
-    return;
-  }
+  addLog(`報告 ID = ${rid}`);
 
   if (!photos || photos.length === 0) {
+    addLog("錯誤：沒有照片，submitForm 中止");
     showWarningAlert('請至少上傳一張照片');
     return;
   }
 
-  const otherDisasterText = document.getElementById('otherDisasterText')?.value.trim() || '';
-
-  document.getElementById('submitBtn').disabled = true;
-  showUploadModal('準備上傳中...');
-
-  const ts = Date.now();
-  const rid = `report_${ts}`;
-  const photoUrls = [];
-  let audioUrl = '';
-  let txt = '';
-
+  // --- 開始上傳照片 ---
   try {
-    // 上傳照片
     for (let i = 0; i < photos.length; i++) {
-      const title = `照片上傳中 (${i + 1}/${photos.length})`;
-      showUploadModal(title);
-      const comp = await compressImage(photos[i].file);
-      const url = await uploadToFirebaseOnce(comp, `reports/${rid}/photo_${i}.jpg`);
-      photoUrls.push(url);
-    }
+      addLog(`開始壓縮第 ${i + 1} 張照片`);
 
-    // 上傳語音
-    if (audioBlob) {
-      showUploadModal('語音上傳中');
-      audioUrl = await uploadToFirebaseOnce(audioBlob, `reports/${rid}/recording.wav`);
-      if (abnormal) txt = await transcribeAudio(audioBlob, reportId);
+      const raw = photos[i];
+      addLog(`raw photo object: ${JSON.stringify(raw)}`);
+
+      const file = raw.file || raw.blob || raw;  
+      addLog(`取得照片 file = ${file ? 'OK' : 'undefined'}`);
+
+      if (!file) {
+        addLog(`照片 ${i} file undefined → 無法上傳`);
+        throw new Error("照片資料錯誤（file undefined）");
+      }
+
+      const comp = await compressImage(file);
+      addLog(`第 ${i + 1} 張壓縮完成 size=${comp.size}`);
+
+      const url = await uploadToFirebaseOnce(comp, `reports/${rid}/photo_${i}.jpg`);
+      addLog(`第 ${i + 1} 張上傳成功 URL=${url}`);
     }
+  } catch (e) {
+    addLog(`照片上傳錯誤：${e.message}`);
+    showWarningAlert(e.message);
+    return;
+  }
+
+  // 語音上傳
+  if (audioBlob) {
+    addLog("開始上傳語音…");
+    await uploadToFirebaseOnce(audioBlob, `reports/${rid}/recording.wav`);
+  }
+
+  addLog("=== submitForm() 結束（Firebase 上傳已完成） ===");
 
     // 提交資料到 GAS
     showUploadModal('提交中');
