@@ -1210,18 +1210,22 @@ function openDetail(url) {
     
     const localDetailUrl = `/display/index.html?id=${reportId}`;
 
-    // 1. 🔥 關鍵步驟：先隱藏 iFrame，防止看到載入中的空白頁面。
+    // 1. 🔥 關鍵步驟：先隱藏 iFrame，防止看到「舊內容被清空」時的閃爍。
     iframe.style.display = 'none'; 
     
-    // 2. 執行 UI 切換 (切換 detailView/listView，但不影響 iFrame 顯示)
+    // 2. 執行 UI 切換 (切換 detailView/listView)
     list.style.display = "none";
     detail.style.display = "block";
     
-    // 3. 設定 src，開始載入新頁面。只設定一次！
+    // 3. 設定 src，開始載入新頁面。
     iframe.src = localDetailUrl; 
     console.log(`▶️ 開始載入本地 iFrame: ${localDetailUrl}`);
 
-    // 4. 手機 vs 電腦的 footer/圓鈕設定 (保持不變)
+    // 4. 🔥 立即顯示 iFrame。
+    // 這樣在 detailView 顯示時，iFrame 容器就存在，不會有白色背景閃爍。
+    iframe.style.display = 'block'; 
+
+    // 5. 手機 vs 電腦的 footer/圓鈕設定 (保持不變)
     if (window.innerWidth < 769) {
         footer.style.display = "flex";
         fb.style.display = "none";
@@ -1231,10 +1235,11 @@ function openDetail(url) {
         document.body.classList.add("show-detail");
     }
 
-    // 5. iframe 載入完成後執行
+    // 6. iframe 載入完成後執行 (保持原有的媒體監聽邏輯)
+    // 注意：onload 僅用於內部邏輯處理，不再控制 iframe 的 display 屬性。
     iframe.onload = () => {
-        // 🔥 關鍵修正：內容載入完成後，才將 iFrame 顯示出來，徹底消除白畫面。
-        iframe.style.display = 'block'; 
+        // 🔥 關鍵修正：移除 iframe.style.display = 'block';
+        // 確保 onload 僅用於內部邏輯，不延遲 iFrame 容器的顯示。
 
         try {
             const doc = iframe.contentDocument;
