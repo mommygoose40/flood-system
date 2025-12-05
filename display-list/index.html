@@ -745,6 +745,76 @@ body.photo-open-detail #floatingButtons {
     transform: translateY(-1px); /* 輕微上浮 */
     box-shadow: 0 2px 6px rgba(0,0,0,0.1); /* 新增陰影 */
 }
+
+    /* -------------------------------------- */
+/* 全域設定：確保手機版 body 的正確高度 */
+/* -------------------------------------- */
+html, body {
+  height: 100%;
+  overflow: hidden;    /* 關閉全頁滾動 */
+}
+
+/* -------------------------------------- */
+/* 底部 Footer：確保 Z-index 正確 */
+/* -------------------------------------- */
+#globalFooter {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 70px;
+  background: #f8f8f8;
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+  align-items: center;
+  padding: 0 16px;
+  box-shadow: 0 -2px 6px rgba(0,0,0,0.12);
+  /* Z-index 維持 9999，確保它在所有卡片/列表/iFrame之上，但低於遮罩 */
+  z-index: 9999; 
+}
+
+/* -------------------------------------- */
+/* 黑色遮罩 (全螢幕偽下拉選單) - iOS/Android 兼容修正 */
+/* -------------------------------------- */
+#fullDropdownMask {
+  position: fixed;
+  inset: 0;
+  /* 🔥 確保在 iOS 上也完全覆蓋，使用 100% 搭配 fixed 定位 */
+  width: 100%; 
+  height: 100%; 
+  background: rgba(0,0,0,0.45);
+  /* Z-Index 調整：必須高於 globalFooter (9999) */
+  z-index: 10000;  
+  display: none;
+  justify-content: center;
+  align-items: center;
+  padding: 30px;
+  box-sizing: border-box;
+}
+
+/* 彈出卡片（維持原有置中和邊距樣式） */
+#fullDropdownPanel {
+  width: 92%;
+  max-width: 520px;
+  /* 避免卡片太大，導致 iOS 滾動問題 */
+  max-height: 90%; 
+  background: #fff;
+  border-radius: 20px;
+  padding: 14px 0;
+  overflow-y: auto;
+  box-shadow: 0 6px 26px rgba(0,0,0,0.3);
+}
+
+/* -------------------------------------- */
+/* 電腦版 (≥769px) 修正 (維持原有邏輯) */
+/* -------------------------------------- */
+@media (min-width: 769px) {
+  /* ... (電腦版設定保持不變) ... */
+  #globalFooter {
+    display: none !important;
+  }
+}
 </style>
 
   <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
@@ -823,7 +893,6 @@ body.photo-open-detail #floatingButtons {
 <div id="adminFilterArea" style="display:none; padding:12px;">
 
   <!-- 大隊 -->
-  <div style="margin-bottom:12px;">
     <label>大隊：</label>
 
     <!-- 原生 select：保留給 JS 用（hidden 不會被看到） -->
