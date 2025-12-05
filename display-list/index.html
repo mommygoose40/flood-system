@@ -1143,7 +1143,7 @@ function openDetail(url) {
     // 給瀏覽器一點時間反應，雖然通常不是必須的，但能確保徹底清除。
     // 在下一個 event loop 階段設定新的 src。
     setTimeout(() => {
-        const localDetailUrl = `/detail.html?id=${reportId}`;
+        const localDetailUrl = `/display/index.html?id=${reportId}`;
         iframe.src = localDetailUrl; 
         console.log(`▶️ 載入本地 iFrame: ${localDetailUrl}`);
     }, 10); // 延遲 10ms
