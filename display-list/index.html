@@ -690,6 +690,51 @@ html, body {
 body.photo-open-detail #floatingButtons {
   display: none !important;  
 }
+
+    /* -------------------------------------- */
+/* 共用按鈕基礎樣式 */
+/* -------------------------------------- */
+#btnTeam,
+#btnSelf {
+    padding: 6px 16px;
+    font-size: 22px;
+    border: 2px solid #0b5ed7;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.2s ease; /* 新增：讓 hover 效果更平滑 */
+}
+
+/* -------------------------------------- */
+/* 藍色按鈕 (大隊紀錄) - 預設選中 */
+/* -------------------------------------- */
+#btnTeam {
+    background: #0b5ed7;
+    color: white;
+    margin-right: 6px;
+}
+
+/* 🔥 藍色按鈕的 HOVER 效果 */
+#btnTeam:hover {
+    background: #094aae; /* 背景變深藍 */
+    border-color: #094aae; /* 邊框變深藍 */
+    transform: translateY(-1px); /* 輕微上浮 */
+    box-shadow: 0 2px 6px rgba(0,0,0,0.1); /* 新增陰影 */
+}
+
+/* -------------------------------------- */
+/* 白色按鈕 (我的紀錄) - 預設未選中 */
+/* -------------------------------------- */
+#btnSelf {
+    background: white;
+    color: #0b5ed7;
+}
+
+/* 🔥 白色按鈕的 HOVER 效果 */
+#btnSelf:hover {
+    background: #e6f0ff; /* 背景變淺藍 */
+    transform: translateY(-1px); /* 輕微上浮 */
+    box-shadow: 0 2px 6px rgba(0,0,0,0.1); /* 新增陰影 */
+}
 </style>
 
   <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
@@ -1165,28 +1210,18 @@ function openDetail(url) {
     
     const localDetailUrl = `/display/index.html?id=${reportId}`;
 
-    // 💡 優化步驟 A: 在載入新內容前，徹底隱藏 iFrame。
-    // 這確保了在內容替換/重新渲染期間，使用者看不到空白狀態。
+    // 1. 🔥 關鍵步驟：先隱藏 iFrame，防止看到載入中的空白頁面。
     iframe.style.display = 'none'; 
     
-    // 💡 優化步驟 B: 確保 iFrame 的 src 只有單獨一次設定。
-    // 移除您程式碼中的 setTimeout 邏輯和重複設定。
-    iframe.src = localDetailUrl; 
-    console.log(`▶️ 開始載入本地 iFrame: ${localDetailUrl}`);
-
-    // 將 UI 切換邏輯移到 onload 中，以達到「內容載入完成才切換顯示」
-    // (但部分 UI 元素可以先切換，例如 footer/fb)
-
-    // 執行 UI 切換
+    // 2. 執行 UI 切換 (切換 detailView/listView，但不影響 iFrame 顯示)
     list.style.display = "none";
     detail.style.display = "block";
     
-    // ★ 執行 iFrame 載入本地 URL ★
+    // 3. 設定 src，開始載入新頁面。只設定一次！
     iframe.src = localDetailUrl; 
-    
-    console.log(`▶️ 載入本地 iFrame: ${localDetailUrl}`);
+    console.log(`▶️ 開始載入本地 iFrame: ${localDetailUrl}`);
 
-    // 3. 手機 vs 電腦的 footer/圓鈕設定
+    // 4. 手機 vs 電腦的 footer/圓鈕設定 (保持不變)
     if (window.innerWidth < 769) {
         footer.style.display = "flex";
         fb.style.display = "none";
@@ -1196,15 +1231,18 @@ function openDetail(url) {
         document.body.classList.add("show-detail");
     }
 
-    // 4. iframe 載入完成後執行 (原有的媒體監聽邏輯 - 保留)
+    // 5. iframe 載入完成後執行
     iframe.onload = () => {
+        // 🔥 關鍵修正：內容載入完成後，才將 iFrame 顯示出來，徹底消除白畫面。
+        iframe.style.display = 'block'; 
+
         try {
             const doc = iframe.contentDocument;
             const modal = doc.querySelector('#image-modal'); // 照片查看視窗
 
             if (!modal) return;
 
-            // 監控查看照片的顯示狀態
+            // 監控查看照片的顯示狀態 (原有的 MutationObserver 邏輯)
             const observer = new MutationObserver(() => {
                 const isOpen = modal.style.display === "block";
 
@@ -1221,8 +1259,6 @@ function openDetail(url) {
             });
 
         } catch (err) {
-            // iFrame 載入本地頁面後，應該不會再報 Cross-Origin 錯誤了
-            // 如果報錯，檢查 iFrame 頁面是否已經完全載入
             console.warn("iFrame onload 處理錯誤:", err); 
         }
     };
