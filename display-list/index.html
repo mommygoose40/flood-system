@@ -777,21 +777,6 @@ html, body {
 /* -------------------------------------- */
 /* 黑色遮罩 (全螢幕偽下拉選單) - iOS/Android 兼容修正 */
 /* -------------------------------------- */
-#fullDropdownMask {
-  position: fixed;
-  inset: 0;
-  /* 🔥 確保在 iOS 上也完全覆蓋，使用 100% 搭配 fixed 定位 */
-  width: 100%; 
-  height: 100%; 
-  background: rgba(0,0,0,0.45);
-  /* Z-Index 調整：必須高於 globalFooter (9999) */
-  z-index: 10000;  
-  display: none;
-  justify-content: center;
-  align-items: center;
-  padding: 30px;
-  box-sizing: border-box;
-}
 
 /* 彈出卡片（維持原有置中和邊距樣式） */
 #fullDropdownPanel {
@@ -841,7 +826,7 @@ html, body {
   </button>
 </div>
 
-<div id="listView" style="display:none;">
+<div id="listView" style="display:block;">
 
 
     <!-- 這個 div 用來顯示所有的日誌 -->
