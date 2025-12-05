@@ -277,16 +277,23 @@
 
 /* 黑色遮罩 */
 #fullDropdownMask {
-  position: fixed;
-  inset: 0;
-  background: rgba(0,0,0,0.45);
-  /* 🔥 Z-Index 調整：確保它在 #floatingButtons (100000) 之上 */
-  z-index: 100001; 
-  display: none;
-  justify-content: center;
-  align-items: center;
-  padding: 30px;            /* 四周留白 */
-  box-sizing: border-box;
+  position: fixed;
+  top: 0; /* 確保從頂部開始 */
+  right: 0;
+  bottom: 0; /* 確保貼住底部，強制填滿可視區域 */
+  left: 0;
+  background: rgba(0,0,0,0.45);
+  z-index: 100001; /* 保持這個高 z-index */
+  display: none;
+  justify-content: center;
+  align-items: center;
+  padding: 30px;
+  box-sizing: border-box;
+
+  /* 🔥 新增：強制使用 100% 視窗高度，避免 vh 問題 */
+  /* 雖然您用了 inset:0，但加入這個可以更確保 */
+  height: 100%;
+  width: 100%;
 }
 
 /* 彈出卡片（升級版：更高、更大） */
@@ -734,6 +741,82 @@ body.photo-open-detail #floatingButtons {
     background: #e6f0ff; /* 背景變淺藍 */
     transform: translateY(-1px); /* 輕微上浮 */
     box-shadow: 0 2px 6px rgba(0,0,0,0.1); /* 新增陰影 */
+}
+
+    /* ... (保留所有您原有的 CSS) ... */
+
+/* ------------------------------------------------------------ */
+/* === iOS Safe Area / Footer 修正 === */
+/* ------------------------------------------------------------ */
+
+/* 確保 Footer 貼合螢幕底部，並處理安全區 */
+@supports (padding-bottom: env(safe-area-inset-bottom)) {
+    #globalFooter {
+        padding-bottom: env(safe-area-inset-bottom);
+        height: calc(70px + env(safe-area-inset-bottom));
+        align-items: flex-start; /* 讓內容靠上 */
+        box-sizing: border-box;
+    }
+    
+    /* 修正清單高度，讓它貼合處理過後的 Footer 上方 */
+    #listView {
+        bottom: calc(70px + env(safe-area-inset-bottom)) !important;
+    }
+    
+    /* 修正 detailFrame 在照片開啟時的高度 */
+    body.photo-open-detail #detailFrame {
+        height: calc(100% - env(safe-area-inset-bottom)) !important;
+    }
+}
+
+
+/* ------------------------------------------------------------ */
+/* === 下拉選單灰幕滿版修正 (重覆確認) === */
+/* ------------------------------------------------------------ */
+
+/* 黑色遮罩：使用 fixed + inset:0 確保滿版 */
+#fullDropdownMask {
+  position: fixed;
+  inset: 0;
+  width: 100%; /* 強制 100% */
+  height: 100%; /* 強制 100% */
+  background: rgba(0,0,0,0.45);
+  z-index: 100001;
+  display: none;
+  justify-content: center;
+  align-items: center;
+  padding: 30px;
+  box-sizing: border-box;
+}
+
+/* 確保 detailFrame 的基本高度設定 */
+#detailFrame {
+  width: 100% !important;
+  height: calc(100% - 70px) !important; /* 確保手機版預設為 100% 減去 Footer */
+  border: none !important;
+}
+
+/* detailView 容器的底部距離，確保一致 */
+#detailView {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 70px;
+  overflow-y: auto;
+  z-index: 9998;
+}
+
+/* 如果支援 Safe Area，同時應用到 Detail View */
+@supports (bottom: env(safe-area-inset-bottom)) {
+    #detailView {
+        bottom: calc(70px + env(safe-area-inset-bottom)) !important;
+    }
+}
+
+/* 確保手機版切換照片時滿版（覆蓋掉 Safe Area 修正） */
+body.photo-open-detail #detailFrame {
+  height: 100% !important;
 }
 </style>
 
