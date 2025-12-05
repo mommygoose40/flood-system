@@ -902,33 +902,41 @@ body.photo-open-detail #floatingButtons {
 
 <!-- == DetailView 覆蓋層 == -->
 <div id="detailView" style="
-  display:none;
-  position:fixed;
-  top:0;
-  left:0;
-  width:100%;
-  height:100%;
-  background:#fff;
-  z-index:9998;
-  overflow:hidden;   /* 保證不出現白邊 */
-  padding:0;
-  margin:0;
+  display:none;
+  position:fixed;
+  top:0;
+  left:0;
+  width:100%;
+  height:100%;
+  background:#fff;
+  z-index:9998;
+  overflow:hidden;   /* 保證不出現白邊 */
+  padding:0;
+  margin:0;
 ">
 
-  <!-- == 無邊距 iframe == -->
-  <iframe id="detailFrame"
-    sandbox="allow-scripts allow-same-origin allow-top-navigation-by-user-activation"
-    style="
-      position:absolute;
-      top:0;
-      left:0;
-      width:100%;
-      height:calc(100% - 70px);
-      border:0;
-      padding:0;
-      margin:0;
-      display:block;
-      background:#fff;
+    <div id="detailContainer" style="
+        width: 100%;
+        height: calc(100% - 70px); /* 跟 iframe 高度一致 */
+        overflow-y: auto;
+        padding: 20px;
+        box-sizing: border-box;
+        display: none; /* 預設隱藏 */
+    ">
+        </div>
+        <iframe id="detailFrame"
+    sandbox="allow-scripts allow-same-origin allow-top-navigation-by-user-activation"
+    style="
+      position:absolute;
+      top:0;
+      left:0;
+      width:100%;
+      height:calc(100% - 70px);
+      border:0;
+      padding:0;
+      margin:0;
+      display:block;
+      background:#fff;
 ">
 </iframe>
 </div>
@@ -966,6 +974,118 @@ let restoredOnce = false;
 let isInitialLoad = true;
 let globalRecords = [];
 
+// ------------------------------------------
+// ★★★ Session Storage 預快取輔助函式 ★★★
+// ------------------------------------------
+
+// 用於儲存列表數據到 Session Storage 的 key
+const LIST_CACHE_KEY = 'reportListCache';
+
+/**
+ * 將列表數據轉換為以 Report ID 為鍵的 Map/Object，並存入 Session Storage。
+ * @param {Array} records - GAS 返回的紀錄陣列。
+ */
+function saveLocalReportsCache(records) {
+    try {
+        const recordsMap = new Map();
+        
+        records.forEach(record => {
+            // 從 '詳細紀錄' 連結中解析 reportId (例如 report_170245...)
+            const detailLink = record['詳細紀錄'] || '';
+            const match = detailLink.match(/id=(report_[0-9]+)/);
+
+            if (match) {
+                // 存入 Map，鍵是 reportId，值是完整的紀錄物件
+                recordsMap.set(match[1], record); 
+            }
+        });
+        
+        // 將 Map 轉為 Object 才能 JSON 序列化，並存入 Session Storage
+        sessionStorage.setItem(LIST_CACHE_KEY, JSON.stringify(Object.fromEntries(recordsMap)));
+        console.log(`✅ ${recordsMap.size} 筆紀錄已存入 Session Storage。`);
+
+    } catch (e) {
+        console.error("無法寫入 Session Storage:", e);
+    }
+}
+
+/**
+ * 從 Session Storage 讀取以 Report ID 為鍵的 Map/Object。
+ * @returns {Object|null}
+ */
+function getLocalReportsCacheMap() {
+    try {
+        const cachedData = sessionStorage.getItem(LIST_CACHE_KEY);
+        return cachedData ? JSON.parse(cachedData) : null;
+    } catch (e) {
+        console.error("無法讀取 Session Storage", e);
+        return null;
+    }
+}
+
+/**
+ * [新增] 使用 Session Storage 的數據直接在主頁面渲染詳細資訊 (零延遲)
+ * @param {Object} data - 從 Session Storage 取得的單筆紀錄 JSON 物件。
+ */
+function renderDetailInline(data) {
+    if (!data) return;
+
+    // 根據您 iFrame 頁面的 JS 邏輯，構建 HTML 內容
+    let htmlContent = `
+        <div class="report-details-card">
+            <h3 style="font-size: 24px; margin-bottom: 20px;">回報紀錄詳情</h3>
+            
+            <p style="margin-bottom: 10px;">
+                <strong style="color: #333;">通報類型：</strong>${data['通報類型'] || '無'}
+            </p>
+            <p style="margin-bottom: 10px;">
+                <strong style="color: #333;">狀態：</strong>${data['狀態'] || '無'}
+            </p>
+
+            ${data['狀態'] === '異常' ? `
+                <p style="margin-bottom: 10px;">
+                    <strong style="color: #e00;">異常分類：</strong>${data['異常分類'] || '無'}
+                </p>
+                
+                <div style="margin-top: 15px; margin-bottom: 20px;">
+                    <h4 style="font-size: 18px; margin-bottom: 5px;">語音轉文字：</h4>
+                    <div style="border: 1px solid #ccc; background: #f9f9f9; padding: 12px; border-radius: 4px; white-space: pre-wrap;">
+                        ${data['語音轉文字'] || '無'}
+                    </div>
+                </div>
+            ` : ''}
+            
+            <div style="margin-top: 15px; margin-bottom: 20px;">
+                 <h4 style="font-size: 18px; margin-bottom: 5px;">說明：</h4>
+                 <div style="border: 1px solid #ccc; background: #fff; padding: 12px; border-radius: 4px; white-space: pre-wrap;">
+                    ${data['說明'] || '無'}
+                 </div>
+            </div>
+
+            <hr style="margin: 20px 0; border: 0; border-top: 1px solid #eee;">
+            
+            <p style="margin-bottom: 8px;">
+                <strong style="color: #333;">回報者：</strong>${data['回報者'] || '無'}
+            </p>
+            <p style="margin-bottom: 8px;">
+                <strong style="color: #333;">同行者：</strong>${data['同行者'] || '無'}
+            </p>
+            <p style="margin-bottom: 8px;">
+                <strong style="color: #333;">所屬大隊：</strong>${data['所屬大隊'] || '無'}
+            </p>
+            
+            <hr style="margin: 20px 0; border: 0; border-top: 1px solid #eee;">
+            
+            <p style="color: #777; font-size: 14px; text-align: center; padding-top: 10px;">
+                照片、音頻等媒體數據仍在 iFrame 頁面中。
+            </p>
+        </div>
+    `;
+
+    // 將 HTML 內容寫入新的容器
+    document.getElementById('detailContainer').innerHTML = htmlContent;
+}
+  
 // === 防止回上一頁重新初始化（BFCache 支援） ===
 window.addEventListener("pageshow", function (event) {
   if (event.persisted) {
@@ -1052,60 +1172,122 @@ window.addEventListener("message", (e) => {
 document.body.classList.add("loaded");
 });
 
-function openDetail(url) {
-  const list   = document.getElementById("listView");
-  const detail = document.getElementById("detailView");
-  const iframe = document.getElementById("detailFrame");
-  const footer = document.getElementById("globalFooter");
-  const fb     = document.getElementById("floatingButtons");   // ← 正確變數
-
-  // 切換畫面
-  list.style.display = "none";
-  detail.style.display = "block";
-  iframe.src = url;
-
-  // 手機 vs 電腦的 footer/圓鈕設定
-  if (window.innerWidth < 769) {
-    footer.style.display = "flex";
-    fb.style.display = "none";
-  } else {
-    footer.style.display = "none";
-    fb.style.display = "flex";                // ← 電腦初始顯示圓鈕
-    document.body.classList.add("show-detail");  // ← 啟動小圓鈕定位
-  }
-
-  // iframe 載入完成後執行
-  iframe.onload = () => {
+// [新增] 輔助函式：從 URL 解析 Report ID
+function getReportIdFromUrl(url) {
     try {
-      const doc   = iframe.contentDocument;
-      const modal = doc.querySelector('#image-modal');  // 照片查看視窗
-
-      if (!modal) return;
-
-      // 監控查看照片的顯示狀態
-      const observer = new MutationObserver(() => {
-        const isOpen = modal.style.display === "block";
-
-        if (window.innerWidth < 769) {
-          // 手機：照片開啟時隱藏 footer
-          footer.style.display = isOpen ? "none" : "flex";
-        } else {
-          // 電腦：照片開啟時隱藏小圓鈕
-          fb.style.display = isOpen ? "none" : "flex";
-        }
-      });
-
-      observer.observe(modal, {
-        attributes: true,
-        attributeFilter: ["style"]
-      });
-
-    } catch (err) {
-      console.warn("iframe 無法存取內容", err);
+        const urlObj = new URL(url);
+        // 假設 ID 總是在 URL 參數中，例如 ...?id=report_12345
+        return urlObj.searchParams.get('id'); 
+    } catch (e) {
+        console.error("無法解析 URL 以獲取 ID:", e);
+        return null;
     }
-  };
 }
 
+// 假設您已經在其他地方定義了 getLocalReportsCacheMap() 輔助函式
+// 假設您已經定義了一個新的渲染函式來處理本地數據：
+// function renderDetailInline(data) { ... } 
+
+function openDetail(url) {
+    const list   = document.getElementById("listView");
+    const detail = document.getElementById("detailView");
+    const iframe = document.getElementById("detailFrame");
+    const footer = document.getElementById("globalFooter");
+    const fb     = document.getElementById("floatingButtons");
+
+    // 1. 解析 Report ID 並檢查 Session Storage
+    const reportId = getReportIdFromUrl(url); // 需要這個輔助函式 (見前文)
+    const localCacheMap = getLocalReportsCacheMap(); // 需要這個輔助函式 (見前文)
+
+    // 檢查本地快取是否命中，且數據足夠渲染
+    if (reportId && localCacheMap && localCacheMap[reportId]) {
+        const detailData = localCacheMap[reportId];
+        
+        // 假設如果 '說明' 和 '狀態' 存在，就可以進行零延遲顯示
+        if (detailData['說明'] !== undefined && detailData['狀態'] !== undefined) { 
+            
+            // ★ 執行零延遲渲染
+            renderDetailInline(detailData); 
+            
+            // 隱藏 iFrame，顯示本地渲染容器
+            iframe.src = 'about:blank'; // 確保 iFrame 清空
+            iframe.style.display = 'none'; // 隱藏 iFrame
+            document.getElementById('detailContainer').style.display = 'block'; // 顯示本地內容
+
+            // 執行 UI 切換
+            list.style.display = "none";
+            detail.style.display = "block"; 
+
+            // 手機 vs 電腦的 footer/圓鈕設定 (跟 iFrame 載入時一樣)
+            if (window.innerWidth < 769) {
+                footer.style.display = "flex";
+                fb.style.display = "none";
+            } else {
+                footer.style.display = "none";
+                fb.style.display = "flex";
+                document.body.classList.add("show-detail");
+            }
+            console.log(`✅ ${reportId} 瞬間載入 (Session Storage)`);
+            return; // 零延遲成功，結束函式
+        }
+    }
+    
+    // ----------------------------------------------------
+    // 2. Fallback 邏輯：本地快取未命中 或 數據不足，切回 iFrame 載入
+    // ----------------------------------------------------
+    
+    // 清理本地渲染容器，確保它不干擾 iFrame
+    document.getElementById('detailContainer').innerHTML = '';
+    document.getElementById('detailContainer').style.display = 'none';
+    iframe.style.display = 'block'; // 顯示 iFrame
+
+    // 切換畫面
+    list.style.display = "none";
+    detail.style.display = "block";
+    iframe.src = url; // 執行 GAS 請求
+
+    // 手機 vs 電腦的 footer/圓鈕設定
+    if (window.innerWidth < 769) {
+        footer.style.display = "flex";
+        fb.style.display = "none";
+    } else {
+        footer.style.display = "none";
+        fb.style.display = "flex";
+        document.body.classList.add("show-detail");
+    }
+
+    // iframe 載入完成後執行 (原有的媒體監聽邏輯)
+    iframe.onload = () => {
+        try {
+            const doc = iframe.contentDocument;
+            const modal = doc.querySelector('#image-modal'); // 照片查看視窗
+
+            if (!modal) return;
+
+            // 監控查看照片的顯示狀態
+            const observer = new MutationObserver(() => {
+                const isOpen = modal.style.display === "block";
+
+                if (window.innerWidth < 769) {
+                    // 手機：照片開啟時隱藏 footer
+                    footer.style.display = isOpen ? "none" : "flex";
+                } else {
+                    // 電腦：照片開啟時隱藏小圓鈕
+                    fb.style.display = isOpen ? "none" : "flex";
+                }
+            });
+
+            observer.observe(modal, {
+                attributes: true,
+                attributeFilter: ["style"]
+            });
+
+        } catch (err) {
+            console.warn("iframe 無法存取內容", err);
+        }
+    };
+}
+  
 // ★★★ 統一照片頁偵測邏輯
 function isPhotoPage(url) {
   return /photo|image|img|picture|gallery/i.test(url);
@@ -1151,6 +1333,9 @@ async function loadAdminRecords() {
 
   globalAdminRecords = json.records || [];
 
+  // ★★★ [新增] 將管理員列表數據存入 Session Storage ★★★
+    saveLocalReportsCache(globalAdminRecords);
+
   const filtered = filterAdminRecords();
   renderList(filtered);
 
@@ -1190,6 +1375,10 @@ async function loadAdminRecords() {
   debug("返回的資料: " + JSON.stringify(json)); // 打印 API 返回的資料
 
   globalRecords = json.records || [];
+
+    // ★★★ [新增] 將志工/大隊列表數據存入 Session Storage ★★★
+    saveLocalReportsCache(globalRecords);
+    
   renderList(globalRecords);
 }
 
