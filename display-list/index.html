@@ -274,6 +274,34 @@
   line-height: 1;
   padding: 0 2px;
 }
+
+    /* 黑色遮罩 */
+#fullDropdownMask {
+  position: fixed;
+  inset: 0;
+  width: 100vw; /* 確保寬度為視窗寬度 */
+  height: 100vh; /* 確保高度為視窗高度 */
+  background: rgba(0,0,0,0.45);
+  /* 🔥 將 Z-Index 設為比 globalFooter (9999) 更高，且高於 detailView (9998) */
+  z-index: 10000; 
+  display: none;
+  justify-content: center;
+  align-items: center;
+  padding: 30px;
+  box-sizing: border-box;
+}
+
+/* 彈出卡片（升級版：更高、更大） */
+#fullDropdownPanel {
+  width: 92%;              /* 卡片更寬，但不滿版 */
+  max-width: 520px;        /* 大螢幕上仍然不會太大 */
+  max-height: 95%;        /* 🔥 卡片可變更大（原本 60% → 75%） */
+  background: #fff;
+  border-radius: 20px;
+  padding: 14px 0;
+  overflow-y: auto;
+  box-shadow: 0 6px 26px rgba(0,0,0,0.3);
+}
     
 /* 標題（微縮） */
 .panel-title {
@@ -1026,7 +1054,7 @@ html, body {
 </div>
 
 <!-- 清單真正呈現的地方，一開始先隱藏 -->
-<div id="listContainer" style="display: none;"></div>
+
 
 </div>
 
