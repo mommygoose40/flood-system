@@ -1,0 +1,2050 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>防汛通報系統</title>
+  <script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-app.js";
+import { getStorage, ref, list, listAll, getDownloadURL } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-storage.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyA4IZ6yZxlOuIjarWmUtIHGyLk84056K2Q",
+  authDomain: "reportsystem-c5fc7.firebaseapp.com",
+  projectId: "reportsystem-c5fc7",
+  storageBucket: "reportsystem-c5fc7.firebasestorage.app",
+  messagingSenderId: "845064058181",
+  appId: "1:845064058181:web:31d2f0fa6dfed084befa2c",
+  measurementId: "G-EDQM0LWQWH"
+};
+
+const app = initializeApp(firebaseConfig);
+const storage = getStorage(app);
+
+window.firebaseStorage = { storage, ref, list, listAll, getDownloadURL };
+</script>
+
+  <style>
+    /* 基礎樣式 */
+    body { 
+        font-family: Arial, sans-serif; 
+        margin: 0; 
+        padding: 20px; 
+        background: #f5f5f5; 
+    }
+    
+    .container { 
+        max-width: 800px; 
+        margin: 0 auto; 
+        background: white; 
+        padding: 20px; 
+        border-radius: 8px; 
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1); 
+        position: relative;
+    }
+    
+    .header { 
+        text-align: center; 
+        margin-bottom: 20px; 
+        padding-bottom: 15px; 
+        border-bottom: 1px solid #ddd; 
+    }
+    
+    .header p {
+        font-size: 18px;
+        margin: 8px 0;
+    }
+    
+    .back-btn { 
+        background: #4285f4; 
+        color: white; 
+        padding: 10px 15px; 
+        border: none; 
+        border-radius: 5px; 
+        cursor: pointer; 
+        margin-bottom: 20px; 
+        font-size: 16px;
+    }
+    
+    .report-info p {
+        margin: 8px 0;
+        font-size: 20px;
+    }
+    
+    /* 照片網格 */
+    .photo-gallery { 
+        display: grid; 
+        grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+        gap: 10px;
+        margin-bottom: 25px; 
+    }
+
+    .photo-item { 
+        border-radius: 8px; 
+        overflow: hidden; 
+        box-shadow: 0 2px 6px rgba(0,0,0,0.1); 
+        cursor: pointer; 
+        aspect-ratio: 1;
+        background-color: #f5f5f5;
+        position: relative;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .photo-item img { 
+        width: 100%; 
+        height: 100%; 
+        object-fit: cover; 
+        display: block;
+        transition: transform 0.3s ease;
+    }
+
+    .photo-item:hover img {
+        transform: scale(1.05);
+    }
+    
+    .audio-player h3 {
+  margin-top: 0 !important;   /* 移除多餘外距 */
+  padding-top: 0 !important;
+  font-size: 24px;
+}
+    
+    .transcription-section { 
+    background: #f9f9f9;
+    padding: 16px 20px;
+    border-radius: 8px;
+    border: 1px solid #ddd;
+    margin-top: 25px;
+}
+    
+    .transcription-text { 
+    background: white; 
+    padding: 16px; 
+    border-radius: 8px; 
+    border: 1px solid #eee; 
+    margin-top: 10px; 
+    white-space: pre-wrap; 
+    font-size: 20px;      /* 放大字體 */
+    line-height: 1.4;     /* 稍微緊密 */
+    max-height: 320px; 
+    overflow-y: auto; 
+}
+
+    /* 編輯區域樣式 */
+    .transcription-text[contenteditable="true"] {
+        border: 2px solid #4285f4;
+        background: #f8fbff;
+        min-height: 120px;
+        padding: 15px;
+        border-radius: 8px;
+        outline: none;
+    }
+
+    .transcription-text[contenteditable="true"]:focus {
+        border-color: #0b5ed7;
+        box-shadow: 0 0 0 2px rgba(66, 133, 244, 0.2);
+    }
+
+    /* === 編輯框狀態 === */
+.transcription-text {
+  min-height: 100px;
+  transition: background 0.25s ease, border-color 0.25s ease, box-shadow 0.25s ease;
+}
+
+/* 編輯中高亮 */
+.transcription-text.editing {
+  border: 2px solid #0b5ed7 !important;
+  background: #f8fbff !important;
+  box-shadow: 0 0 0 2px rgba(11,94,215,0.15);
+}
+
+/* === 按鈕區 === */
+#edit-actions {
+  display: flex;
+  justify-content: center;
+  gap: 14px;
+  margin-top: 18px;
+  transition: opacity 0.25s ease;
+}
+
+/* === 點擊與 hover 視覺 === */
+button:active,
+.save-btn:active,
+.reset-btn:active,
+.nav-btn:active,
+.zoom-btn:active,
+.btn-primary:active,
+.btn-secondary:active,
+.back-btn:active {
+  filter: brightness(1.2);
+  transform: scale(0.98);
+}
+
+button:hover,
+.save-btn:hover,
+.reset-btn:hover,
+.nav-btn:hover,
+.zoom-btn:hover,
+.btn-primary:hover,
+.btn-secondary:hover,
+.back-btn:hover {
+  filter: brightness(1.1);
+}
+
+/* === 全域互動回饋與 focus 狀態 === */
+html, body, button, a, img, div {
+  -webkit-tap-highlight-color: rgba(200, 200, 200, 0.3); /* 手機灰亮回饋 */
+}
+
+button, a, input, textarea {
+  outline: none !important; /* 移除藍框只限互動元件 */
+  box-shadow: none !important;
+}
+
+button:focus,
+a:focus,
+input:focus,
+textarea:focus {
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+    .save-btn, .reset-btn {
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  padding: 12px 26px;
+  font-size: 20px;
+  font-weight: normal;
+  transition: background 0.25s ease, transform 0.1s ease;
+  color: #fff;
+}
+
+/* 初始狀態：深色 */
+.save-btn {
+  background: #0b5ed7; /* 深藍 */
+}
+
+.reset-btn {
+  background: #60748f; /* 深灰藍 */
+}
+
+/* 點擊後：變亮 */
+.save-btn.active {
+  background: #4d8dff; /* 淺藍 */
+}
+
+.reset-btn.active {
+  background: #9aafc6; /* 淺灰藍 */
+}
+
+/* 滑過時稍微提亮 */
+.save-btn:hover,
+.reset-btn:hover {
+  filter: brightness(1.1);
+}
+    
+    .download-link { 
+        display: inline-block; 
+        margin-top: 10px; 
+        color: #4285f4; 
+        text-decoration: none; 
+        font-weight: bold; 
+    }
+    
+    .download-link:hover { 
+        text-decoration: underline; 
+    }
+    
+    .error { 
+        text-align: center; 
+        color: gray; 
+        font-size: 18px; 
+        padding: 40px; 
+    }
+    
+    /* 模態框樣式 - 改進版本 */
+    .modal {
+        display: none;
+        position: fixed;
+        z-index: 1000;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0,0,0,0.9);
+        overflow: hidden;
+        touch-action: none;
+    }
+
+    /* 確保圖片容器固定 */
+    .modal-content-container {
+        position: relative;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        width: 100%;
+        height: 100%;
+        cursor: default;
+        overflow: hidden;
+    }
+
+    .modal-content {
+        display: block;
+        max-width: 90vw;
+        max-height: 80vh;
+        object-fit: contain;
+        transition: none;
+        cursor: default;
+        transform-origin: center center;
+        will-change: transform;
+        user-select: none;
+        -webkit-user-drag: none;
+    }
+
+    .modal-content.zoomed {
+        cursor: grab;
+        max-width: none;
+        max-height: none;
+    }
+
+    .modal-content.zoomed:active {
+        cursor: grabbing;
+    }
+
+    /* 電腦版背景點擊區域 */
+    @media (min-width: 769px) {
+        .modal-content-container::before,
+        .modal-content-container::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            width: 30%;
+            background: transparent;
+            z-index: 1;
+            cursor: pointer;
+        }
+        
+        .modal-content-container::before {
+            left: 0;
+        }
+        
+        .modal-content-container::after {
+            right: 0;
+        }
+    }
+    
+    .close {
+        position: absolute;
+        top: 25px;
+        right: 35px;
+        color: #f1f1f1;
+        font-size: 40px;
+        font-weight: bold;
+        cursor: pointer;
+        z-index: 1001;
+        background: rgba(0,0,0,0.5);
+        width: 50px;
+        height: 50px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: background 0.3s ease;
+    }
+
+    .close:hover {
+        background: rgba(0,0,0,0.7);
+    }
+    
+    .navigation {
+        position: absolute;
+        top: 50%;
+        width: 100%;
+        display: flex;
+        justify-content: space-between;
+        transform: translateY(-50%);
+        pointer-events: none;
+        z-index: 3;
+    }
+    
+    .nav-btn {
+        background: rgba(0,0,0,0.5);
+        color: white;
+        border: none;
+        padding: 20px 15px;
+        font-size: 24px;
+        cursor: pointer;
+        pointer-events: auto;
+        margin: 0 10px;
+        border-radius: 5px;
+        transition: all 0.3s ease;
+        z-index: 4;
+    }
+    
+    .nav-btn.disabled {
+        opacity: 0.3;
+        cursor: not-allowed;
+        pointer-events: none;
+    }
+
+    .nav-btn:not(.disabled):hover {
+        background: rgba(0,0,0,0.7);
+        transform: scale(1.1);
+    }
+    
+    /* 載入中樣式 */
+    .loading-container {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding: 40px;
+        color: #666;
+        grid-column: 1 / -1;
+    }
+    
+    .loading-spinner {
+        width: 32px;
+        height: 32px;
+        border: 3px solid #ccc;
+        border-top: 3px solid #0b5ed7;
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+        margin-bottom: 15px;
+    }
+    
+    @keyframes spin { 
+        from { transform: rotate(0deg); } 
+        to { transform: rotate(360deg); } 
+    }
+    
+    /* 進度條樣式 */
+    .progress-bar {
+        flex: 1;
+        height: 12px;
+        background: #eee;
+        border-radius: 8px;
+        overflow: hidden;
+        cursor: pointer;
+        position: relative;
+        max-width: 400px;
+    }
+    
+    .progress-bar:hover {
+        background: #e0e0e0;
+    }
+    
+    .progress-fill {
+        width: 0%;
+        height: 100%;
+        background: #0b5ed7;
+        transition: width 0.1s ease;
+    }
+    
+    /* 頁面關閉按鈕 */
+    .page-close-btn {
+        position: absolute;
+        top: 20px;
+        right: 20px;
+        color: #666;
+        font-size: 36px;
+        font-weight: bold;
+        cursor: pointer;
+        z-index: 10;
+        background: none;
+        border: none;
+        width: 40px;
+        height: 40px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .page-close-btn:hover {
+        color: #333;
+    }
+    
+    /* 照片載入優化 */
+    .photo-item.loading img {
+        opacity: 0;
+    }
+    
+    .photo-item.loaded img {
+        opacity: 1;
+    }
+
+    /* 手機版樣式 */
+    @media (max-width: 768px) {
+        body {
+            padding: 10px;
+            background: white;
+        }
+        
+        .container {
+            padding: 15px;
+            border-radius: 0;
+            box-shadow: none;
+        }
+        
+        .header h1 {
+            font-size: 24px;
+        }
+        
+        .header p {
+            font-size: 16px;
+        }
+        
+        .report-info p {
+            font-size: 20px;
+        }
+        
+        .back-btn {
+            font-size: 18px;
+            padding: 12px 20px;
+            margin-bottom: 15px;
+        }
+        
+        .modal-content {
+            max-width: 95vw;
+            max-height: 80vh;
+        }
+        
+        .nav-btn {
+            padding: 15px 10px;
+            font-size: 20px;
+            margin: 0 5px;
+        }
+        
+        .close {
+            top: 15px;
+            right: 20px;
+            width: 40px;
+            height: 40px;
+            font-size: 30px;
+        }
+        
+        .page-close-btn {
+            top: 15px;
+            right: 15px;
+            font-size: 32px;
+        }
+        
+        /* 手機版移除背景點擊區域 */
+        .modal-content-container::before,
+        .modal-content-container::after {
+            display: none;
+        }
+    }
+
+    /* 縮放控制按鈕 */
+    .zoom-controls {
+        position: fixed;
+        bottom: 30px;
+        left: 50%;
+        transform: translateX(-50%);
+        display: flex;
+        gap: 10px;
+        z-index: 1001;
+        background: rgba(0,0,0,0.7);
+        padding: 10px 15px;
+        border-radius: 25px;
+        align-items: center;
+    }
+
+    /* 只調整手機端 */
+    @media (max-width: 768px) {
+        .nav-btn {
+            padding: 20px 15px;
+            font-size: 24px;
+            margin: 0 10px;
+            border-radius: 5px;
+        }
+        
+        .zoom-controls {
+            gap: 16px;
+            padding: 14px 20px;
+            bottom: 25px;
+        }
+        
+        .zoom-btn {
+            width: 44px;
+            height: 44px;
+            font-size: 20px;
+        }
+        
+        /* 回復原狀按鈕 */
+        .zoom-btn.reset {
+            height: 44px;
+            padding: 0 16px;
+            font-size: 20px !important;
+            white-space: nowrap;
+            font-weight: normal;
+        }
+        
+        /* 文字指示器 */
+        .zoom-indicator {
+            min-width: 100px;
+            font-size: 20px !important;
+            font-weight: normal;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 44px;
+            background: transparent;
+            color: white;
+            border: none;
+            box-shadow: none;
+            cursor: default;
+            pointer-events: none;
+        }
+        
+        /* 手機端隱藏加減按鈕 */
+        .zoom-btn:first-child,
+        .zoom-btn:last-child {
+            display: none;
+        }
+    }
+
+    .zoom-btn {
+        background: rgba(255,255,255,0.2);
+        color: white;
+        border: none;
+        width: 44px;
+        height: 44px;
+        border-radius: 50%;
+        font-size: 20px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.3s ease;
+        font-weight: bold;
+    }
+
+    .zoom-btn.reset {
+        width: auto;
+        padding: 0 15px;
+        border-radius: 22px;
+        font-size: 14px;
+        font-weight: normal;
+        display: none;
+    }
+
+    .zoom-btn:hover {
+        background: rgba(255,255,255,0.4);
+        transform: scale(1.1);
+    }
+
+    .zoom-indicator {
+        color: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 60px;
+        font-size: 14px;
+        font-weight: normal;
+    }
+
+    .footer-actions {
+  display: flex;
+  gap: 12px;
+  margin-top: 40px;
+  padding: 12px 16px;
+  border-top: 1px solid #e5e5e5;
+}
+
+.footer-actions .btn-secondary,
+.footer-actions .btn-primary {
+  flex: 1;
+  height: 48px;
+  border-radius: 10px;
+  font-size: 20px;
+  border: none;
+  cursor: pointer;
+  background: #e0e0e0;
+  color: #333;
+}
+
+/* 手機優化 */
+@media (max-width: 768px) {
+  .footer-actions {
+    margin-top: 24px;
+    padding: 12px;
+  }
+
+  .footer-actions .btn-secondary,
+  .footer-actions .btn-primary {
+    height: 52px;
+    font-size: 20px;
+  }
+}
+
+h2 {
+  font-size: 24px;
+  margin: 0 0 12px 0;
+  color: #333;
+}
+
+#audio-section,
+#photo-section,
+#transcription-section {
+  background: #f9f9f9;
+  padding: 16px 20px;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  margin-top: 25px;
+}
+
+#audio-section {
+  margin-top: 25px;        /* 回復灰框與其他框距離 */
+  padding: 8px 20px 16px;  /* 上方內距縮小，其餘維持原樣 */
+  background: #f9f9f9;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+}
+
+@media (min-width: 769px) {
+  .footer-actions { display: none !important; }
+}
+
+/* === 修復手機照片只能看前三張問題 === */
+.photo-item {
+  position: relative;
+  z-index: 1;
+}
+
+#image-modal {
+  z-index: 9999 !important;
+  overflow: hidden !important;
+  touch-action: pan-y pinch-zoom; /* ✅ 改成允許垂直與縮放 */
+}
+
+/* 強制圖片每次開新圖時刷新繪製層，防止被前一張覆蓋 */
+#image-modal img {
+  will-change: transform;
+  backface-visibility: hidden;
+  transform: translateZ(0);
+}
+
+.red-btn {
+  flex: 1;
+  height: 48px;
+  border-radius: 10px;
+  font-size: 20px;
+  background: #d9534f;   /* 紅色 */
+  color: #fff;
+  border: none;
+  cursor: pointer;
+}
+
+.red-btn:hover {
+  background: #c9302c;
+  filter: brightness(1.05);
+}
+</style>
+</head>
+
+<body>
+  <div class="container">
+    <div class="header">
+        <h1>通報詳細紀錄</h1>
+        <p id="report-date">回報時間：載入中...</p>
+    </div>
+
+    <div class="report-info">
+        <p id="report-type">通報類型：載入中...</p>
+        <p id="report-status">狀態：載入中...</p>
+        <p id="abnormal-type" style="display:none;">異常分類：載入中...</p>
+        <p id="remarks">說明：載入中...</p>
+        <p id="transcription-summary" style="display:none;">語音轉文字：載入中...</p>
+        <p id="reporter">回報者：載入中...</p>
+        <p id="companions">同行者：載入中...</p>
+        <p id="team">所屬大隊：載入中...</p>
+    </div>
+
+    <div id="photo-section">
+      <h2>照片</h2>
+      <div id="photo-gallery" class="photo-gallery">
+        <div class="loading-container">
+          <div class="loading-spinner"></div>
+          <span class="loading-text">照片載入中...</span>
+        </div>
+      </div>
+    </div>
+
+    <div id="audio-section" style="display:none;">
+      <div class="audio-player">
+        <h3>語音</h3>
+        <div style="display:flex;align-items:center;gap:14px;margin:20px 0;max-width:500px;">
+          <button id="playBtn" style="
+            width:56px;height:56px;border-radius:50%;
+            border:none;background:#0b5ed7;color:#fff;
+            cursor:pointer;display:flex;align-items:center;justify-content:center;">
+            <div id="playIcon" style="
+              width:0;height:0;border-top:9px solid transparent;
+              border-bottom:9px solid transparent;border-left:16px solid #fff;margin-left:3px;">
+            </div>
+          </button>
+
+          <span id="timeLabel" style="font-size:19px;color:#333;min-width:45px;">0:00</span>
+
+          <div style="flex:1;height:12px;background:#eee;border-radius:8px;overflow:hidden;cursor:pointer;" id="progressBar">
+            <div id="waveFill" style="width:0%;height:100%;background:#0b5ed7;"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div id="transcription-section" class="transcription-section" style="display:none;">
+  <h2>語音轉文字</h2>
+  <div id="transcription-text" class="transcription-text" contenteditable="false"></div>
+  <div id="edit-actions" style="margin-top: 15px; display: flex; gap: 10px;">
+    <button id="edit-btn" class="save-btn">修改</button>
+  </div>
+</div>
+
+    <!-- 修改縮放控制按鈕 -->
+  <div id="image-modal" class="modal">
+    <span class="close" onclick="closeModal()">&times;</span>
+    <div class="modal-content-container" id="modalContainer">
+        <img class="modal-content" id="modal-image">
+    </div>
+    <div class="navigation">
+        <button class="nav-btn" onclick="navigatePhoto(-1)">&#10094;</button>
+        <button class="nav-btn" onclick="navigatePhoto(1)">&#10095;</button>
+    </div>
+    <div class="zoom-controls">
+        <button class="zoom-btn" onclick="zoomOut()">−</button>
+        <button class="zoom-btn reset" onclick="resetZoom()">回復原狀</button>
+        <div class="zoom-indicator">100%</div>
+        <button class="zoom-btn" onclick="zoomIn()">+</button>
+    </div>
+  </div>
+
+  <div class="footer-actions" id="footer-back">
+  <button class="btn-secondary gray-btn" onclick="handleGoBack()">繼續回報</button>
+  <button class="btn-secondary gray-btn" onclick="closeWindowSafe()">回主選單</button>
+</div>
+  </div>
+
+   <script>
+    let baseScale = 1; // 用來記錄圖片剛載入時 fit 的比例
+let visualScale = 1; // 顯示用比例
+    let currentIndex = 0, currentPhotoUrls = [], currentReportId = '', pageSource = '';
+    let isZoomed = false;
+    let currentScale = 1;
+    let currentTranslateX = 0, currentTranslateY = 0;
+    let isDragging = false;
+    let dragStartX = 0, dragStartY = 0;
+    let isKeyboardCooldown = false;
+    const keyboardCooldownTime = 300;
+    // 在頂部變數宣告區域添加
+const zoomLevels = [1.0, 1.1, 1.25, 1.5, 1.75, 2.0, 2.5];
+let currentZoomIndex = 0;
+// 在頂部變數宣告區域添加
+let hasUserZoomed = false;
+
+    document.addEventListener('DOMContentLoaded', () => {
+      const temp = localStorage.getItem('tempReportData');
+      if (temp) {
+        try {
+          const data = JSON.parse(temp);
+          console.log('⚡ 显示暂存资料:', data);
+          handleResponse(data);
+        } catch (e) {
+          console.warn('暂存资料解析失败:', e);
+        }
+        localStorage.removeItem('tempReportData');
+      }
+
+      const urlParams = new URLSearchParams(window.location.search);
+      const reportId = urlParams.get('id');
+      pageSource = urlParams.get('source');
+      if (reportId) {
+        currentReportId = reportId;
+        loadReportData(reportId);
+      } else showError('無法載入照片');
+    });
+
+    async function loadReportData(reportId) {
+  try {
+    document.getElementById('report-date').innerHTML = `回報時間：${formatDateFromId(reportId)}`;
+
+    await loadReportInfoFromSheet(reportId);
+    await loadPhotosFromFirebase(reportId);
+
+    const hasAudio = await loadAudioFromFirebase(reportId);
+
+    // 語音顯示
+    const audioSection = document.getElementById('audio-section');
+    audioSection.style.display = hasAudio ? 'block' : 'none';
+
+    // 二次確認語音與文字同步顯示（多輪重試避免 race condition）
+let checkCount = 0;
+const checkInterval = setInterval(() => {
+  const text = document.getElementById('transcription-text')?.textContent.trim();
+  const transcriptionSection = document.getElementById('transcription-section');
+  if (text && text !== '' && hasAudio) {
+    transcriptionSection.style.display = 'block';
+    clearInterval(checkInterval);
+  }
+  if (++checkCount > 10) clearInterval(checkInterval); // 最多檢查10次（約2秒）
+}, 200);
+
+  } catch (e) {
+    console.error(e);
+    showError('載入數據失敗');
+  }
+}
+
+    function handleResponse(data) {
+      console.log('📥 JSONP 取得:', data);
+      if (!data || data.error) return showError('查無此報告資料');
+
+      const elements = ['report-type', 'report-status', 'abnormal-type', 'remarks', 
+                       'transcription-summary', 'reporter', 'companions', 'team'];
+      elements.forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.style.color = '';
+      });
+
+      document.getElementById('report-type').innerHTML = `通報類型：${data['通報類型'] || '無'}`;
+      document.getElementById('report-status').innerHTML = `狀態：${data['狀態'] || '無'}`;
+
+      if (data['狀態'] === '異常') {
+        document.getElementById('abnormal-type').style.display = 'block';
+        document.getElementById('abnormal-type').innerHTML = `異常分類：${data['異常分類'] || '無'}`;
+        document.getElementById('transcription-summary').style.display = 'block';
+        document.getElementById('transcription-summary').innerHTML = `語音轉文字：${data['語音轉文字'] || '無'}`;
+      } else {
+        document.getElementById('abnormal-type').style.display = 'none';
+        document.getElementById('transcription-summary').style.display = 'none';
+      }
+
+      document.getElementById('remarks').innerHTML = `說明：${data['說明'] || '無'}`;
+      document.getElementById('reporter').innerHTML = `回報者：${data['回報者'] || '無'}`;
+      document.getElementById('companions').innerHTML = `同行者：${data['同行者'] || '無'}`;
+      document.getElementById('team').innerHTML = `所屬大隊：${data['所屬大隊'] || '無'}`;
+
+      // 顯示語音轉文字內容（來自 Sheet）
+const transcriptionSection = document.getElementById('transcription-section');
+const transcriptionText = document.getElementById('transcription-text');
+const transcriptionValue = data['語音轉文字'] || '';
+
+transcriptionText.textContent = data['語音轉文字'] || '';
+transcriptionText.setAttribute('contenteditable', 'false'); // ← 改這行
+setupTranscriptionEditing(currentReportId);
+    }
+
+    async function loadReportInfoFromSheet(reportId) {
+      const url = `https://script.google.com/macros/s/AKfycbzh6qo1Wq0toPEkEZB-U1giT7e0_ScwPzHm6VIAq1RBAPSkc-KJxqEOFqczDNBCdZJYCg/exec?id=${reportId}&callback=handleResponse`;
+      const script = document.createElement('script');
+      script.src = url;
+      document.body.appendChild(script);
+    }
+
+    function formatDateFromId(reportId) {
+      const t = parseInt(reportId.replace('report_', ''));
+      return isNaN(t) ? '未知時間' : new Date(t).toLocaleString('zh-TW');
+    }
+
+    async function loadPhotosFromFirebase(reportId) {
+      try {
+        const { ref, list, getDownloadURL } = window.firebaseStorage;
+        const storageRef = ref(window.firebaseStorage.storage, `reports/${reportId}/`);
+        let pageToken = null;
+        let allUrls = [];
+
+        do {
+          const result = await list(storageRef, { maxResults: 50, pageToken });
+
+          const validItems = result.items
+            .filter(item => /\.(jpg|jpeg|png|gif|webp|heic)$/i.test(item.name))
+            .sort((a, b) => {
+              const numA = parseInt(a.name.match(/photo_(\d+)/)?.[1] || '0');
+              const numB = parseInt(b.name.match(/photo_(\d+)/)?.[1] || '0');
+              return numA - numB;
+            });
+
+          for (const f of validItems) {
+            try {
+              const url = await getDownloadURL(f);
+              if (url && url.startsWith('https')) {
+                allUrls.push(url);
+              }
+            } catch (err) {
+              console.warn('跳過壞檔：', f.name, err.message);
+            }
+          }
+
+          pageToken = result.nextPageToken;
+        } while (pageToken);
+
+        displayPhotos(allUrls);
+        
+      } catch (e) {
+        console.error("❌ 載入照片錯誤:", e);
+        document.getElementById('photo-gallery').innerHTML =
+          '<p style="color:#666;text-align:center;font-size:18px;">載入照片失敗</p>';
+      }
+    }
+
+    function displayPhotos(urls) {
+      const g = document.getElementById('photo-gallery');
+      g.innerHTML = '';
+      
+      if (!urls || urls.length === 0) {
+        g.innerHTML = '<p style="text-align:center;color:#666;font-size:18px;">此回報沒有照片</p>';
+        return;
+      }
+      
+      urls.forEach((u, i) => {
+        const d = document.createElement('div');
+        d.className = 'photo-item loading';
+        
+        const img = new Image();
+        img.style.cssText = 'width:100%;height:100%;object-fit:cover;background:#f5f5f5;transition:opacity 0.3s ease;';
+        
+        img.onload = function() {
+          d.classList.remove('loading');
+          d.classList.add('loaded');
+        };
+        
+        img.onerror = function() {
+          console.error('圖片載入失敗:', u);
+          d.innerHTML = '<div style="color:#999;text-align:center;padding:20px;">❌ 載入失敗</div>';
+          d.style.cursor = 'default';
+        };
+        
+        img.src = u;
+        img.alt = `照片 ${i + 1}`;
+        
+        d.appendChild(img);
+        d.onclick = () => openModal(i, urls);
+        g.appendChild(d);
+      });
+    }
+
+    async function loadAudioFromFirebase(reportId) {
+  const { ref, getDownloadURL } = window.firebaseStorage;
+  const exts = ['.webm', '.mp3', '.wav', '.m4a'];
+  for (const ext of exts) {
+    try {
+      const r = ref(window.firebaseStorage.storage, `reports/${reportId}/recording${ext}`);
+      const url = await getDownloadURL(r);
+      initCustomPlayer(url);
+      console.log('🎧 載入音訊:', url);
+      return true; // 成功載入回傳 true
+    } catch {}
+  }
+  return false; // 沒有語音
+}
+
+    function showError(msg) {
+      document.getElementById('photo-gallery').innerHTML = `<div class="error">${msg}</div>`;
+    }
+
+    function openModal(i, urls) {
+    window.parent.postMessage({ action: "PHOTO_OPEN" }, "*");
+    document.body.style.overflow = 'hidden';
+    currentIndex = i;
+    currentPhotoUrls = urls;
+    const m = document.getElementById('image-modal');
+    const modalImg = document.getElementById('modal-image');
+    const modalContainer = document.getElementById('modalContainer');
+
+    // 重置狀態
+    resetZoomImmediate();
+    hasUserZoomed = false;
+    
+    modalImg.src = urls[i];
+
+    modalImg.onload = () => {
+        modalImg.style.transform = 'translate(0, 0) scale(1)';
+        modalImg.style.maxWidth = '90vw';
+        modalImg.style.maxHeight = '80vh';
+        modalImg.style.objectFit = 'contain';
+
+        currentZoomIndex = 0;
+        visualScale = zoomLevels[0];
+        currentScale = visualScale;
+        currentTranslateX = 0;
+        currentTranslateY = 0;
+        isZoomed = false;
+
+        updateZoomIndicator();
+        updateZoomButtons();
+        updateResetButtonVisibility(); // 初始化按鈕顯示狀態
+    };
+
+    m.style.display = 'block';
+    updateModalNavButtons();
+
+    // 啟用滾輪縮放
+    modalImg.removeEventListener('wheel', handleWheelZoom);
+    modalImg.addEventListener('wheel', handleWheelZoom);
+
+    // 電腦版：只有左右30%區域可以點擊切換
+if (window.innerWidth > 768) {
+    modalContainer.onclick = function(e) {
+        if (isZoomed) return;
+        
+        const rect = this.getBoundingClientRect();
+        const clickX = e.clientX - rect.left;
+        const width = rect.width;
+        
+        if (clickX < width * 0.3) {
+            navigatePhoto(-1);
+        } else if (clickX > width * 0.7) {
+            navigatePhoto(1);
+        }
+    };
+}
+
+    // 手機縮放支持
+    setupTouchZoom(modalImg);
+
+    // 手機滑動切換
+    setupSwipeNavigation(modalContainer);
+
+    // 啟用拖曳功能
+    enableDragForZoomedImage(modalImg);
+}
+
+    function resetZoom() {
+    const modalImg = document.getElementById('modal-image');
+    isZoomed = false;
+    currentZoomIndex = 0;
+    visualScale = zoomLevels[0];
+    currentScale = visualScale;
+    currentTranslateX = 0;
+    currentTranslateY = 0;
+    hasUserZoomed = false; // 重置標記
+    
+    modalImg.style.transition = 'transform 0.2s ease-out';
+    modalImg.style.transform = 'translate(0, 0) scale(1)';
+    modalImg.classList.remove('zoomed');
+    
+    updateZoomIndicator();
+    updateZoomButtons();
+    updateResetButtonVisibility(); // 隱藏回復原狀按鈕
+}
+
+    // 修改 handleZoom 函數，偵測用戶縮放行為
+function handleZoom(direction, clientX, clientY) {
+    const modalImg = document.getElementById('modal-image');
+    const container = document.getElementById('modalContainer');
+    const oldVisual = visualScale;
+
+    let newIndex = currentZoomIndex + direction;
+    newIndex = Math.max(0, Math.min(zoomLevels.length - 1, newIndex));
+    
+    if (newIndex === currentZoomIndex) return;
+    
+    currentZoomIndex = newIndex;
+    visualScale = zoomLevels[currentZoomIndex];
+    currentScale = visualScale;
+    isZoomed = visualScale > 1.0;
+    
+    // 標記用戶有進行縮放操作（除了回到100%）
+    if (visualScale > 1.0) {
+        hasUserZoomed = true;
+    }
+    
+    // 顯示/隱藏回復原狀按鈕
+    updateResetButtonVisibility();
+    
+    if (isZoomed) {
+        modalImg.classList.add('zoomed');
+    } else {
+        modalImg.classList.remove('zoomed');
+        currentTranslateX = 0;
+        currentTranslateY = 0;
+    }
+
+    // 縮放計算...
+    const rect = container.getBoundingClientRect();
+    const imgRect = modalImg.getBoundingClientRect();
+    const cx = clientX ?? rect.left + rect.width / 2;
+    const cy = clientY ?? rect.top + rect.height / 2;
+    const offsetX = cx - (imgRect.left + imgRect.width / 2);
+    const offsetY = cy - (imgRect.top + imgRect.height / 2);
+
+    currentTranslateX -= offsetX * (visualScale / oldVisual - 1);
+    currentTranslateY -= offsetY * (visualScale / oldVisual - 1);
+
+    constrainTranslation();
+    applyTransform();
+    updateZoomIndicator();
+    updateZoomButtons();
+}
+
+function updateResetButtonVisibility() {
+    const resetBtn = document.querySelector('.zoom-btn.reset');
+    if (resetBtn) {
+        // 手機端總是顯示回復原狀按鈕，或者只在需要時顯示
+        if (window.innerWidth <= 768) {
+            // 手機端：只要有縮放或拖曳就顯示
+            if (hasUserZoomed || isZoomed || currentTranslateX !== 0 || currentTranslateY !== 0) {
+                resetBtn.style.display = 'flex';
+            } else {
+                resetBtn.style.display = 'none';
+            }
+        } else {
+            // 電腦端：智慧顯示
+            if (hasUserZoomed || isZoomed || currentTranslateX !== 0 || currentTranslateY !== 0) {
+                resetBtn.style.display = 'flex';
+            } else {
+                resetBtn.style.display = 'none';
+            }
+        }
+    }
+}
+
+    function constrainTranslation() {
+        const modalImg = document.getElementById('modal-image');
+        const container = document.getElementById('modalContainer');
+        
+        const containerRect = container.getBoundingClientRect();
+        const imgRect = modalImg.getBoundingClientRect();
+        
+        // 計算圖片在當前縮放下的實際顯示尺寸
+        const displayWidth = imgRect.width * currentScale;
+        const displayHeight = imgRect.height * currentScale;
+        
+        // 計算最大允許的拖曳範圍
+        const maxTranslateX = Math.max(0, (displayWidth - containerRect.width) / 2);
+        const maxTranslateY = Math.max(0, (displayHeight - containerRect.height) / 2);
+        
+        // 嚴格限制範圍
+        if (displayWidth > containerRect.width) {
+            currentTranslateX = Math.max(-maxTranslateX, Math.min(maxTranslateX, currentTranslateX));
+        } else {
+            currentTranslateX = 0;
+        }
+        
+        if (displayHeight > containerRect.height) {
+            currentTranslateY = Math.max(-maxTranslateY, Math.min(maxTranslateY, currentTranslateY));
+        } else {
+            currentTranslateY = 0;
+        }
+    }
+
+    function resetZoomImmediate() {
+    const modalImg = document.getElementById('modal-image');
+    isZoomed = false;
+    visualScale = 1;
+    currentScale = baseScale; // 保持最初的比例
+    currentTranslateX = 0;
+    currentTranslateY = 0;
+    modalImg.style.transition = 'none'; // 取消動畫
+    modalImg.style.transform = 'translate(0, 0) scale(1)';
+    modalImg.classList.remove('zoomed');
+}
+
+    // 修改 zoomIn 和 zoomOut 函數
+function zoomIn() {
+    const modalImg = document.getElementById('modal-image');
+    const container = document.getElementById('modalContainer');
+    const rect = container.getBoundingClientRect();
+    const centerX = rect.left + rect.width / 2;
+    const centerY = rect.top + rect.height / 2;
+    handleZoom(1, centerX, centerY);
+}
+
+function zoomOut() {
+    const modalImg = document.getElementById('modal-image');
+    const container = document.getElementById('modalContainer');
+    const rect = container.getBoundingClientRect();
+    const centerX = rect.left + rect.width / 2;
+    const centerY = rect.top + rect.height / 2;
+    handleZoom(-1, centerX, centerY);
+}
+
+    // 修改 handleWheelZoom 函數，讓滾輪也使用固定級別
+function handleWheelZoom(e) {
+    if (e.ctrlKey) {
+        e.preventDefault();
+        const direction = e.deltaY < 0 ? 1 : -1;
+        handleZoom(direction, e.clientX, e.clientY);
+    }
+}
+
+    // 正確的 transform 套用
+function applyTransform() {
+  const modalImg = document.getElementById('modal-image');
+  modalImg.style.transform = `translate(${currentTranslateX}px, ${currentTranslateY}px) scale(${currentScale})`;
+}
+
+    // 新增更新按鈕狀態的函數
+function updateZoomButtons() {
+    const zoomInBtn = document.querySelector('.zoom-btn:last-child');
+    const zoomOutBtn = document.querySelector('.zoom-btn:first-child');
+    
+    // 禁用/啟用縮小按鈕
+    if (currentZoomIndex === 0) {
+        zoomOutBtn.disabled = true;
+        zoomOutBtn.style.opacity = '0.3';
+        zoomOutBtn.style.cursor = 'not-allowed';
+    } else {
+        zoomOutBtn.disabled = false;
+        zoomOutBtn.style.opacity = '1';
+        zoomOutBtn.style.cursor = 'pointer';
+    }
+    
+    // 禁用/啟用放大按鈕
+    if (currentZoomIndex === zoomLevels.length - 1) {
+        zoomInBtn.disabled = true;
+        zoomInBtn.style.opacity = '0.3';
+        zoomInBtn.style.cursor = 'not-allowed';
+    } else {
+        zoomInBtn.disabled = false;
+        zoomInBtn.style.opacity = '1';
+        zoomInBtn.style.cursor = 'pointer';
+    }
+}
+
+function updateZoomIndicator() {
+    const indicator = document.querySelector('.zoom-indicator');
+    const resetBtn = document.querySelector('.zoom-btn.reset');
+    
+    if (indicator && resetBtn) {
+        const scaleText = Math.round(visualScale * 100) + '%';
+        
+        if (window.innerWidth <= 768) {
+            // 手機端邏輯
+            if (visualScale === 1 && !hasUserZoomed) {
+                // 初始狀態：顯示"照片可縮放"
+                indicator.textContent = "照片可縮放";
+                resetBtn.textContent = "回復原狀";
+            } else {
+                // 縮放狀態或用戶操作後：顯示百分比
+                indicator.textContent = scaleText;
+                resetBtn.textContent = "回復原狀";
+            }
+        } else {
+            // 電腦端：只顯示百分比
+            indicator.textContent = scaleText;
+            resetBtn.textContent = "回復原狀";
+        }
+    }
+}
+
+    // 改善手機雙指縮放支援
+function setupTouchZoom(modalImg) {
+    let initialDistance = 0;
+    let initialScale = 1;
+    let initialX = 0, initialY = 0;
+    let isPinching = false;
+
+    modalImg.addEventListener('touchstart', e => {
+        if (e.touches.length === 2) {
+            e.preventDefault();
+            isPinching = true;
+            const [t1, t2] = e.touches;
+            initialDistance = Math.hypot(t2.clientX - t1.clientX, t2.clientY - t1.clientY);
+            initialScale = currentScale;
+            initialX = (t1.clientX + t2.clientX) / 2;
+            initialY = (t1.clientY + t2.clientY) / 2;
+        }
+    }, { passive: false });
+
+    modalImg.addEventListener('touchmove', e => {
+        if (e.touches.length === 2 && initialDistance > 0) {
+            e.preventDefault();
+            isPinching = true;
+            const [t1, t2] = e.touches;
+            const dist = Math.hypot(t2.clientX - t1.clientX, t2.clientY - t1.clientY);
+            const factor = dist / initialDistance;
+            
+            // 使用固定級別縮放而不是連續縮放
+            const targetScale = initialScale * factor;
+            const closestZoomLevel = findClosestZoomLevel(targetScale);
+            
+            if (closestZoomLevel !== visualScale) {
+                const direction = closestZoomLevel > visualScale ? 1 : -1;
+                handleZoom(direction, initialX, initialY);
+            }
+        }
+    }, { passive: true });
+
+    modalImg.addEventListener('touchend', (e) => {
+        if (isPinching) {
+            isPinching = false;
+            // 短暫禁用滑動切換，避免誤觸
+            setTimeout(() => {
+                isPinching = false;
+            }, 300);
+        }
+        initialDistance = 0;
+    });
+}
+
+// 輔助函數：找到最接近的固定縮放級別
+function findClosestZoomLevel(targetScale) {
+    let closestLevel = zoomLevels[0];
+    let minDiff = Math.abs(targetScale - closestLevel);
+    
+    for (let i = 1; i < zoomLevels.length; i++) {
+        const diff = Math.abs(targetScale - zoomLevels[i]);
+        if (diff < minDiff) {
+            minDiff = diff;
+            closestLevel = zoomLevels[i];
+        }
+    }
+    return closestLevel;
+}
+
+// 用於 pinch 的縮放更新
+function handlePinchZoom(newScale, cx, cy) {
+  const modalImg = document.getElementById('modal-image');
+  const container = document.getElementById('modalContainer');
+  const oldVisual = visualScale;
+
+  visualScale = Math.max(1, Math.min(2.0, newScale));
+  currentScale = baseScale * visualScale;
+  isZoomed = visualScale > 1.0;
+
+  const rect = container.getBoundingClientRect();
+  const imgRect = modalImg.getBoundingClientRect();
+  const offsetX = cx - (imgRect.left + imgRect.width / 2);
+  const offsetY = cy - (imgRect.top + imgRect.height / 2);
+
+  currentTranslateX -= offsetX * (visualScale / oldVisual - 1);
+  currentTranslateY -= offsetY * (visualScale / oldVisual - 1);
+
+  constrainTranslation();
+  applyTransform();
+  updateZoomIndicator();
+}
+
+    function setupSwipeNavigation(container) {
+  // 🔹 Android 修正：防止多次綁定
+  if (container.dataset.swipeBound === "true") return;
+  container.dataset.swipeBound = "true";
+
+  let startX = 0;
+  let startY = 0;
+  let isSwiping = false;
+
+  container.addEventListener('touchstart', (e) => {
+    if (isZoomed || e.touches.length !== 1) return;
+    startX = e.touches[0].clientX;
+    startY = e.touches[0].clientY;
+    isSwiping = true;
+  }, { passive: true });
+
+  container.addEventListener('touchmove', (e) => {
+    if (!isSwiping || isZoomed || e.touches.length !== 1) return;
+    const currentX = e.touches[0].clientX;
+    const diffX = currentX - startX;
+    if (Math.abs(diffX) > 10) e.preventDefault();
+  }, { passive: false });
+
+  container.addEventListener('touchend', (e) => {
+    if (!isSwiping || isZoomed) return;
+    const endX = e.changedTouches[0].clientX;
+    const endY = e.changedTouches[0].clientY;
+    const diffX = endX - startX;
+    const diffY = endY - startY;
+    isSwiping = false;
+
+    const minSwipeDistance = 40;
+    const maxVerticalDistance = 60;
+
+    if (Math.abs(diffX) > minSwipeDistance && Math.abs(diffY) < maxVerticalDistance) {
+      if (diffX > 0 && currentIndex > 0) navigatePhoto(-1);
+      else if (diffX < 0 && currentIndex < currentPhotoUrls.length - 1) navigatePhoto(1);
+    }
+  });
+}
+
+    function navigatePhoto(direction) {
+        if (direction === -1 && currentIndex <= 0) return;
+        if (direction === 1 && currentIndex >= currentPhotoUrls.length - 1) return;
+        
+        // 切換照片時自動重置縮放
+        resetZoom();
+        
+        currentIndex += direction;
+        const modalImg = document.getElementById('modal-image');
+        modalImg.src = currentPhotoUrls[currentIndex];
+        
+        updateModalNavButtons();
+    }
+
+    function updateModalNavButtons() {
+        const leftBtn = document.querySelector('.nav-btn:nth-child(1)');
+        const rightBtn = document.querySelector('.nav-btn:nth-child(2)');
+        
+        const isFirst = currentIndex === 0;
+        const isLast = currentIndex === currentPhotoUrls.length - 1;
+        
+        if (isFirst) {
+            leftBtn.style.opacity = "0.3";
+            leftBtn.style.cursor = "not-allowed";
+            leftBtn.style.pointerEvents = "none";
+        } else {
+            leftBtn.style.opacity = "1";
+            leftBtn.style.cursor = "pointer";
+            leftBtn.style.pointerEvents = "auto";
+        }
+        
+        if (isLast) {
+            rightBtn.style.opacity = "0.3";
+            rightBtn.style.cursor = "not-allowed";
+            rightBtn.style.pointerEvents = "none";
+        } else {
+            rightBtn.style.opacity = "1";
+            rightBtn.style.cursor = "pointer";
+            rightBtn.style.pointerEvents = "auto";
+        }
+    }
+
+    function closeModal() {
+        window.parent.postMessage({ action: "PHOTO_CLOSE" }, "*");
+        document.body.style.overflow = '';
+        document.getElementById('image-modal').style.display = 'none';
+        resetZoom();
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+        document.querySelector('.nav-btn:nth-child(1)').onclick = function() { navigatePhoto(-1); };
+        document.querySelector('.nav-btn:nth-child(2)').onclick = function() { navigatePhoto(1); };
+    });
+
+    document.addEventListener('keydown', function(e) {
+        const modal = document.getElementById('image-modal');
+        if (modal.style.display === 'block' && !isKeyboardCooldown) {
+            if (e.key === 'ArrowLeft') {
+                navigatePhoto(-1);
+                setKeyboardCooldown();
+            } else if (e.key === 'ArrowRight') {
+                navigatePhoto(1);
+                setKeyboardCooldown();
+            } else if (e.key === 'Escape') {
+                closeModal();
+            }
+        }
+    });
+
+    function setKeyboardCooldown() {
+        isKeyboardCooldown = true;
+        setTimeout(() => {
+            isKeyboardCooldown = false;
+        }, keyboardCooldownTime);
+    }
+
+    function enableDragForZoomedImage(img) {
+        const container = document.getElementById('modalContainer');
+        
+        img.addEventListener('mousedown', (e) => {
+            if (!isZoomed) return;
+            isDragging = true;
+            dragStartX = e.clientX - currentTranslateX;
+            dragStartY = e.clientY - currentTranslateY;
+            img.style.cursor = 'grabbing';
+            e.preventDefault();
+        });
+
+        document.addEventListener('mousemove', (e) => {
+            if (!isDragging || !isZoomed) return;
+            
+            currentTranslateX = e.clientX - dragStartX;
+            currentTranslateY = e.clientY - dragStartY;
+            
+            constrainTranslation();
+            applyTransform();
+        });
+
+        document.addEventListener('mouseup', () => {
+            isDragging = false;
+            if (isZoomed) {
+                img.style.cursor = 'grab';
+            }
+        });
+
+        // 手機觸控拖動
+        let touchStart = null;
+        img.addEventListener('touchstart', (e) => {
+            if (isZoomed && e.touches.length === 1) {
+                touchStart = { 
+                    x: e.touches[0].clientX, 
+                    y: e.touches[0].clientY,
+                    translateX: currentTranslateX,
+                    translateY: currentTranslateY
+                };
+                e.preventDefault();
+            }
+        });
+
+        img.addEventListener('touchmove', (e) => {
+            if (isZoomed && e.touches.length === 1 && touchStart) {
+                const dx = e.touches[0].clientX - touchStart.x;
+                const dy = e.touches[0].clientY - touchStart.y;
+                
+                currentTranslateX = touchStart.translateX + dx;
+                currentTranslateY = touchStart.translateY + dy;
+                
+                constrainTranslation();
+                applyTransform();
+                e.preventDefault();
+            }
+        });
+
+        img.addEventListener('touchend', () => {
+            touchStart = null;
+        });
+    }
+
+    let playbackAudio, rafId;
+
+    async function initCustomPlayer(url) {
+  const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+
+  playbackAudio = new Audio(url);
+  playbackAudio.preload = 'auto';
+  playbackAudio.load();
+
+  const btn = document.getElementById('playBtn');
+  const label = document.getElementById('timeLabel');
+  const bar = document.getElementById('waveFill');
+  const progressBar = document.getElementById('progressBar');
+  let playing = false;
+  let isDragging = false;
+  let rafId = null;
+  let metadataReady = false;
+
+  /* === 預載與背景靜音預播放 === */
+  function preloadAndPrimeAudio() {
+    playbackAudio.muted = true;
+    const startPreview = () => {
+      playbackAudio.play()
+        .then(() => {
+          console.log('🎧 預播放中（靜音）');
+          const check = setInterval(() => {
+            if (isFinite(playbackAudio.duration) && playbackAudio.duration > 0) {
+              metadataReady = true;
+              clearInterval(check);
+              playbackAudio.pause();
+              playbackAudio.currentTime = 0;
+              playbackAudio.muted = false;
+              console.log('✅ metadata ready via 預播放:', playbackAudio.duration);
+            }
+          }, 200);
+        })
+        .catch(() => console.warn('🔇 無法自動預播放，將等待使用者互動'));
+    };
+    // 某些瀏覽器要等互動後再啟動
+    document.addEventListener('click', startPreview, { once: true });
+    // 若允許自動播放，立即試一次
+    startPreview();
+  }
+  preloadAndPrimeAudio();
+
+  /* === 播放控制 === */
+  btn.onclick = async () => {
+    if (!playing) {
+      await playbackAudio.play();
+      setPauseIcon();
+      playing = true;
+      updateProgress();
+    } else {
+      playbackAudio.pause();
+      setPlayIcon();
+      playing = false;
+      cancelAnimationFrame(rafId);
+    }
+  };
+
+  playbackAudio.onended = () => {
+    setPlayIcon();
+    playing = false;
+    cancelAnimationFrame(rafId);
+    bar.style.width = '100%';
+  };
+
+  /* === 更新進度條 === */
+  function updateProgress() {
+    if (!playing && !isDragging) return;
+    const dur = getDuration();
+    const cur = playbackAudio.currentTime || 0;
+    if (dur > 0) {
+      const pct = Math.min(100, (cur / dur) * 100);
+      bar.style.width = pct + '%';
+      updateTimeLabel(cur);
+    }
+    if (playing) rafId = requestAnimationFrame(updateProgress);
+  }
+
+  function getDuration() {
+    return (playbackAudio.seekable && playbackAudio.seekable.length)
+      ? playbackAudio.seekable.end(0)
+      : playbackAudio.duration || 0;
+  }
+
+  function updateTimeLabel(currentTime) {
+    const min = Math.floor(currentTime / 60);
+    const sec = Math.floor(currentTime % 60).toString().padStart(2, '0');
+    label.textContent = `${min}:${sec}`;
+  }
+
+  function setPauseIcon() {
+    btn.innerHTML = `<div style="
+      width:14px;height:16px;background:#fff;
+      clip-path: polygon(
+        0 0,0 100%,35% 100%,35% 0,65% 0,65% 100%,100% 100%,100% 0
+      );
+    "></div>`;
+  }
+
+  function setPlayIcon() {
+    btn.innerHTML = `<div style="
+      width:0;height:0;border-top:9px solid transparent;
+      border-bottom:9px solid transparent;border-left:16px solid #fff;margin-left:3px;
+    "></div>`;
+  }
+
+  /* === 進度條拖曳功能 === */
+  // 計算點擊位置對應的時間
+  function getTimeFromPosition(clientX) {
+    const progressRect = progressBar.getBoundingClientRect();
+    const percent = (clientX - progressRect.left) / progressRect.width;
+    const duration = getDuration();
+    return Math.max(0, Math.min(duration, percent * duration));
+  }
+
+  // 更新音訊時間和進度條
+  function setAudioTime(time) {
+    playbackAudio.currentTime = time;
+    const duration = getDuration();
+    const pct = (time / duration) * 100;
+    bar.style.width = pct + '%';
+    updateTimeLabel(time);
+  }
+
+  // 滑鼠按下開始拖曳
+  progressBar.addEventListener('mousedown', (e) => {
+    isDragging = true;
+    const time = getTimeFromPosition(e.clientX);
+    setAudioTime(time);
+
+    // 添加全局事件監聽
+    const handleMouseMove = (moveEvent) => {
+      if (isDragging) {
+        const newTime = getTimeFromPosition(moveEvent.clientX);
+        setAudioTime(newTime);
+      }
+    };
+
+    const handleMouseUp = () => {
+      isDragging = false;
+      document.removeEventListener('mousemove', handleMouseMove);
+      document.removeEventListener('mouseup', handleMouseUp);
+
+      // 如果原本在播放狀態，繼續播放
+      if (playing) {
+        updateProgress();
+      }
+    };
+
+    document.addEventListener('mousemove', handleMouseMove);
+    document.addEventListener('mouseup', handleMouseUp);
+  });
+
+  // 點擊進度條跳轉
+  progressBar.addEventListener('click', (e) => {
+    const time = getTimeFromPosition(e.clientX);
+    setAudioTime(time);
+
+    // 如果原本在播放狀態，確保進度條繼續更新
+    if (playing) {
+      updateProgress();
+    }
+  });
+
+  // 拖曳時暫停自動更新，避免衝突
+  progressBar.addEventListener('mousedown', () => {
+    if (playing) {
+      cancelAnimationFrame(rafId);
+    }
+  });
+}
+
+    function handleBack() {
+      if (document.referrer && document.referrer.includes(location.hostname)) {
+        history.back();
+      } else {
+        window.close();
+        setTimeout(() => {
+          location.href = 'https://report-tan-tau.vercel.app/';
+        }, 100);
+      }
+    }
+
+    function setupTranscriptionEditing(reportId) {
+  const transcriptionElement = document.getElementById('transcription-text');
+  const actionArea = document.getElementById('edit-actions');
+  let originalText = transcriptionElement.textContent.trim();
+
+  const editBtn = document.getElementById('edit-btn');
+  editBtn.onclick = () => {
+    // 進入編輯
+    transcriptionElement.setAttribute('contenteditable', 'true');
+    transcriptionElement.classList.add('editing');
+    transcriptionElement.focus();
+
+    // 手機自動彈出鍵盤
+    setTimeout(() => transcriptionElement.focus(), 100);
+
+    // 換成取消/儲存按鈕，立即切換
+    actionArea.innerHTML = `
+      <button id="cancel-btn" class="reset-btn">取消</button>
+      <button id="save-btn" class="save-btn">儲存</button>
+    `;
+
+    const cancelBtn = document.getElementById('cancel-btn');
+    const saveBtn = document.getElementById('save-btn');
+
+    cancelBtn.onclick = () => {
+      transcriptionElement.textContent = originalText;
+      transcriptionElement.setAttribute('contenteditable', 'false');
+      transcriptionElement.classList.remove('editing');
+      transcriptionElement.blur();
+      // 立即回復修改按鈕
+      actionArea.innerHTML = `<button id="edit-btn" class="save-btn">修改</button>`;
+      setupTranscriptionEditing(reportId);
+    };
+
+    saveBtn.onclick = async () => {
+      const newText = transcriptionElement.textContent.trim();
+      if (newText === originalText) {
+        showMessage("內容未變更");
+        return;
+      }
+
+      showMicLoading(300);
+      try {
+        await saveTranscriptionToServer(reportId, newText);
+        hideMicLoading();
+        originalText = newText;
+        showMessage("儲存成功！");
+
+        const summary = document.getElementById('transcription-summary');
+        if (summary) {
+          summary.textContent = `語音轉文字：${newText || '無'}`;
+          summary.style.display = 'block';
+        }
+      } catch {
+        hideMicLoading();
+        alert("儲存失敗，請稍後再試");
+      }
+
+      transcriptionElement.setAttribute('contenteditable', 'false');
+      transcriptionElement.classList.remove('editing');
+      transcriptionElement.blur();
+      // 立即回復修改按鈕
+      actionArea.innerHTML = `<button id="edit-btn" class="save-btn">修改</button>`;
+      setupTranscriptionEditing(reportId);
+    };
+  };
+}
+
+async function saveTranscriptionToServer(reportId, newText) {
+  try {
+    const url = `https://script.google.com/macros/s/AKfycbwRxmFOrf8Lagc3309Qpi9rHX-6cf3Q7CNnWfVW0YEK1QE5EvuDsDWeeGnMX-sNZpsdkg/exec`;
+    const params = new URLSearchParams({
+  action: 'updateTranscription',
+  id: reportId,
+  transcription: newText
+});
+
+    const response = await fetch(`${url}?${params.toString()}`, { method: 'GET' });
+    const result = await response.text();
+    console.log('✅ 已寫回 Google Sheets：', result);
+  } catch (err) {
+    console.error('❌ 寫回 Google Sheets 失敗：', err);
+    alert('儲存失敗，請稍後再試');
+  }
+}
+
+function showMessage(text, onConfirm) {
+  document.getElementById("customModal")?.remove();
+  const overlay = document.createElement("div");
+  overlay.id = "customModal";
+  Object.assign(overlay.style, {
+    position: "fixed",
+    inset: "0",
+    background: "rgba(0,0,0,0.6)",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    zIndex: "9999",
+  });
+  const box = document.createElement("div");
+  Object.assign(box.style, {
+    background: "#fff",
+    color: "#000",
+    borderRadius: "12px",
+    padding: "30px 40px",
+    fontSize: "22px",
+    textAlign: "center",
+    maxWidth: "80%",
+    boxShadow: "0 4px 20px rgba(0,0,0,0.3)",
+  });
+  box.innerHTML = text;
+
+  const btn = document.createElement("button");
+  btn.textContent = "確定";
+  Object.assign(btn.style, {
+    marginTop: "24px",
+    fontSize: "20px",
+    padding: "10px 28px",
+    borderRadius: "8px",
+    border: "none",
+    background: "#0b5ed7",
+    color: "#fff",
+  });
+
+  // ← 只改這段：先移除視窗，連續兩次 rAF 確保完成重繪，再執行 onConfirm（開相簿）
+  btn.onclick = () => {
+    overlay.remove();
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        if (typeof onConfirm === "function") onConfirm();
+      });
+    });
+  };
+
+  box.appendChild(document.createElement("br"));
+  box.appendChild(btn);
+  overlay.appendChild(box);
+  document.body.appendChild(overlay);
+}
+
+let micLoadingTimer = null;
+
+function showMicLoading(delay = 100) {
+  showScreenLock();
+
+  micLoadingTimer = setTimeout(() => {
+    let box = document.getElementById('micLoading');
+    if (!box) {
+      box = document.createElement('div');
+      box.id = 'micLoading';
+      Object.assign(box.style, {
+        position: 'fixed',
+        left: '50%',
+        top: '50%',
+        transform: 'translate(-50%, -50%)',
+        background: 'rgba(255,255,255,0.96)',
+        borderRadius: '12px',
+        padding: '18px 26px',
+        boxShadow: '0 2px 12px rgba(0,0,0,0.25)',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        gap: '10px',
+        zIndex: '9999',
+        fontSize: '21px',
+        color: '#333'
+      });
+      box.innerHTML = `
+        <div class="spinner" style="
+          width:22px;height:22px;
+          border:3px solid #ccc;
+          border-top:3px solid #0b5ed7;
+          border-radius:50%;
+          animation:spin 1s linear infinite;"></div>
+        <span>處理中...</span>
+      `;
+      const style = document.createElement('style');
+      style.textContent = `@keyframes spin { from{transform:rotate(0deg);} to{transform:rotate(360deg);} }`;
+      document.head.appendChild(style);
+      document.body.appendChild(box);
+    } else box.style.display = 'flex';
+  }, delay);
+}
+
+function hideMicLoading() {
+  clearTimeout(micLoadingTimer);
+  const box = document.getElementById('micLoading');
+  if (box) box.style.display = 'none';
+  hideScreenLock();
+}
+
+function showScreenLock() {
+  let overlay = document.getElementById('screenLock');
+  if (!overlay) {
+    overlay = document.createElement('div');
+    overlay.id = 'screenLock';
+    Object.assign(overlay.style, {
+      position: 'fixed',
+      inset: '0',
+      background: 'rgba(0,0,0,0.3)',
+      zIndex: '9998'
+    });
+    document.body.appendChild(overlay);
+  } else overlay.style.display = 'block';
+}
+
+function hideScreenLock() {
+  const overlay = document.getElementById('screenLock');
+  if (overlay) overlay.style.display = 'none';
+}
+
+function closeWindowSafe() {
+  window.location.href = "https://flood-system.vercel.app/home";  // 替換成你的主選單頁
+}
+
+function handleGoBack() {
+  const urlParams = new URLSearchParams(location.search);
+  const source = urlParams.get('source');
+
+  if (source === 'report') {
+    history.back();
+    return;
+  }
+
+  if (source === 'list') {
+    history.back();
+    return;
+  }
+
+  history.back();
+}
+
+(function() {
+  const urlParams = new URLSearchParams(location.search);
+  const source = urlParams.get('source');
+  const footer = document.getElementById('footer-back');
+
+  const inIframe = window.self !== window.top;
+
+  // 如果是 DisplayList 用 iframe embed → 一律隱藏
+  if (inIframe) {
+    footer.style.display = 'none';
+    return;
+  }
+
+  // 來自 reports → 顯示
+  if (source === 'report') {
+    footer.style.display = 'flex';
+    return;
+  }
+
+  // 來自 display list（非 iframe 的情況）→ 隱藏
+  if (source === 'list') {
+    footer.style.display = 'none';
+    return;
+  }
+
+  // 其他情況預設：顯示
+  footer.style.display = 'flex';
+})();
+  </script>
+</body>
+</html>
