@@ -902,20 +902,20 @@ body.photo-open-detail #floatingButtons {
 
 <!-- == DetailView 覆蓋層 == -->
 <div id="detailView" style="
-  display:none;
-  position:fixed;
-  top:0;
-  left:0;
-  width:100%;
-  height:100%;
-  background:#fff;
-  z-index:9998;
-  overflow:hidden;   /* 保證不出現白邊 */
-  padding:0;
-  margin:0;
+  display:none;
+  position:fixed;
+  top:0;
+  left:0;
+  width:100%;
+  height:100%;
+  background:#fff;
+  z-index:9998;
+  overflow:hidden;   /* 保證不出現白邊 */
+  padding:0;
+  margin:0;
 ">
 
-    <div id="detailContainer" style="
+<div id="detailContainer" style="
         width: 100%;
         height: calc(100% - 70px); /* 跟 iframe 高度一致 */
         overflow-y: auto;
@@ -924,19 +924,21 @@ body.photo-open-detail #floatingButtons {
         display: none; /* 預設隱藏 */
     ">
         </div>
-        <iframe id="detailFrame"
-    sandbox="allow-scripts allow-same-origin allow-top-navigation-by-user-activation"
-    style="
-      position:absolute;
-      top:0;
-      left:0;
-      width:100%;
-      height:calc(100% - 70px);
-      border:0;
-      padding:0;
-      margin:0;
-      display:block;
-      background:#fff;
+
+  <!-- == 無邊距 iframe == -->
+  <iframe id="detailFrame"
+    sandbox="allow-scripts allow-same-origin allow-top-navigation-by-user-activation"
+    style="
+      position:absolute;
+      top:0;
+      left:0;
+      width:100%;
+      height:calc(100% - 70px);
+      border:0;
+      padding:0;
+      margin:0;
+      display:block;
+      background:#fff;
 ">
 </iframe>
 </div>
@@ -1085,7 +1087,7 @@ function renderDetailInline(data) {
     // 將 HTML 內容寫入新的容器
     document.getElementById('detailContainer').innerHTML = htmlContent;
 }
-  
+
 // === 防止回上一頁重新初始化（BFCache 支援） ===
 window.addEventListener("pageshow", function (event) {
   if (event.persisted) {
@@ -1188,6 +1190,7 @@ function getReportIdFromUrl(url) {
 // 假設您已經定義了一個新的渲染函式來處理本地數據：
 // function renderDetailInline(data) { ... } 
 
+
 function openDetail(url) {
     const list   = document.getElementById("listView");
     const detail = document.getElementById("detailView");
@@ -1287,7 +1290,7 @@ function openDetail(url) {
         }
     };
 }
-  
+
 // ★★★ 統一照片頁偵測邏輯
 function isPhotoPage(url) {
   return /photo|image|img|picture|gallery/i.test(url);
@@ -1376,9 +1379,9 @@ async function loadAdminRecords() {
 
   globalRecords = json.records || [];
 
-    // ★★★ [新增] 將志工/大隊列表數據存入 Session Storage ★★★
+  // ★★★ [新增] 將志工/大隊列表數據存入 Session Storage ★★★
     saveLocalReportsCache(globalRecords);
-    
+
   renderList(globalRecords);
 }
 
