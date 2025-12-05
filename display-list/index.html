@@ -97,7 +97,7 @@
 
 /* 日期展開後的紀錄字體加大 */
 .day-block .record {
-  font-size: 20px;   /* 你可改成 20 / 24 */
+  font-size: 20px;    /* 你可改成 20 / 24 */
 }
 
 /* 本月無巡視紀錄 字體與一般紀錄一致 */
@@ -130,7 +130,7 @@
 
 @keyframes spin {
   from { transform: rotate(0deg); }
-  to   { transform: rotate(360deg); }
+  to    { transform: rotate(360deg); }
 }
 
 .loadingText {
@@ -164,21 +164,21 @@
   display: flex;
   align-items: center;
   gap: 6px;
-  flex-wrap: nowrap;   /* ⭐ 不允許換行 */
-  white-space: nowrap;   /* 🔥 完整禁止換行 */
+  flex-wrap: nowrap;    /* ⭐ 不允許換行 */
+  white-space: nowrap;    /* 🔥 完整禁止換行 */
 }
 
 #adminSearchBtn, #viewFullRecords {
   padding: 8px 14px; /* 更小 */
-  font-size: 20px;   /* 更小 */
+  font-size: 20px;    /* 更小 */
   border: none;
   color: white;
   border-radius: 8px;
   cursor: pointer;
   transition: all 0.2s ease;
-  flex: none !important;   /* 不要被撐大 */
+  flex: none !important;    /* 不要被撐大 */
   width: auto !important;  /* 自動縮 */
-  display: inline-block;   /* 不要佔滿 */
+  display: inline-block;    /* 不要佔滿 */
 }
 
 #adminSearchBtn {
@@ -192,6 +192,13 @@
   background: #0a58ca;
   transform: translateY(-1px);
 }
+/* 🔥 新增 active 狀態 */
+#adminSearchBtn:active {
+  background: #0953c0;
+  transform: translateY(0);
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
 
 #viewFullRecords {
   background: #28a745;
@@ -201,6 +208,13 @@
   background: #218838;
   transform: translateY(-1px);
 }
+/* 🔥 新增 active 狀態 */
+#viewFullRecords:active {
+  background: #1e7e34;
+  transform: translateY(0);
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
 
 /* 偽下拉按鈕 */
 .fakeSelectBtn {
@@ -217,6 +231,13 @@
   min-width: 110px;
   box-sizing: border-box;
 }
+/* 🔥 新增 active 狀態 */
+.fakeSelectBtn:active {
+  background: #f7f7f7 !important;
+  /* 保持 translateY(0) 防止手機上被 desktop 的 transform 影響 */
+  transform: translateY(0); 
+}
+
 
 /* 偽下拉選單內文字改成同色 */
 .fakeSelectBtn span {
@@ -259,19 +280,20 @@
   position: fixed;
   inset: 0;
   background: rgba(0,0,0,0.45);
-  z-index: 99999;
+  /* 🔥 Z-Index 調整：確保它在 #floatingButtons (100000) 之上 */
+  z-index: 100001; 
   display: none;
   justify-content: center;
   align-items: center;
-  padding: 30px;         /* 四周留白 */
-
+  padding: 30px;            /* 四周留白 */
+  box-sizing: border-box;
 }
 
 /* 彈出卡片（升級版：更高、更大） */
 #fullDropdownPanel {
-  width: 92%;            /* 卡片更寬，但不滿版 */
-  max-width: 520px;      /* 大螢幕上仍然不會太大 */
-  max-height: 95%;       /* 🔥 卡片可變更大（原本 60% → 75%） */
+  width: 92%;              /* 卡片更寬，但不滿版 */
+  max-width: 520px;        /* 大螢幕上仍然不會太大 */
+  max-height: 95%;        /* 🔥 卡片可變更大（原本 60% → 75%） */
   background: #fff;
   border-radius: 20px;
   padding: 14px 0;
@@ -281,7 +303,7 @@
     
 /* 標題（微縮） */
 .panel-title {
-  font-size: 20px;       /* 原本 22 → 現在 20 */
+  font-size: 20px;        /* 原本 22 → 現在 20 */
   font-weight: bold;
   padding: 0 20px 14px;
   margin-bottom: 6px;
@@ -291,7 +313,7 @@
 /* 選項（微縮） */
 .panel-options .option {
   padding: 14px 20px;    /* 原本 18px → 14px */
-  font-size: 20px;       /* 原本 22px → 20px */
+  font-size: 20px;        /* 原本 22px → 20px */
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -300,14 +322,14 @@
   color: #222;
 }
 
-/* 點擊回饋 */
+/* 點擊回饋：已移除並優化為 selected 狀態，保持原樣 */
 .panel-options .option:active {
-  background: #f7f7f7;
+  background: white !important;
 }
 
 /* 單選圓圈（微縮） */
 .radio-circle {
-  width: 22px;           /* 原 24 → 22 */
+  width: 22px;             /* 原 24 → 22 */
   height: 22px;
   border-radius: 50%;
   border: 2px solid #777;
@@ -322,7 +344,7 @@
 
 .radio-circle.selected::after {
   content: "";
-  width: 10px;           /* 原 12 → 10 */
+  width: 10px;             /* 原 12 → 10 */
   height: 10px;
   background: #0b5ed7;
   border-radius: 50%;
@@ -335,9 +357,9 @@
   color: white;
   border: none;
   border-radius: 8px;
-  display: inline-block;     /* 🔥 讓按鈕寬度回到正常 */
-  width: auto;               /* 🔥 取消 flex 的影響 */
-  margin: 0 auto;            /* 🔥 水平置中 */
+  display: inline-block;      /* 🔥 讓按鈕寬度回到正常 */
+  width: auto;            /* 🔥 取消 flex 的影響 */
+  margin: 0 auto;           /* 🔥 水平置中 */
 }
 
 /* 完全去除手機觸控高亮 */
@@ -430,7 +452,7 @@
 
 html, body {
   height: 100%;
-  overflow: hidden;   /* 關閉全頁滾動 */
+  overflow: hidden;    /* 關閉全頁滾動 */
 }
 
 #listView {
@@ -467,14 +489,14 @@ html, body {
   }
 
 /* ============================================================================
-   電腦版（≥769px）
-   完整重整後版本：卡片模式 + detailView 滿版 + loadingMask + 小圓鈕貼卡片
-   ============================================================================ */
+    電腦版（≥769px）
+    完整重整後版本：卡片模式 + detailView 滿版 + loadingMask + 小圓鈕貼卡片
+    ============================================================================ */
 @media (min-width: 769px) {
 
   /* ------------------------------------------------------------
-     全域設定（解除手機限制）
-     ------------------------------------------------------------ */
+      全域設定（解除手機限制）
+      ------------------------------------------------------------ */
   html, body {
     height: auto !important;
     overflow: auto !important;
@@ -484,8 +506,8 @@ html, body {
 
 
   /* ------------------------------------------------------------
-     卡片模式（pageWrapper）
-     ------------------------------------------------------------ */
+      卡片模式（pageWrapper）
+      ------------------------------------------------------------ */
   body.desktop-card-mode {
     background: #f1f1f1 !important;
     display: flex !important;
@@ -516,8 +538,8 @@ html, body {
 
 
   /* ------------------------------------------------------------
-     detailView：滿版 iframe 顯示
-     ------------------------------------------------------------ */
+      detailView：滿版 iframe 顯示
+      ------------------------------------------------------------ */
   #detailView {
     position: fixed !important;
     inset: 0 !important;
@@ -538,22 +560,22 @@ html, body {
 
 
   /* ------------------------------------------------------------
-     手機版 footer → 電腦版永遠不顯示
-     ------------------------------------------------------------ */
+      手機版 footer → 電腦版永遠不顯示
+      ------------------------------------------------------------ */
   #globalFooter {
     display: none !important;
   }
 
 
   /* ------------------------------------------------------------
-     電腦版回上一頁 / 回首頁 按鈕 （在卡片上方）
-     ------------------------------------------------------------ */
+      電腦版回上一頁 / 回首頁 按鈕 （在卡片上方）
+      ------------------------------------------------------------ */
   #desktopBackBtn,
   #desktopHomeBtn {
     display: inline-block !important;
     position: fixed !important;
     top: 80px !important;
-    z-index: 10050 !important;
+    z-index: 10050 !important; /* 保持高於卡片，低於浮動元素 */
 
     padding: 10px 18px;
     font-size: 15px;
@@ -562,29 +584,40 @@ html, body {
     background: white;
     cursor: pointer;
     box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+    transition: all 0.2s ease; /* 🔥 新增過渡效果 */
   }
 
   /* 對齊卡片左右 */
   #desktopBackBtn  { left:  calc(50% - 410px); }
   #desktopHomeBtn  { right: calc(50% - 410px); }
 
+  /* 🔥 新增 hover/active 效果 */
   #desktopBackBtn:hover,
   #desktopHomeBtn:hover {
     background: #f5f5f5;
+    transform: translateY(-1px); 
+    box-shadow: 0 4px 10px rgba(0,0,0,0.1); 
+  }
+
+  #desktopBackBtn:active,
+  #desktopHomeBtn:active {
+    background: #eee;
+    transform: translateY(0);
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
   }
 
 
   /* ------------------------------------------------------------
-     「小圓鈕」統一位置（display-list + iframe）
-     目標：永遠貼卡片右側，兩模式完全一致
-     ------------------------------------------------------------ */
+      「小圓鈕」統一位置（display-list + iframe）
+      目標：永遠貼卡片右側，兩模式完全一致
+      ------------------------------------------------------------ */
 
   #floatingButtons {
     position: fixed !important;
 
     top: 50px !important;
 
-    /* ★★★★★ 重要：卡片半寬 410px + 外距 24px */
+    /* ★★★★★ 重要：卡片半寬 410px + 外距 60px */
     left: calc(50% + 410px + 60px) !important;
 
     display: flex !important;
@@ -631,8 +664,8 @@ html, body {
 
 
   /* ------------------------------------------------------------
-     LoadingMask：灰幕，不模糊、不延遲
-     ------------------------------------------------------------ */
+      LoadingMask：灰幕，不模糊、不延遲
+      ------------------------------------------------------------ */
   #loadingMask {
     position: fixed !important;
     inset: 0 !important;
@@ -653,12 +686,11 @@ html, body {
   }
 }
 
-    /* 新增 CSS：當 body 有 photo-open-detail 時，隱藏小圓鈕 */
+/* 新增 CSS：當 body 有 photo-open-detail 時，隱藏小圓鈕 */
 body.photo-open-detail #floatingButtons {
-    display: none !important; 
+  display: none !important;  
 }
-   
-  </style>
+</style>
 
   <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
 </head>
@@ -1118,13 +1150,12 @@ function getReportIdFromUrl(url) {
 // function renderDetailInline(data) { ... } 
 
 function openDetail(url) {
-    const list   = document.getElementById("listView");
+    const list     = document.getElementById("listView");
     const detail = document.getElementById("detailView");
     const iframe = document.getElementById("detailFrame");
     const footer = document.getElementById("globalFooter");
-    const fb     = document.getElementById("floatingButtons");
+    const fb     = document.getElementById("floatingButtons");
 
-    // 1. 從傳入的 GAS URL 中解析出 report ID (這個輔助函式必須存在)
     const reportId = getReportIdFromUrl(url); 
 
     if (!reportId) {
@@ -1132,29 +1163,19 @@ function openDetail(url) {
         return; 
     }
     
-    // ★★★ 2. 設定 iFrame 載入本地詳細頁面 ★★★
-    // 假設您的詳細頁面路徑是 /detail/index.html
     const localDetailUrl = `/display/index.html?id=${reportId}`;
 
-  // ★★★ [新增/確認] 立即清空 iFrame 內容 ★★★
-    // 這一步能立即清空舊的 DOM 結構和殘留的樣式
-    iframe.src = 'about:blank'; 
+    // 💡 優化步驟 A: 在載入新內容前，徹底隱藏 iFrame。
+    // 這確保了在內容替換/重新渲染期間，使用者看不到空白狀態。
+    iframe.style.display = 'none'; 
     
-    // 給瀏覽器一點時間反應，雖然通常不是必須的，但能確保徹底清除。
-    // 在下一個 event loop 階段設定新的 src。
-    setTimeout(() => {
-        const localDetailUrl = `/display/index.html?id=${reportId}`;
-        iframe.src = localDetailUrl; 
-        console.log(`▶️ 載入本地 iFrame: ${localDetailUrl}`);
-    }, 10); // 延遲 10ms
+    // 💡 優化步驟 B: 確保 iFrame 的 src 只有單獨一次設定。
+    // 移除您程式碼中的 setTimeout 邏輯和重複設定。
+    iframe.src = localDetailUrl; 
+    console.log(`▶️ 開始載入本地 iFrame: ${localDetailUrl}`);
 
-    // 確保本地渲染容器被隱藏 (雖然理論上它不應該被操作)
-    const detailContainer = document.getElementById('detailContainer');
-    if (detailContainer) {
-        detailContainer.style.display = 'none';
-    }
-
-    iframe.style.display = 'block'; // 顯示 iFrame
+    // 將 UI 切換邏輯移到 onload 中，以達到「內容載入完成才切換顯示」
+    // (但部分 UI 元素可以先切換，例如 footer/fb)
 
     // 執行 UI 切換
     list.style.display = "none";
