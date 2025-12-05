@@ -1117,7 +1117,6 @@ function getReportIdFromUrl(url) {
 // 假設您已經定義了一個新的渲染函式來處理本地數據：
 // function renderDetailInline(data) { ... } 
 
-
 function openDetail(url) {
     const list   = document.getElementById("listView");
     const detail = document.getElementById("detailView");
@@ -1125,58 +1124,36 @@ function openDetail(url) {
     const footer = document.getElementById("globalFooter");
     const fb     = document.getElementById("floatingButtons");
 
-    // 1. 解析 Report ID 並檢查 Session Storage
-    const reportId = getReportIdFromUrl(url); // 需要這個輔助函式 (見前文)
-    const localCacheMap = getLocalReportsCacheMap(); // 需要這個輔助函式 (見前文)
+    // 1. 從傳入的 GAS URL 中解析出 report ID (這個輔助函式必須存在)
+    const reportId = getReportIdFromUrl(url); 
 
-    // 檢查本地快取是否命中，且數據足夠渲染
-    if (reportId && localCacheMap && localCacheMap[reportId]) {
-        const detailData = localCacheMap[reportId];
-        
-        // 假設如果 '說明' 和 '狀態' 存在，就可以進行零延遲顯示
-        if (detailData['說明'] !== undefined && detailData['狀態'] !== undefined) { 
-            
-            // ★ 執行零延遲渲染
-            renderDetailInline(detailData); 
-            
-            // 隱藏 iFrame，顯示本地渲染容器
-            iframe.src = 'about:blank'; // 確保 iFrame 清空
-            iframe.style.display = 'none'; // 隱藏 iFrame
-            document.getElementById('detailContainer').style.display = 'block'; // 顯示本地內容
-
-            // 執行 UI 切換
-            list.style.display = "none";
-            detail.style.display = "block"; 
-
-            // 手機 vs 電腦的 footer/圓鈕設定 (跟 iFrame 載入時一樣)
-            if (window.innerWidth < 769) {
-                footer.style.display = "flex";
-                fb.style.display = "none";
-            } else {
-                footer.style.display = "none";
-                fb.style.display = "flex";
-                document.body.classList.add("show-detail");
-            }
-            console.log(`✅ ${reportId} 瞬間載入 (Session Storage)`);
-            return; // 零延遲成功，結束函式
-        }
+    if (!reportId) {
+        console.error("無法從 URL 解析報告 ID，無法開啟詳細頁面。");
+        return; 
     }
     
-    // ----------------------------------------------------
-    // 2. Fallback 邏輯：本地快取未命中 或 數據不足，切回 iFrame 載入
-    // ----------------------------------------------------
-    
-    // 清理本地渲染容器，確保它不干擾 iFrame
-    document.getElementById('detailContainer').innerHTML = '';
-    document.getElementById('detailContainer').style.display = 'none';
+    // ★★★ 2. 設定 iFrame 載入本地詳細頁面 ★★★
+    // 假設您的詳細頁面路徑是 /detail/index.html
+    const localDetailUrl = `/detail/index.html?id=${reportId}`;
+
+    // 確保本地渲染容器被隱藏 (雖然理論上它不應該被操作)
+    const detailContainer = document.getElementById('detailContainer');
+    if (detailContainer) {
+        detailContainer.style.display = 'none';
+    }
+
     iframe.style.display = 'block'; // 顯示 iFrame
 
-    // 切換畫面
+    // 執行 UI 切換
     list.style.display = "none";
     detail.style.display = "block";
-    iframe.src = url; // 執行 GAS 請求
+    
+    // ★ 執行 iFrame 載入本地 URL ★
+    iframe.src = localDetailUrl; 
+    
+    console.log(`▶️ 載入本地 iFrame: ${localDetailUrl}`);
 
-    // 手機 vs 電腦的 footer/圓鈕設定
+    // 3. 手機 vs 電腦的 footer/圓鈕設定
     if (window.innerWidth < 769) {
         footer.style.display = "flex";
         fb.style.display = "none";
@@ -1186,7 +1163,7 @@ function openDetail(url) {
         document.body.classList.add("show-detail");
     }
 
-    // iframe 載入完成後執行 (原有的媒體監聽邏輯)
+    // 4. iframe 載入完成後執行 (原有的媒體監聽邏輯 - 保留)
     iframe.onload = () => {
         try {
             const doc = iframe.contentDocument;
@@ -1199,10 +1176,8 @@ function openDetail(url) {
                 const isOpen = modal.style.display === "block";
 
                 if (window.innerWidth < 769) {
-                    // 手機：照片開啟時隱藏 footer
                     footer.style.display = isOpen ? "none" : "flex";
                 } else {
-                    // 電腦：照片開啟時隱藏小圓鈕
                     fb.style.display = isOpen ? "none" : "flex";
                 }
             });
@@ -1213,11 +1188,13 @@ function openDetail(url) {
             });
 
         } catch (err) {
-            console.warn("iframe 無法存取內容", err);
+            // iFrame 載入本地頁面後，應該不會再報 Cross-Origin 錯誤了
+            // 如果報錯，檢查 iFrame 頁面是否已經完全載入
+            console.warn("iFrame onload 處理錯誤:", err); 
         }
     };
 }
-
+  
 // ★★★ 統一照片頁偵測邏輯
 function isPhotoPage(url) {
   return /photo|image|img|picture|gallery/i.test(url);
