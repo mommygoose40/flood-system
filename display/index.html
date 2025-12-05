@@ -1004,7 +1004,7 @@ setupTranscriptionEditing(currentReportId);
     }
 
     async function loadReportInfoFromSheet(reportId) {
-      const url = `https://script.google.com/macros/s/AKfycbxfnOoS9UjnQUzBRpFa51R5qYG22-rYa5VemaCBxyNplyr5Karolwrzu4rgEr1znNsqyw/exec?id=${reportId}&callback=handleResponse`;
+      const url = `https://script.google.com/macros/s/AKfycbzP_yNNwMetNQEKinmVS7sgDuMEk6sYMauAE866yBMMR5dPeG8JNHa2MN70XGCscdLVDA/exec?id=${reportId}&callback=handleResponse`;
       const script = document.createElement('script');
       script.src = url;
       document.body.appendChild(script);
@@ -1919,7 +1919,7 @@ function handlePinchZoom(newScale, cx, cy) {
 
 async function saveTranscriptionToServer(reportId, newText) {
   try {
-    const url = `https://script.google.com/macros/s/AKfycbwRxmFOrf8Lagc3309Qpi9rHX-6cf3Q7CNnWfVW0YEK1QE5EvuDsDWeeGnMX-sNZpsdkg/exec`;
+    const url = `https://script.google.com/macros/s/AKfycbzP_yNNwMetNQEKinmVS7sgDuMEk6sYMauAE866yBMMR5dPeG8JNHa2MN70XGCscdLVDA/exec`;
     const params = new URLSearchParams({
   action: 'updateTranscription',
   id: reportId,
