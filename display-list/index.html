@@ -952,7 +952,7 @@ body.photo-open-detail #floatingButtons {
 <script>
 
   const VOLUNTEER_API_URL = "https://script.google.com/macros/s/AKfycbxiGSG5hSMO6We-C6cyEJZLgf4Rnbjp-6w9Tmb0qfF9VM6JB4YGEMqj3QRfTzg7Czpc/exec"; 
-const REPORT_GAS_URL = "https://script.google.com/macros/s/AKfycbxfnOoS9UjnQUzBRpFa51R5qYG22-rYa5VemaCBxyNplyr5Karolwrzu4rgEr1znNsqyw/exec";
+const REPORT_GAS_URL = "https://script.google.com/macros/s/AKfycbzP_yNNwMetNQEKinmVS7sgDuMEk6sYMauAE866yBMMR5dPeG8JNHa2MN70XGCscdLVDA/exec";
 
 let globalAdminRecords = [];   // 管理員一次抓全部後存在這邊
 let adminViewDays = 3;        // 預設抓最近兩週，可改 30
@@ -1136,6 +1136,18 @@ function openDetail(url) {
     // 假設您的詳細頁面路徑是 /detail/index.html
     const localDetailUrl = `/display/index.html?id=${reportId}`;
 
+  // ★★★ [新增/確認] 立即清空 iFrame 內容 ★★★
+    // 這一步能立即清空舊的 DOM 結構和殘留的樣式
+    iframe.src = 'about:blank'; 
+    
+    // 給瀏覽器一點時間反應，雖然通常不是必須的，但能確保徹底清除。
+    // 在下一個 event loop 階段設定新的 src。
+    setTimeout(() => {
+        const localDetailUrl = `/detail.html?id=${reportId}`;
+        iframe.src = localDetailUrl; 
+        console.log(`▶️ 載入本地 iFrame: ${localDetailUrl}`);
+    }, 10); // 延遲 10ms
+
     // 確保本地渲染容器被隱藏 (雖然理論上它不應該被操作)
     const detailContainer = document.getElementById('detailContainer');
     if (detailContainer) {
@@ -1201,27 +1213,33 @@ function isPhotoPage(url) {
 }
 
 function backToList() {
-  const detail = document.getElementById("detailView");
-  const list = document.getElementById("listView");
-  const fb = document.getElementById("floatingButtons");
+    const detail = document.getElementById("detailView");
+    const list = document.getElementById("listView");
+    const fb = document.getElementById("floatingButtons");
+    const iframe = document.getElementById("detailFrame"); // 新增：取得 iFrame 元素
 
-  if (detail.style.display === "block") {
-    detail.style.display = "none";
-    list.style.display = "block";
+    if (detail.style.display === "block") {
+        
+        // ★★★ 【關閉時清理 iFrame】★★★
+        iframe.src = 'about:blank'; // 徹底清空 iFrame 內容
+        iframe.style.display = 'none'; // 徹底隱藏 iFrame 元素
 
-    document.body.classList.remove("show-detail");
+        detail.style.display = "none"; // 隱藏 detailView 容器
+        list.style.display = "block"; // 顯示 listView
+        
+        document.body.classList.remove("show-detail");
 
-    // 電腦版回列表 → 圓鈕貼卡片邊
-    if (window.innerWidth >= 769) {
-      fb.style.display = "flex";
+        // 電腦版回列表 → 圓鈕貼卡片邊
+        if (window.innerWidth >= 769) {
+            fb.style.display = "flex";
+        }
+
+        return;
     }
 
-    return;
-  }
-
-  window.location.href = "/home";
+    window.location.href = "/home";
 }
-
+  
 async function loadAdminRecords() {
 
   const url = `${REPORT_GAS_URL}?action=listAdminFull&days=30`;
