@@ -293,7 +293,7 @@
 #fullDropdownPanel {
   width: 92%;              /* 卡片更寬，但不滿版 */
   max-width: 520px;        /* 大螢幕上仍然不會太大 */
-  max-height: 95%;        /* 🔥 卡片可變更大（原本 60% → 75%） */
+  max-height: calc(100vh - 140px); /* 100vh - 頂部間距 (約 70px) - 底部間距 (70px) */
   background: #fff;
   border-radius: 20px;
   padding: 14px 0;
@@ -734,60 +734,6 @@ body.photo-open-detail #floatingButtons {
     background: #e6f0ff; /* 背景變淺藍 */
     transform: translateY(-1px); /* 輕微上浮 */
     box-shadow: 0 2px 6px rgba(0,0,0,0.1); /* 新增陰影 */
-}
-
-/* ================================================= */
-/* 修正區塊：確保移動端（iOS/Android）堆疊層級正確 */
-/* ================================================= */
-
-/* Footer: 最低層級 (所有瀏覽器通用) */
-#globalFooter {
-  /* 保持原本的 position: fixed; bottom: 0; 等樣式 */
-  box-shadow: 0 -2px 6px rgba(0,0,0,0.12);
-  /* 確保在所有彈出層之下 */
-  z-index: 9900; 
-  /* 避免 Android/Chrome 的 transform 降級問題，只在必要時使用 transform */
-}
-
-/* LoadingMask: 中間層級 (Android/iOS 通用) */
-#loadingMask {
-  /* 確保高於 Footer (9900) */
-  z-index: 9999; 
-  
-  /* 專門為 Webkit (iOS) 建立堆疊上下文，不影響 Android/Desktop 正常堆疊 */
-  -webkit-transform: translateZ(0); 
-  transform: translateZ(0); 
-}
-
-/* FullDropdownMask: 最高層級 (Android/iOS 通用) */
-#fullDropdownMask {
-  /* 確保高於 LoadingMask (9999) */
-  z-index: 10000; 
-
-  /* 針對 Webkit (iOS) 的最終手段：確保它覆蓋一切 */
-  -webkit-transform: translate3d(0, 0, 1px);
-  transform: translate3d(0, 0, 1px);
-}
-
-/* ================================================= */
-/* 桌面版覆寫：使用更高 Z-index 以應對複雜的桌面佈局 */
-/* ================================================= */
-@media (min-width: 769px) {
-    #fullDropdownMask {
-        /* 桌面版最高 Z-index (使用 !important 確保覆蓋手機版規則) */
-        z-index: 100001 !important;
-        /* 避免與手機版規則衝突，這裡不需要重複 transform */
-        -webkit-transform: none !important;
-        transform: none !important;
-    }
-    #loadingMask {
-        /* 桌面版 LoadingMask Z-index */
-        z-index: 999999 !important;
-        /* 避免與手機版規則衝突，這裡不需要重複 transform */
-        -webkit-transform: none !important;
-        transform: none !important;
-    }
-    /* 桌面版 Footer 保持 9900 或原本的桌面 Z-index 即可 */
 }
 </style>
 
