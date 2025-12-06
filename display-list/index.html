@@ -1058,6 +1058,15 @@ let globalRecords = [];
 // 用於儲存列表數據到 Session Storage 的 key
 const LIST_CACHE_KEY = 'reportListCache';
 
+  document.addEventListener("DOMContentLoaded", () => {
+  const mask = document.getElementById("fullDropdownMask");
+
+  // ★★★ 預先把遮罩移到 <html> 層級，避免之後移動造成 layout shift
+  if (mask && mask.parentElement !== document.documentElement) {
+    document.documentElement.appendChild(mask);
+  }
+});
+
 /**
  * 將列表數據轉換為以 Report ID 為鍵的 Map/Object，並存入 Session Storage。
  * @param {Array} records - GAS 返回的紀錄陣列。
@@ -1980,9 +1989,7 @@ const dropdownData = {
 const mask = document.getElementById("fullDropdownMask");
 let maskOriginalParent = null;
 
-// 開啟
 function openDropdown(type){
-  // 隱藏 footer，但不移除，不會觸發 iOS 高度重算
   document.getElementById("globalFooter").style.visibility = "hidden";
 
   const info = dropdownData[type];
@@ -1993,14 +2000,14 @@ function openDropdown(type){
   const box = document.getElementById("panelOptions");
   box.innerHTML = "";
 
-  const currentSelectedValue = document.getElementById(info.input).value;
+  const currentSelected = document.getElementById(info.input).value;
 
   info.options.forEach(opt => {
     const div = document.createElement("div");
     div.className = "option";
     div.textContent = opt.text;
 
-    if (opt.value == currentSelectedValue) div.classList.add("selected");
+    if (opt.value == currentSelected) div.classList.add("selected");
 
     div.onclick = () => {
       document.getElementById(info.target).textContent = opt.text;
@@ -2015,26 +2022,18 @@ function openDropdown(type){
     box.appendChild(div);
   });
 
-  // ★★★★★ iOS 真正關鍵：遮罩暫時移到 <html> 層級 ★★★★★
-  maskOriginalParent = mask.parentElement;
-  document.documentElement.appendChild(mask);
+  // ★ 遮罩不要移動，只要顯示即可
+  document.getElementById("fullDropdownMask").style.display = "flex";
 
-  mask.style.display = "flex";
   lockBodyScroll();
 }
 
-// 關閉
+
 function closeDropdown(){
-  mask.style.display = "none";
+  document.getElementById("fullDropdownMask").style.display = "none";
 
   unlockBodyScroll();
 
-  // ★★★★★ 遮罩移回原本的位置（不影響之後 DOM 結構） ★★★★★
-  if (maskOriginalParent) {
-    maskOriginalParent.appendChild(mask);
-  }
-
-  // 恢復 footer
   document.getElementById("globalFooter").style.visibility = "visible";
 }
 
