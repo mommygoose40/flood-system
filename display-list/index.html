@@ -450,39 +450,38 @@
   height: 70px;
 }
 
+/* L317: 原本的 body/html 修正 */
 html, body {
-  /* ... 保持原有設定 ... */
-  height: 100%;
-  overflow: hidden;
+  /* 保持原有設定 */
+  height: 100%;
+  /* 🔥 關鍵修正：將全域滾動改為 auto 或移除，允許頁面內容滾動 */
+  overflow: auto; 
+  /* 移除 overflow-x: hidden 以避免潛在副作用，若需要可單獨加回 */
 }
-    
-/* 🔥 關鍵修正：對於 iOS 瀏覽器，確保 viewport 是 100% */
+    
+/* L327: 🔥 關鍵修正：針對 iOS 瀏覽器，確保 viewport 是 100% 但不禁止滾動 */
 @supports (-webkit-overflow-scrolling: touch) {
-  html, body {
-    /* 確保全螢幕高度計算正確 */
-    height: 100vh;
-  }
-  overflow: hidden;    /* 關閉全頁滾動 */
+  html, body {
+    /* 確保全螢幕高度計算正確 */
+    height: 100vh; 
+    /* 🔥 移除 overflow: hidden! */
+    overflow: auto !important; /* 確保 iOS 允許滾動 */
+  }
 }
 
+/* L337: 🔥 關鍵修正：讓 listView 佔用從頂部到底部 footer 上方的空間 */
 #listView {
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 70px; /* <--- 關鍵修正：確保列表從頂部延伸到底部 Footer (70px) 上方 */
 
-  /* ★★★ 正確的滾動容器設定 ★★★ */
-  height: 100%   
-  overflow-y: scroll;
-  -webkit-overflow-scrolling: touch;
+  overflow-y: scroll;
+  -webkit-overflow-scrolling: touch;
 
-  padding: 0 16px 0 !important;
-  box-sizing: border-box;
-}
-
-#listView {
-  padding: 0 16px 0 !important; /* 左右內距+底部留空 */
-  box-sizing: border-box;
+  padding: 0 16px 0 !important;
+  box-sizing: border-box;
 }
 
 .fakeSelectBtn {
