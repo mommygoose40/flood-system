@@ -388,7 +388,7 @@
 }
 
 #globalFooter {
-  position: absolute;
+  position: fixed;
   bottom: 0;
   left: 0;
   width: 100%;
@@ -429,7 +429,7 @@
 }
 
 #pageWrapper {
-  padding-bottom: 90px;   /* 預留 footer 空間 */
+  padding-bottom: 0px; /* 預留 footer 空間 */
 }
 
 #detailView {
@@ -443,7 +443,7 @@
 }
 
 #globalFooter {
-  position: absolute;
+  position: fixed;
   bottom: 0;
   left: 0;
   width: 100%;
@@ -1971,6 +1971,9 @@ const dropdownData = {
 
 // 開啟
 function openDropdown(type){
+  // ★ iOS 專用修正：避免 fixed footer 蓋住遮罩
+  document.getElementById("globalFooter").style.display = "none";
+  
   const info = dropdownData[type];
   if (!info) return;
 
@@ -2019,6 +2022,9 @@ function openDropdown(type){
 function closeDropdown(){
   document.getElementById("fullDropdownMask").style.display = "none";
   unlockBodyScroll();
+
+  // ★ iOS 專用修正：恢復 footer
+  document.getElementById("globalFooter").style.display = "flex";
 }
 
 /* 點黑底關閉 */
