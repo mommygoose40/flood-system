@@ -735,6 +735,71 @@ body.photo-open-detail #floatingButtons {
     transform: translateY(-1px); /* 輕微上浮 */
     box-shadow: 0 2px 6px rgba(0,0,0,0.1); /* 新增陰影 */
 }
+
+    /* ... [略去上半部 CSS] ... */
+
+/* 偽下拉按鈕 ... */
+
+/* 黑色遮罩 */
+#fullDropdownMask {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.45);
+  /* 🔥 關鍵修正：確保手機版 Z-Index 最高 */
+  z-index: 99999;
+  display: none;
+  /* ... 其他樣式 ... */
+}
+
+/* 彈出卡片 ... */
+
+/* 全域 LoadingMask */
+#loadingMask {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.35);
+  display: none;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  /* 🔥 關鍵修正：確保高於 Footer 但低於全螢幕選單 */
+  z-index: 9990; 
+  font-size: 28px;
+  /* ... 其他樣式 ... */
+}
+
+/* Footer */
+#globalFooter {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 70px;
+  background: #f8f8f8;
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+  align-items: center;
+  padding: 0 16px;
+  box-shadow: 0 -2px 6px rgba(0,0,0,0.12);
+  /* 🔥 關鍵修正：確保最低，讓遮罩和選單可以蓋過 */
+  z-index: 9000; 
+}
+
+/* ... [略去下半部 CSS] ... */
+
+/* 桌面版覆寫（確保桌面版邏輯不變） */
+@media (min-width: 769px) {
+    /* ... 保持不變 ... */
+    #fullDropdownMask {
+        /* 桌面版 z-index 保持為高於浮動圓鈕的設計 (100000) */
+        z-index: 100001 !important;
+    }
+    #loadingMask {
+        /* 桌面版 z-index 保持最高 (999999) */
+        z-index: 999999 !important;
+    }
+}
 </style>
 
   <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
