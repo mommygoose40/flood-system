@@ -1977,11 +1977,14 @@ const dropdownData = {
   }
 };
 
+const mask = document.getElementById("fullDropdownMask");
+let maskOriginalParent = null;
+
 // 開啟
 function openDropdown(type){
-  // ★ iOS 專用修正：避免 fixed footer 蓋住遮罩
+  // 隱藏 footer，但不移除，不會觸發 iOS 高度重算
   document.getElementById("globalFooter").style.visibility = "hidden";
-  
+
   const info = dropdownData[type];
   if (!info) return;
 
@@ -1997,41 +2000,41 @@ function openDropdown(type){
     div.className = "option";
     div.textContent = opt.text;
 
-    // 若與 select 目前的值相同 → 套用選取樣式
-    if (opt.value == currentSelectedValue) {
-      div.classList.add("selected");
-    }
+    if (opt.value == currentSelectedValue) div.classList.add("selected");
 
     div.onclick = () => {
-  document.getElementById(info.target).textContent = opt.text;
-  document.getElementById(info.input).value = opt.value;
+      document.getElementById(info.target).textContent = opt.text;
+      document.getElementById(info.input).value = opt.value;
 
-  // 清掉所有選取狀態
-  document.querySelectorAll(".option").forEach(o => {
-    o.classList.remove("selected");
-  });
+      document.querySelectorAll(".option").forEach(o => o.classList.remove("selected"));
+      div.classList.add("selected");
 
-  // ☆☆☆ 一次加 selected → 藍底＋藍點同一個 frame 一起亮
-  div.classList.add("selected");
-
-  // 增加人眼可辨識的延遲（150–180ms）
-  setTimeout(() => {
-    closeDropdown();
-  }, 180);
-};
+      setTimeout(() => closeDropdown(), 180);
+    };
 
     box.appendChild(div);
   });
 
-  document.getElementById("fullDropdownMask").style.display = "flex";
+  // ★★★★★ iOS 真正關鍵：遮罩暫時移到 <html> 層級 ★★★★★
+  maskOriginalParent = mask.parentElement;
+  document.documentElement.appendChild(mask);
+
+  mask.style.display = "flex";
   lockBodyScroll();
 }
 
+// 關閉
 function closeDropdown(){
-  document.getElementById("fullDropdownMask").style.display = "none";
+  mask.style.display = "none";
+
   unlockBodyScroll();
 
-  // ★ iOS 專用修正：恢復 footer
+  // ★★★★★ 遮罩移回原本的位置（不影響之後 DOM 結構） ★★★★★
+  if (maskOriginalParent) {
+    maskOriginalParent.appendChild(mask);
+  }
+
+  // 恢復 footer
   document.getElementById("globalFooter").style.visibility = "visible";
 }
 
