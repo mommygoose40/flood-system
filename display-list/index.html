@@ -284,9 +284,19 @@
   z-index: 100001; 
   display: none;
   justify-content: center;
-  align-items: flex-start;
-  padding: 30px;            /* 四周留白 */
+  align-items: flex-start; 
+  
+  padding-top: 20px; /* 頂部留出 20px 間距 */
+  padding-bottom: 90px; /* 底部留出 20px 間距 + footer 高度 70px = 90px */
+  
+  /* 移除 height/bottom/top/left/right，讓 padding 決定實際顯示範圍 */
+  inset: 0;
   box-sizing: border-box;
+}
+
+        /* 新增一個用於置中的 Class (短選單專用) */
+.center-panel {
+  align-items: center !important;
 }
 
 /* 彈出卡片（升級版：更高、更大） */
@@ -1976,7 +1986,13 @@ function openDropdown(type){
 
   document.getElementById("panelTitle").textContent = info.title;
 
-  const box = document.getElementById("panelOptions");
+  const mask = document.getElementById("fullDropdownMask");
+  const panel = document.getElementById("fullDropdownPanel");
+  const box = document.getElementById("panelOptions");
+  
+  // 重置 mask 的置中狀態
+  mask.classList.remove("center-panel");
+  
   box.innerHTML = "";
 
   const currentSelectedValue = document.getElementById(info.input).value;
@@ -2014,6 +2030,29 @@ function openDropdown(type){
 
   document.getElementById("fullDropdownMask").style.display = "flex";
   lockBodyScroll();
+
+  // 🔥 關鍵：延遲判斷 Panel 高度
+  setTimeout(() => {
+    
+    // 獲取 Panel 的實際內容高度（包含 padding, border）
+    const panelHeight = panel.offsetHeight;
+    
+    // 獲取視窗高度
+    const windowHeight = window.innerHeight;
+    
+    // 計算 Panel 在不被 Footer 遮擋情況下的最大高度
+    // 110px = 頂部間距 (20px) + 底部間距 (20px) + Footer 高度 (70px)
+    const maxSafeHeight = windowHeight - 140; 
+
+    // 如果 Panel 的實際高度 < 最大安全高度，則置中
+    if (panelHeight < maxSafeHeight) {
+      mask.classList.add("center-panel");
+    } else {
+      // 否則保持 flex-start (靠上)
+      mask.classList.remove("center-panel");
+    }
+
+  }, 50); // 稍微延遲
 }
 
 function closeDropdown(){
