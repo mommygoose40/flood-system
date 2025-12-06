@@ -275,18 +275,26 @@
   padding: 0 2px;
 }
 
-/* 黑色遮罩 */
+/* ★★★ iOS 100vh 修正：使用 100dvh + 強制覆蓋全版 ★★★ */
 #fullDropdownMask {
   position: fixed;
-  inset: 0;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100dvh;     /* 使用動態 viewport 高度，iOS 才不會漏底 */
   background: rgba(0,0,0,0.45);
-  /* 🔥 Z-Index 調整：確保它在 #floatingButtons (100000) 之上 */
-  z-index: 100001; 
+
+  z-index: 100001;
+
   display: none;
   justify-content: center;
   align-items: center;
-  padding: 30px;            /* 四周留白 */
+
+  padding: 30px;
   box-sizing: border-box;
+
+  /* ★ 保證不受父容器 overflow 影響，不要讓它被 clip */
+  pointer-events: auto;
 }
 
 /* 彈出卡片（升級版：更高、更大） */
@@ -1972,7 +1980,7 @@ const dropdownData = {
 // 開啟
 function openDropdown(type){
   // ★ iOS 專用修正：避免 fixed footer 蓋住遮罩
-  document.getElementById("globalFooter").style.display = "none";
+  document.getElementById("globalFooter").style.visibility = "hidden";
   
   const info = dropdownData[type];
   if (!info) return;
@@ -2024,7 +2032,7 @@ function closeDropdown(){
   unlockBodyScroll();
 
   // ★ iOS 專用修正：恢復 footer
-  document.getElementById("globalFooter").style.display = "flex";
+  document.getElementById("globalFooter").style.visibility = "visible";
 }
 
 /* 點黑底關閉 */
