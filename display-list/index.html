@@ -286,8 +286,9 @@
   justify-content: center;
   align-items: flex-start; 
   
-  padding-top: 50px; /* 頂部留出 20px 間距 */
-  padding-bottom: 90px; /* 底部留出 20px 間距 + footer 高度 70px = 90px */
+  /* 🔥 移除 padding，讓 Panel 自身控制邊距 */
+  padding-top: 0;
+  padding-bottom: 0;
   
   /* 移除 height/bottom/top/left/right，讓 padding 決定實際顯示範圍 */
   inset: 0;
@@ -309,6 +310,12 @@
   padding: 14px 0;
   overflow-y: auto;
   box-shadow: 0 6px 26px rgba(0,0,0,0.3);
+  
+  /* 🔥 關鍵修正：透過 margin-top 創建頂部空間 */
+  margin-top: 50px; 
+  
+  /* 🔥 關鍵修正：透過 margin-bottom 創建底部空間，以便與 footer 保持距離 */
+  margin-bottom: 50px;
 }
     
 /* 標題（微縮） */
@@ -2031,27 +2038,22 @@ function openDropdown(type){
   document.getElementById("fullDropdownMask").style.display = "flex";
   lockBodyScroll();
 
-  // 🔥 關鍵：延遲判斷 Panel 高度
+  // 延遲判斷 Panel 高度
   setTimeout(() => {
     
-    // 獲取 Panel 的實際內容高度
     const panelHeight = panel.offsetHeight;
     
-    // 計算 Panel 在 CSS 中設定的最大高度值
-    // 這裡使用你提供的 CSS 值：100vh - 140px
+    // 最大安全高度的計算值：170px = 50px (上) + 50px (下) + 70px (footer)
     const maxSafeHeight = window.innerHeight - 140; 
 
-    // 🏆 判斷邏輯：
-    // 如果 Panel 的實際高度 panelHeight 比「最大高度」少於 10px 以上，
-    // 我們就視為「短選單」（沒有被 max-height 限制到頂）
+    // 判斷邏輯：如果實際高度明顯小於最大可能高度，則置中
     if (panelHeight < maxSafeHeight - 10) { 
       mask.classList.add("center-panel"); // 短選單：置中
     } else {
-      // 否則就是長選單（高度接近或等於最大值），保持 flex-start 靠上
-      mask.classList.remove("center-panel");
+      mask.classList.remove("center-panel"); // 長選單：保持 flex-start (靠上)
     }
 
-  }, 50); // 稍微延遲
+  }, 50);
 }
 
 function closeDropdown(){
