@@ -696,27 +696,6 @@ html, body {
   }
 }
 
-    /* 調整 loadingMask 在電腦版卡片模式下的位置 */
-  #loadingMask {
-    /* 確保 Loading Mask 不再是全螢幕，而是只覆蓋卡片 */
-    position: absolute !important; /* 讓它相對於 pageWrapper 定位 */
-    top: 0 !important;
-    left: 0 !important;
-    right: 0 !important;
-    bottom: 0 !important;
-    width: 100% !important;
-    height: 100% !important;
-    /* 取消 background: rgba(0,0,0,0.35) !important; 使用白色遮罩 */
-    background: rgba(255, 255, 255, 0.95) !important; 
-    z-index: 999999 !important;
-  }
-
-  /* 確保 pageWrapper 在載入時顯示，才能讓 loadingMask 相對定位 */
-  body.loading #pageWrapper {
-      display: block !important;
-  }
-}
-
 /* 新增 CSS：當 body 有 photo-open-detail 時，隱藏小圓鈕 */
 body.photo-open-detail #floatingButtons {
   display: none !important;  
@@ -765,6 +744,74 @@ body.photo-open-detail #floatingButtons {
     background: #e6f0ff; /* 背景變淺藍 */
     transform: translateY(-1px); /* 輕微上浮 */
     box-shadow: 0 2px 6px rgba(0,0,0,0.1); /* 新增陰影 */
+}
+
+    /* 位於 CSS 頂部 */
+#loadingMask {
+    /* 保持原有灰色半透明遮罩 */
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.35); /* 原始設定 */
+    /* ... 保持其他原始設定 ... */
+    /* 確保手機版 z-index 夠高 */
+    z-index: 10000; 
+}
+
+/* 位於 @media (min-width: 769px) 區塊內 */
+@media (min-width: 769px) {
+    /* ... (其他電腦版樣式) ... */
+    
+    /* 當 body 有 loading class 時，Loading Mask 才能準確覆蓋卡片 */
+    body.loading #loadingMask {
+        /* 調整 Loading Mask 的定位：讓它相對於 #pageWrapper (相對定位) */
+        position: absolute !important; 
+        top: 0 !important;
+        left: 0 !important;
+        right: 0 !important;
+        bottom: 0 !important;
+        width: 100% !important;
+        height: 100% !important;
+        /* 在電腦版，讓 Loading Mask 的背景色與卡片背景色一致或更深 */
+        background: rgba(0,0,0,0.35) !important; 
+        /* 堆疊層級依然要最高 */
+        z-index: 999999 !important;
+        /* 啟用 Flex 佈局來居中旋轉圖標 */
+        display: flex !important; 
+    }
+}
+
+    @media (min-width: 769px) {
+  /* ... 其他電腦版樣式 ... */
+
+  /*
+   * 關鍵修正：讓 #loadingMask 在電腦版且 body 有 .loading class 時，
+   * 才會變為相對 #pageWrapper 定位。
+   */
+  body.loading #loadingMask { /* 建議加上 body.loading 限制，讓它只在載入時生效 */
+    /* 1. 定位：相對於 #pageWrapper (PageWrapper 需要有 position: relative;) */
+    position: absolute !important; 
+    top: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    bottom: 0 !important;
+    width: 100% !important;
+    height: 100% !important;
+    
+    /* 2. 背景色：使用原始的半透明灰色，避免兩層白底疊加 */
+    background: rgba(0, 0, 0, 0.35) !important; /* 【修改為】原始的灰色遮罩 */
+    
+    /* 3. 堆疊層級：確保它高於卡片內容 */
+    z-index: 999999 !important;
+
+    /* 4. 顯示方式：確保 Spinner 能夠居中 */
+    display: flex !important; /* 【新增】如果您的 spinner 放在 mask 裡面，必須確保 flex 屬性 */
+  }
+
+  /* 確保 pageWrapper 在載入時顯示，才能讓 loadingMask 相對定位 */
+  /* 當 body 處於 loading 狀態時，強制 #pageWrapper 可見，為 #loadingMask 提供參考點。 */
+  body.loading #pageWrapper { /* 【保留】這段是必要的 */
+      display: block !important;
+  }
 }
 </style>
 
@@ -1334,50 +1381,51 @@ function backToList() {
 }
   
 async function loadAdminRecords() {
+    const url = `${REPORT_GAS_URL}?action=listAdminFull&days=30`;
 
-  const url = `${REPORT_GAS_URL}?action=listAdminFull&days=30`;
+    let json;
+    try {
+        const res = await fetch(url);
+        const text = await res.text();
+        json = JSON.parse(text);
+    } catch (e) {
+        document.getElementById("listContainer").innerHTML = "管理員資料載入失敗";
+        // 錯誤時必須關閉遮罩和移除 body.loading class
+        document.getElementById("loadingMask").style.display = "none";
+        document.body.classList.remove("loading"); // 【新增】
+        return;
+    }
 
-  let json;
-  try {
-    const res = await fetch(url);
-    const text = await res.text();
-    json = JSON.parse(text);
-  } catch (e) {
-    document.getElementById("listContainer").innerHTML = "管理員資料載入失敗";
-    shouldKeepMask = false;
-    document.getElementById("loadingMask").style.display = "none";
-    return;
-  }
-
-  globalAdminRecords = json.records || [];
-
-  // ★★★ [新增] 將管理員列表數據存入 Session Storage ★★★
+    globalAdminRecords = json.records || [];
     saveLocalReportsCache(globalAdminRecords);
 
-  const filtered = filterAdminRecords();
-  renderList(filtered);
+    const filtered = filterAdminRecords();
+    renderList(filtered); // 讓 renderList 負責最終的關閉 loading mask 動作
 
-  // ★ renderList 結束後，關掉大 loading
-  if (shouldKeepMask) {
-    shouldKeepMask = false;
-    document.getElementById("loadingMask").style.display = "none";
-    document.getElementById("listContainer").style.display = "flex";
-  }
+    // 移除多餘的 shouldKeepMask 判斷 (讓 renderList 統一處理)
+    /*
+    if (shouldKeepMask) { 
+        shouldKeepMask = false;
+        document.getElementById("loadingMask").style.display = "none";
+    }
+    */
 
-  isInitialLoad = false;   // ★ 第一次載入結束
+    isInitialLoad = false;
+    // 不再需要在這裡移除 body.classList.remove("loading");，由 renderList 統一執行
 }
 
-  /* ------------------------------------------
-      3. 從 GAS 取得回報記錄（未來串 API）
-  -------------------------------------------*/
-  async function loadRecordList(mode = "self") {
-  if (!globalVid) {
-    debug("錯誤：沒有 vid 無法查詢");
-    document.getElementById("loadingMask").style.display = "none";
-    return;
-  }
+/* ------------------------------------------
+   3. 從 GAS 取得回報記錄（未來串 API）
+-------------------------------------------*/
+async function loadRecordList(mode = "self") {
+    if (!globalVid) {
+        debug("錯誤：沒有 vid 無法查詢");
+        document.getElementById("loadingMask").style.display = "none";
+        document.body.classList.remove("loading"); // 【新增】
+        return;
+    }
 
-  let url = "";
+    let url = "";
 
   if (mode === "self") {
     url = `${REPORT_GAS_URL}?action=listMyReports&vid=${encodeURIComponent(globalVid)}`;
@@ -1387,27 +1435,28 @@ async function loadAdminRecords() {
 
   debug("發送 API 請求，URL: " + url); // 打印 API 請求的 URL
 
-  const res = await fetch(url);
-  const text = await res.text();
-  const json = JSON.parse(text);
+  try { // 【修正】加入 try...catch 確保網路錯誤時也能關閉遮罩
+        const res = await fetch(url);
+        const text = await res.text();
+        const json = JSON.parse(text);
 
-  debug("返回的資料: " + JSON.stringify(json)); // 打印 API 返回的資料
+        debug("返回的資料: " + JSON.stringify(json));
 
-  globalRecords = json.records || [];
+        globalRecords = json.records || [];
+        saveLocalReportsCache(globalRecords);
 
-  // ★★★ [新增] 將志工/大隊列表數據存入 Session Storage ★★★
-    saveLocalReportsCache(globalRecords);
-
-  renderList(globalRecords);
+        renderList(globalRecords);
+        // 讓 renderList 統一處理遮罩移除
+        
+    } catch (e) {
+        debug("API 請求或解析失敗: " + e);
+        document.getElementById("listContainer").innerHTML = "資料載入失敗";
+        document.getElementById("loadingMask").style.display = "none";
+    }
+    
+    document.body.classList.remove("loading"); // 【新增】不論成功失敗，都確保移除 body.loading
+    // 不再需要在這裡移除 body.classList.remove("loading");，由 renderList 或錯誤處理統一執行
 }
-
-  if (shouldKeepMask) {
-    shouldKeepMask = false;
-    document.getElementById("loadingMask").style.display = "none";
-    document.getElementById("listContainer").style.display = "flex";
-  }
-
-  updateSwitchUI();
 
   /* ------------------------------------------
       4. 渲染「年度 → 月份 → 日期 → 紀錄」
@@ -1656,7 +1705,6 @@ function renderList(records) {
 
   // --- 渲染完成 ---
   document.getElementById("loadingMask").style.display = "none";
-  document.getElementById("listContainer").style.display = "flex";
   container.style.display = "block";
 
   if (spinner) spinner.style.display = "none";
