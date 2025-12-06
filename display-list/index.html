@@ -696,6 +696,27 @@ html, body {
   }
 }
 
+    /* 調整 loadingMask 在電腦版卡片模式下的位置 */
+  #loadingMask {
+    /* 確保 Loading Mask 不再是全螢幕，而是只覆蓋卡片 */
+    position: absolute !important; /* 讓它相對於 pageWrapper 定位 */
+    top: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    bottom: 0 !important;
+    width: 100% !important;
+    height: 100% !important;
+    /* 取消 background: rgba(0,0,0,0.35) !important; 使用白色遮罩 */
+    background: rgba(255, 255, 255, 0.95) !important; 
+    z-index: 999999 !important;
+  }
+
+  /* 確保 pageWrapper 在載入時顯示，才能讓 loadingMask 相對定位 */
+  body.loading #pageWrapper {
+      display: block !important;
+  }
+}
+
 /* 新增 CSS：當 body 有 photo-open-detail 時，隱藏小圓鈕 */
 body.photo-open-detail #floatingButtons {
   display: none !important;  
@@ -750,7 +771,7 @@ body.photo-open-detail #floatingButtons {
   <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
 </head>
 
-<body>
+<body class="desktop-card-mode">
 
   <div id="pageWrapper">
 
