@@ -1340,6 +1340,7 @@ async function loadAdminRecords() {
   if (shouldKeepMask) {
     shouldKeepMask = false;
     document.getElementById("loadingMask").style.display = "none";
+    document.getElementById("listContainer").style.display = "flex";
   }
 
   isInitialLoad = false;   // ★ 第一次載入結束
@@ -1382,6 +1383,7 @@ async function loadAdminRecords() {
   if (shouldKeepMask) {
     shouldKeepMask = false;
     document.getElementById("loadingMask").style.display = "none";
+    document.getElementById("listContainer").style.display = "flex";
   }
 
   updateSwitchUI();
@@ -1633,6 +1635,7 @@ function renderList(records) {
 
   // --- 渲染完成 ---
   document.getElementById("loadingMask").style.display = "none";
+  document.getElementById("listContainer").style.display = "flex";
   container.style.display = "block";
 
   if (spinner) spinner.style.display = "none";
