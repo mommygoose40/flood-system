@@ -455,6 +455,13 @@ html, body {
   height: 100%;
   overflow: hidden;
 }
+/* 🔥 關鍵修正：對於 iOS 瀏覽器，確保 viewport 是 100% */
+@supports (-webkit-overflow-scrolling: touch) {
+  html, body {
+    /* 確保全螢幕高度計算正確 */
+    height: 100vh;
+  }
+}
     
 /* 🔥 關鍵修正：對於 iOS 瀏覽器，確保 viewport 是 100% */
 @supports (-webkit-overflow-scrolling: touch) {
