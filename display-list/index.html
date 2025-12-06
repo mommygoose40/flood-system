@@ -471,9 +471,13 @@ html, body {
   left: 0;
   right: 0;
 
-  bottom: 50px;  /* ★ 不用 calc，直接讓它撐滿到 footer 上方 */
-  overflow-y: auto;
+  /* ★★★ 正確的滾動容器設定 ★★★ */
+  height: calc(100vh - 70px);     
+  overflow-y: scroll;
   -webkit-overflow-scrolling: touch;
+
+  padding: 0 16px 0 !important;
+  box-sizing: border-box;
 }
 
 #listView {
