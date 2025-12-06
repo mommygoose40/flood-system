@@ -451,17 +451,7 @@
 }
 
 html, body {
-  /* ... 保持原有設定 ... */
   height: 100%;
-  overflow: hidden;
-}
-    
-/* 🔥 關鍵修正：對於 iOS 瀏覽器，確保 viewport 是 100% */
-@supports (-webkit-overflow-scrolling: touch) {
-  html, body {
-    /* 確保全螢幕高度計算正確 */
-    height: 100vh;
-  }
   overflow: hidden;    /* 關閉全頁滾動 */
 }
 
@@ -471,13 +461,9 @@ html, body {
   left: 0;
   right: 0;
 
-  /* ★★★ 正確的滾動容器設定 ★★★ */
-  height: calc(100vh - 53px);      
-  overflow-y: scroll;
+  bottom: 70px;  /* ★ 不用 calc，直接讓它撐滿到 footer 上方 */
+  overflow-y: auto;
   -webkit-overflow-scrolling: touch;
-
-  padding: 0 16px 0 !important;
-  box-sizing: border-box;
 }
 
 #listView {
