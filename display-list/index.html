@@ -743,6 +743,17 @@ body.photo-open-detail #floatingButtons {
     transform: translateY(-1px); /* 輕微上浮 */
     box-shadow: 0 2px 6px rgba(0,0,0,0.1); /* 新增陰影 */
 }
+
+    html {
+  height: 100%;
+  overflow: hidden;        /* html 控制滾動 */
+}
+
+body {
+  height: auto;            /* 不強制 */
+  overflow: visible;       /* 不要裁切，否則 iOS reflow */
+  position: static !important;  /* 不要被 scroll lock 改變定位點 */
+}
 </style>
 
   <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
@@ -2045,20 +2056,20 @@ document.getElementById("fullDropdownMask").addEventListener("click", function(e
 let scrollTopCache = 0;
 
 function lockBodyScroll() {
+  // 記錄當前捲動位置
   scrollTopCache = window.scrollY || document.documentElement.scrollTop;
-  document.body.style.position = "absolute";
-  document.body.style.top = `-${scrollTopCache}px`;
-  document.body.style.left = "0";
-  document.body.style.right = "0";
-  document.body.style.overflow = "hidden";
+
+  // 直接鎖住 html，不動 body（避免整體位移）
+  document.documentElement.style.overflow = "hidden";
+  document.documentElement.style.height = "100%";
 }
 
 function unlockBodyScroll() {
-  document.body.style.position = "";
-  document.body.style.top = "";
-  document.body.style.left = "";
-  document.body.style.right = "";
-  document.body.style.overflow = "";
+  // 解鎖 html
+  document.documentElement.style.overflow = "";
+  document.documentElement.style.height = "";
+
+  // 回到原本捲動位置
   window.scrollTo(0, scrollTopCache);
 }
 
