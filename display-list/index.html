@@ -478,13 +478,15 @@ html, body {
   left: 0;
   right: 0;
 
-  overflow-y: scroll;
+  bottom: 70px;  /* ★ 不用 calc，直接讓它撐滿到 footer 上方 */
+  overflow-y: auto;
   -webkit-overflow-scrolling: touch;
-
-  padding: 0 16px 0 !important;
-  box-sizing: border-box;
 }
 
+#listView {
+  padding: 0 16px 0 !important; /* 左右內距+底部留空 */
+  box-sizing: border-box;
+}
 
 .fakeSelectBtn {
   height: 42px !important;
