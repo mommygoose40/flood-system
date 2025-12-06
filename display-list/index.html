@@ -736,60 +736,58 @@ body.photo-open-detail #floatingButtons {
     box-shadow: 0 2px 6px rgba(0,0,0,0.1); /* 新增陰影 */
 }
 
-    /* ... [略去上半部 CSS] ... */
+/* ================================================= */
+/* 修正區塊：確保移動端（iOS/Android）堆疊層級正確 */
+/* ================================================= */
 
-/* 偽下拉按鈕 ... */
-
-/* Footer */
+/* Footer: 最低層級 (所有瀏覽器通用) */
 #globalFooter {
-  /* ... 其他樣式保持不變 ... */
+  /* 保持原本的 position: fixed; bottom: 0; 等樣式 */
   box-shadow: 0 -2px 6px rgba(0,0,0,0.12);
-  /* 讓 Footer Z-index 再次回到標準值 (例如 9900) */
+  /* 確保在所有彈出層之下 */
   z-index: 9900; 
+  /* 避免 Android/Chrome 的 transform 降級問題，只在必要時使用 transform */
 }
 
-/* 全域 LoadingMask */
+/* LoadingMask: 中間層級 (Android/iOS 通用) */
 #loadingMask {
-  /* ... 其他樣式保持不變 ... */
-  /* 讓 LoadingMask Z-index 高於 Footer */
+  /* 確保高於 Footer (9900) */
   z-index: 9999; 
+  
+  /* 專門為 Webkit (iOS) 建立堆疊上下文，不影響 Android/Desktop 正常堆疊 */
+  -webkit-transform: translateZ(0); 
+  transform: translateZ(0); 
 }
 
-/* 黑色遮罩 (全螢幕選單) */
+/* FullDropdownMask: 最高層級 (Android/iOS 通用) */
 #fullDropdownMask {
-  /* ... 其他樣式保持不變 ... */
-  /* 讓選單 Z-index 最高 */
+  /* 確保高於 LoadingMask (9999) */
   z-index: 10000; 
-}
-    /* 專門針對 iOS Safari/Webkit 的 Z-index 修正 */
-#fullDropdownMask {
-    /* 使用 !important 確保覆蓋所有其他規則 */
-    z-index: 100000 !important; 
-    
-    /* 這是解決 iOS 固定定位 Z-index 堆疊衝突的最終手段 */
-    -webkit-transform: translate3d(0, 0, 1px) !important;
-    transform: translate3d(0, 0, 1px) !important;
+
+  /* 針對 Webkit (iOS) 的最終手段：確保它覆蓋一切 */
+  -webkit-transform: translate3d(0, 0, 1px);
+  transform: translate3d(0, 0, 1px);
 }
 
-/* 確保 LoadingMask 也能蓋過 Footer (雖然 Z-index 已經設高，但保險起見) */
-#loadingMask {
-    -webkit-transform: translateZ(0);
-    transform: translateZ(0);
-}
-    
-/* ... [略去下半部 CSS] ... */
-
-/* 桌面版覆寫（確保桌面版邏輯不變） */
+/* ================================================= */
+/* 桌面版覆寫：使用更高 Z-index 以應對複雜的桌面佈局 */
+/* ================================================= */
 @media (min-width: 769px) {
-    /* ... 保持不變 ... */
     #fullDropdownMask {
-        /* 桌面版 z-index 保持為高於浮動圓鈕的設計 (100000) */
+        /* 桌面版最高 Z-index (使用 !important 確保覆蓋手機版規則) */
         z-index: 100001 !important;
+        /* 避免與手機版規則衝突，這裡不需要重複 transform */
+        -webkit-transform: none !important;
+        transform: none !important;
     }
     #loadingMask {
-        /* 桌面版 z-index 保持最高 (999999) */
+        /* 桌面版 LoadingMask Z-index */
         z-index: 999999 !important;
+        /* 避免與手機版規則衝突，這裡不需要重複 transform */
+        -webkit-transform: none !important;
+        transform: none !important;
     }
+    /* 桌面版 Footer 保持 9900 或原本的桌面 Z-index 即可 */
 }
 </style>
 
