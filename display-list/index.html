@@ -740,33 +740,43 @@ body.photo-open-detail #floatingButtons {
 
 /* 偽下拉按鈕 ... */
 
-/* 黑色遮罩 */
-#fullDropdownMask {
-  /* ... 其他樣式 ... */
-  z-index: 99999;
-  
-  /* 🔥 修正：強制啟用硬體加速，建立獨立堆疊上下文 */
-  transform: translateZ(0); 
+/* Footer */
+#globalFooter {
+  /* ... 其他樣式保持不變 ... */
+  box-shadow: 0 -2px 6px rgba(0,0,0,0.12);
+  /* 讓 Footer Z-index 再次回到標準值 (例如 9900) */
+  z-index: 9900; 
 }
 
 /* 全域 LoadingMask */
 #loadingMask {
-  /* ... 其他樣式 ... */
-  z-index: 9990; 
-  
-  /* 🔥 修正：強制啟用硬體加速，建立獨立堆疊上下文 */
-  transform: translateZ(0);
+  /* ... 其他樣式保持不變 ... */
+  /* 讓 LoadingMask Z-index 高於 Footer */
+  z-index: 9999; 
 }
 
-/* Footer */
-#globalFooter {
-  /* ... 其他樣式 ... */
-  z-index: 9000; 
-  
-  /* 🔥 修正：強制啟用硬體加速，建立獨立堆疊上下文 */
-  transform: translateZ(0);
+/* 黑色遮罩 (全螢幕選單) */
+#fullDropdownMask {
+  /* ... 其他樣式保持不變 ... */
+  /* 讓選單 Z-index 最高 */
+  z-index: 10000; 
+}
+    /* 專門針對 iOS Safari/Webkit 的 Z-index 修正 */
+#fullDropdownMask {
+    /* 使用 !important 確保覆蓋所有其他規則 */
+    z-index: 100000 !important; 
+    
+    /* 這是解決 iOS 固定定位 Z-index 堆疊衝突的最終手段 */
+    -webkit-transform: translate3d(0, 0, 1px) !important;
+    transform: translate3d(0, 0, 1px) !important;
 }
 
+/* 確保 LoadingMask 也能蓋過 Footer (雖然 Z-index 已經設高，但保險起見) */
+#loadingMask {
+    -webkit-transform: translateZ(0);
+    transform: translateZ(0);
+}
+    
 /* ... [略去下半部 CSS] ... */
 
 /* 桌面版覆寫（確保桌面版邏輯不變） */
