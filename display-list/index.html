@@ -284,38 +284,21 @@
   z-index: 100001; 
   display: none;
   justify-content: center;
-  align-items: flex-start; 
-  
-  /* 🔥 移除 padding，讓 Panel 自身控制邊距 */
-  padding-top: 0;
-  padding-bottom: 0;
-  
-  /* 移除 height/bottom/top/left/right，讓 padding 決定實際顯示範圍 */
-  inset: 0;
+  align-items: center;
+  padding: 30px;            /* 四周留白 */
   box-sizing: border-box;
-}
-
-        /* 新增一個用於置中的 Class (短選單專用) */
-.center-panel {
-  align-items: center !important;
 }
 
 /* 彈出卡片（升級版：更高、更大） */
 #fullDropdownPanel {
   width: 92%;              /* 卡片更寬，但不滿版 */
   max-width: 520px;        /* 大螢幕上仍然不會太大 */
-  max-height: calc(100vh - 140px);
+  max-height: 95%;        /* 🔥 卡片可變更大（原本 60% → 75%） */
   background: #fff;
   border-radius: 20px;
   padding: 14px 0;
   overflow-y: auto;
   box-shadow: 0 6px 26px rgba(0,0,0,0.3);
-  
-  /* 🔥 關鍵修正：透過 margin-top 創建頂部空間 */
-  margin-top: 150px; 
-  
-  /* 🔥 關鍵修正：透過 margin-bottom 創建底部空間，以便與 footer 保持距離 */
-  margin-bottom: 50px;
 }
     
 /* 標題（微縮） */
@@ -405,7 +388,7 @@
 }
 
 #globalFooter {
-  position: fixed;
+  position: absolute;
   bottom: 0;
   left: 0;
   width: 100%;
@@ -460,7 +443,7 @@
 }
 
 #globalFooter {
-  position: fixed;
+  position: absolute;
   bottom: 0;
   left: 0;
   width: 100%;
@@ -1993,13 +1976,7 @@ function openDropdown(type){
 
   document.getElementById("panelTitle").textContent = info.title;
 
-  const mask = document.getElementById("fullDropdownMask");
-  const panel = document.getElementById("fullDropdownPanel");
-  const box = document.getElementById("panelOptions");
-  
-  // 重置 mask 的置中狀態
-  mask.classList.remove("center-panel");
-  
+  const box = document.getElementById("panelOptions");
   box.innerHTML = "";
 
   const currentSelectedValue = document.getElementById(info.input).value;
@@ -2037,23 +2014,6 @@ function openDropdown(type){
 
   document.getElementById("fullDropdownMask").style.display = "flex";
   lockBodyScroll();
-
-  // 延遲判斷 Panel 高度
-  setTimeout(() => {
-    
-    const panelHeight = panel.offsetHeight;
-    
-    // 最大安全高度的計算值：170px = 50px (上) + 50px (下) + 70px (footer)
-    const maxSafeHeight = window.innerHeight - 140; 
-
-    // 判斷邏輯：如果實際高度明顯小於最大可能高度，則置中
-    if (panelHeight < maxSafeHeight - 10) { 
-      mask.classList.add("center-panel"); // 短選單：置中
-    } else {
-      mask.classList.remove("center-panel"); // 長選單：保持 flex-start (靠上)
-    }
-
-  }, 50);
 }
 
 function closeDropdown(){
