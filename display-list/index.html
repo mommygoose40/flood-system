@@ -277,18 +277,23 @@
 
 /* 黑色遮罩 */
 #fullDropdownMask {
-  position: fixed;
-  inset: 0;
-  width: 100vw; /* 確保寬度為視窗寬度 */
-  height: 100vh; /* 確保高度為視窗高度 */
-  background: rgba(0,0,0,0.45);
-  /* 🔥 將 Z-Index 設為比 globalFooter (9999) 更高，且高於 detailView (9998) */
-  z-index: 10000; 
-  display: none;
-  justify-content: center;
-  align-items: center;
-  padding: 30px;
-  box-sizing: border-box;
+  position: fixed;
+  top: 0; /* 確保從頂部開始 */
+  right: 0;
+  bottom: 0; /* 確保貼住底部，強制填滿可視區域 */
+  left: 0;
+  background: rgba(0,0,0,0.45);
+  z-index: 100001; /* 保持這個高 z-index */
+  display: none;
+  justify-content: center;
+  align-items: center;
+  padding: 30px;
+  box-sizing: border-box;
+
+  /* 🔥 新增：強制使用 100% 視窗高度，避免 vh 問題 */
+  /* 雖然您用了 inset:0，但加入這個可以更確保 */
+  height: 100%;
+  width: 100%;
 }
 
 /* 彈出卡片（升級版：更高、更大） */
@@ -301,6 +306,7 @@
   padding: 14px 0;
   overflow-y: auto;
   box-shadow: 0 6px 26px rgba(0,0,0,0.3);
+  z-index: 100002; /* 保持這個高 z-index */
 }
     
 /* 標題（微縮） */
@@ -453,16 +459,8 @@
 }
 
 html, body {
-  /* ... 保持原有設定 ... */
   height: 100%;
-  overflow: hidden;
-}
-/* 🔥 關鍵修正：對於 iOS 瀏覽器，確保 viewport 是 100% */
-@supports (-webkit-overflow-scrolling: touch) {
-  html, body {
-    /* 確保全螢幕高度計算正確 */
-    height: 100vh;
-  }
+  overflow: hidden;    /* 關閉全頁滾動 */
 }
 
 #listView {
@@ -470,8 +468,6 @@ html, body {
   top: 0;
   left: 0;
   right: 0;
-
-  bottom: 70px;  /* ★ 不用 calc，直接讓它撐滿到 footer 上方 */
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
 }
@@ -744,6 +740,13 @@ body.photo-open-detail #floatingButtons {
     background: #e6f0ff; /* 背景變淺藍 */
     transform: translateY(-1px); /* 輕微上浮 */
     box-shadow: 0 2px 6px rgba(0,0,0,0.1); /* 新增陰影 */
+}
+
+#fullDropdownMask {
+    position: fixed;
+    inset: 0;
+    width: 100vw;
+    height: 100vh;
 }
 </style>
 
