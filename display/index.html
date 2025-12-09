@@ -775,23 +775,17 @@ h2 {
       </div>
     </div>
 
-    <div id="audio-section" style="display:block;">  <!-- 強制顯示 -->
-  <div class="audio-player">
+    <div id="audio-section" class="audio-section" style="display:block;">
+  <h2>語音</h2>
 
-    <!-- ⭐ 新增：載入中區塊 -->
-    <div id="audio-loading" style="text-align:center;padding:20px;font-size:18px;color:#666;">
-      <h3>語音</h3>
-      <div class="loading-spinner" style="
-        width:28px;height:28px;border:3px solid #ccc;
-        border-top:3px solid #0b5ed7;border-radius:50%;
-        margin:0 auto 8px;animation:spin 1s linear infinite;">
-      </div>
-      語音載入中…
-    </div>
+  <div id="audio-loading" class="loading-container">
+    <div class="loading-spinner"></div>
+    <span class="loading-text">語音載入中...</span>
+  </div>
 
-    <!-- ⭐ 原播放器（預設先隱藏） -->
-    <div id="audio-player-container" style="display:none;">
-      <h3>語音</h3>
+  <!-- 播放器（載入成功後顯示） -->
+  <div id="audio-player-container" style="display:none;">
+    <div class="audio-player">
       <div style="display:flex;align-items:center;gap:14px;margin:20px 0;max-width:500px;">
         <button id="playBtn" style="
           width:56px;height:56px;border-radius:50%;
@@ -802,18 +796,21 @@ h2 {
             border-bottom:9px solid transparent;border-left:16px solid #fff;margin-left:3px;">
           </div>
         </button>
+
         <span id="timeLabel" style="font-size:19px;color:#333;min-width:45px;">0:00</span>
+
         <div style="flex:1;height:12px;background:#eee;border-radius:8px;overflow:hidden;cursor:pointer;" id="progressBar">
           <div id="waveFill" style="width:0%;height:100%;background:#0b5ed7;"></div>
         </div>
       </div>
     </div>
+  </div>
 
-    <!-- ⭐ 新增：無語音時顯示 -->
-    <div id="audio-empty" style="display:none;text-align:center;padding:20px;font-size:18px;color:#666;">
-      此回報沒有語音
-    </div>
-
+  <!-- 無語音 -->
+  <div id="audio-empty" class="loading-container" style="display:none;">
+    <span class="loading-text">此回報沒有語音</span>
+  </div>
+</div>
   </div>
 </div>
 
