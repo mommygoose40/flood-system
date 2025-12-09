@@ -2402,7 +2402,7 @@ function smoothProgress(target) {
   }, 60);
 }
 
-/* === 提交表單 (精簡版) === */
+/* === 提交表單 (精簡版 - 修正 localStorage) === */
 async function submitForm() {
 
   const summary = document.getElementById('summary').value.trim();
@@ -2432,12 +2432,12 @@ async function submitForm() {
   	return;
   }
   
-  // 處理同行者檢查
-  const companionsChecked = Array.from(document.querySelectorAll('input[name="companions"]:checked'))
+  // 處理同行者檢查
+  const companionsChecked = Array.from(document.querySelectorAll('input[name="companions"]:checked'))
     .map(e => e.value);
-  const otherCompanionName = document.getElementById('otherCompanionName')?.value.trim() || '';
+  const otherCompanionName = document.getElementById('otherCompanionName')?.value.trim() || '';
 
-  if (companionsChecked.includes('其他') && !otherCompanionName) {
+  if (companionsChecked.includes('其他') && !otherCompanionName) {
     showWarningAlert('請輸入同行志工姓名');
     return;
   }
@@ -2511,11 +2511,11 @@ async function submitForm() {
     fd.append("volunteerName", volunteerName);
     fd.append("team", team);
 
-    // 處理同行者資料
+    // 處理同行者資料 (GAS 期望的格式)
     const companionsToSend = companionsChecked.map(c =>
       c === '其他' && otherCompanionName ? `其他(${otherCompanionName})` : c
     );
-    fd.append('companions', companionsToSend.join(','));
+    fd.append('companions', companionsToSend.join(',')); // 傳給 GAS
 
     fd.append('transcription', txt || '');
 
@@ -2525,18 +2525,37 @@ async function submitForm() {
     hideUploadModal();
 
     if (rj.result === 'success') {
+          
+      // ★★★ 修正邏輯：處理要存入 localStorage 的「同行者」字串 ★★★
+      const localStorageCompanions = companionsChecked.map(c =>
+          c === '其他' && otherCompanionName ? `其他(${otherCompanionName})` : c
+      ).join(',');
+
+      // ★★★ 修正邏輯：處理要存入 localStorage 的「異常分類」字串 ★★★
+      let localStorageDisasterType = types || '';
+      if (types.includes('其他') && otherDisasterText) {
+          // 替換或新增包含其他文字內容的分類
+          localStorageDisasterType = types.split(',')
+              .map(v => (v === '其他' ? `其他(${otherDisasterText})` : v))
+              .join(',');
+      } else if (otherDisasterText && !types) {
+          // 如果只寫了其他文字，但未勾選任何分類
+          localStorageDisasterType = otherDisasterText;
+      }
 
       const reportData = {
         id: rid,
         通報類型: reportType,
         狀態: disaster,
-        異常分類: types || otherDisasterText,
+        // 🚩 使用修正後的 localStorageDisasterType
+        異常分類: localStorageDisasterType,
         說明: summary,
         語音轉文字: txt,
         回報者: volunteerName,
         回報者ID: volunteerId,
         所屬大隊: team,
-        同行者: companionsChecked.join(',') + (otherCompanionName ? `,${otherCompanionName}` : '')
+        // 🚩 使用修正後的 localStorageCompanions
+        同行者: localStorageCompanions
       };
 
       localStorage.setItem('tempReportData', JSON.stringify(reportData));
