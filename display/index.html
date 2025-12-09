@@ -780,52 +780,46 @@ h2 {
 
   <h2>語音</h2>
 
-  <!-- ⭐ 外層固定寬度、置中容器（關鍵） -->
-  <div id="audio-wrapper" style="
-      width:100%;
-      display:flex;
-      justify-content:center;
-      align-items:center;
-      flex-direction:column;
-      min-height:120px; /* 讓切換時不跳動 */
-  ">
+  <!-- ⭐ 只有 loading / empty 用這個 wrapper（可置中） -->
+  <div id="audio-center-wrapper"
+       style="width:100%;display:flex;justify-content:center;align-items:center;min-height:80px;">
 
-    <!-- ⭐ 載入中 -->
+    <!-- 載入中 -->
     <div id="audio-loading" class="loading-container" style="text-align:center;">
       <div class="loading-spinner"></div>
       <span class="loading-text">語音載入中...</span>
     </div>
 
-    <!-- ⭐ 無語音 -->
+    <!-- 無語音 -->
     <div id="audio-empty" class="loading-container" style="display:none;text-align:center;">
       <span class="loading-text">此回報沒有語音</span>
     </div>
 
-    <!-- ⭐ 播放器 -->
-    <div id="audio-player-container" style="display:none;">
-      <div class="audio-player">
-        <div style="display:flex;align-items:center;gap:14px;margin:20px 0;max-width:500px;">
+  </div>
 
-          <button id="playBtn" style="
-            width:56px;height:56px;border-radius:50%;
-            border:none;background:#0b5ed7;color:#fff;
-            cursor:pointer;display:flex;align-items:center;justify-content:center;">
-            <div id="playIcon" style="
-              width:0;height:0;border-top:9px solid transparent;
-              border-bottom:9px solid transparent;border-left:16px solid #fff;margin-left:3px;">
-            </div>
-          </button>
+  <!-- ⭐ 播放器（保持你原來的靠左，不放在置中 wrapper 裡） -->
+  <div id="audio-player-container" style="display:none;">
+    <div class="audio-player">
+      <div style="display:flex;align-items:center;gap:14px;margin:20px 0;max-width:500px;">
 
-          <span id="timeLabel" style="font-size:19px;color:#333;min-width:45px;">0:00</span>
-
-          <div style="flex:1;height:12px;background:#eee;border-radius:8px;overflow:hidden;cursor:pointer;" id="progressBar">
-            <div id="waveFill" style="width:0%;height:100%;background:#0b5ed7;"></div>
+        <button id="playBtn" style="
+          width:56px;height:56px;border-radius:50%;
+          border:none;background:#0b5ed7;color:#fff;
+          cursor:pointer;display:flex;align-items:center;justify-content:center;">
+          <div id="playIcon" style="
+            width:0;height:0;border-top:9px solid transparent;
+            border-bottom:9px solid transparent;border-left:16px solid #fff;margin-left:3px;">
           </div>
+        </button>
 
+        <span id="timeLabel" style="font-size:19px;color:#333;min-width:45px;">0:00</span>
+
+        <div style="flex:1;height:12px;background:#eee;border-radius:8px;overflow:hidden;cursor:pointer;" id="progressBar">
+          <div id="waveFill" style="width:0%;height:100%;background:#0b5ed7;"></div>
         </div>
+
       </div>
     </div>
-
   </div>
 </div>
 
@@ -1127,9 +1121,11 @@ setupTranscriptionEditing(currentReportId);
   const loadingBox = document.getElementById('audio-loading');
   const emptyBox = document.getElementById('audio-empty');
   const playerBox = document.getElementById('audio-player-container');
+  const centerWrapper = document.getElementById('audio-center-wrapper');
 
-  // 初始化狀態
-  loadingBox.style.display = 'flex';
+  // 初始：顯示 loading
+  centerWrapper.style.display = 'flex';
+  loadingBox.style.display = 'block';
   emptyBox.style.display = 'none';
   playerBox.style.display = 'none';
 
@@ -1141,24 +1137,22 @@ setupTranscriptionEditing(currentReportId);
       const r = ref(window.firebaseStorage.storage, `reports/${reportId}/recording${ext}`);
       const url = await getDownloadURL(r);
 
-      // 成功載入語音
-      loadingBox.style.display = 'none';
+      // 成功 → 不置中，顯示播放器
+      centerWrapper.style.display = 'none';
       playerBox.style.display = 'block';
-      emptyBox.style.display = 'none';
 
-      console.log('🎧 語音載入成功:', url);
       initCustomPlayer(url);
       return true;
 
     } catch (err) {
-      // 下一個格式
+      // 嘗試下一種格式
     }
   }
 
-  // ⭐ 完全找不到語音（四種格式都找不到）
+  // 四種格式都找不到 → 顯示「無語音」
   loadingBox.style.display = 'none';
-  emptyBox.style.display = 'flex';   // ←←← 關鍵：顯示無語音
-  playerBox.style.display = 'none';
+  emptyBox.style.display = 'block';
+  centerWrapper.style.display = 'flex'; // 保持置中
 
   return false;
 }
