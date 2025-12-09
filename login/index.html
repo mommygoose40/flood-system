@@ -58,7 +58,7 @@
 -->
   
 <!-- 遮罩：永遠蓋住全部 -->
-<div id="loadingMask">
+<div id="loadingMask" style="display: flex;">
   <div class="spinner"></div>
   <div id="loadingText">驗證身份中...</div>
 </div>
@@ -75,6 +75,7 @@ function logDebug(msg) {
 }
 
 async function main() {
+  document.getElementById("loadingMask").style.display = "flex";
   logDebug("JS 已開始執行");
 
   try {
