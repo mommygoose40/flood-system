@@ -1618,7 +1618,7 @@ function renderList(records) {
           const isAbnormal = status === "異常";
 
           const timeText = document.createElement("span");
-          timeText.textContent = `${hh}:${mm}｜${status}`;
+          timeText.textContent = status ? `${hh}:${mm}｜${status}` : `${hh}:${mm}`;
           div.appendChild(timeText);
 
           if ((viewMode === "team" || viewMode === "admin") && record.回報者 && record.回報者.trim()) {
