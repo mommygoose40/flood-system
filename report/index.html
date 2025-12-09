@@ -2582,7 +2582,7 @@ async function submitForm() {
       localStorage.setItem('tempReportData', JSON.stringify(reportData));
 
       addLog("跳轉至 Display 頁面");
-      window.location.href = `https://display-delta.vercel.app/index.html?id=${rid}&source=form`;
+      window.location.href = `display/index.html?id=${rid}&source=form`;
       return;
     } else {
       addLog("❌ GAS 回傳失敗");
