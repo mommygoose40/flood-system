@@ -1094,7 +1094,8 @@ setupTranscriptionEditing(currentReportId);
 
     async function loadAudioFromFirebase(reportId) {
   const { ref, getDownloadURL } = window.firebaseStorage;
-  const exts = ['.webm', '.mp3', '.wav', '.m4a'];
+  // 🔹 修正順序：將 M4A/MP3 放在前面，避免優先載入 WAV/WEBM 造成問題
+  const exts = ['.m4a', '.mp3', '.webm', '.wav'];
   for (const ext of exts) {
     try {
       const r = ref(window.firebaseStorage.storage, `reports/${reportId}/recording${ext}`);
