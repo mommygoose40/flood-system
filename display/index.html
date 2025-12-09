@@ -1667,69 +1667,85 @@ function handlePinchZoom(newScale, cx, cy) {
     let playbackAudio, rafId;
 
     async function initCustomPlayer(url) {
-  const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+  // ------------------------------------
+    // 🔔 狀態與 DOM 元素初始化
+    // ------------------------------------
+    const btn = document.getElementById('playBtn');
+    const label = document.getElementById('timeLabel');
+    const bar = document.getElementById('waveFill');
+    const progressBar = document.getElementById('progressBar');
+    
+    // 播放器狀態變數
+    let playing = false;
+    let isDragging = false;
+    let rafId = null;
+    let metadataReady = false;
+    // const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent); // 此變數似乎未被使用，可省略或移至全域
 
-  playbackAudio = new Audio(url);
-  playbackAudio.preload = 'auto';
-  playbackAudio.load();
+    // ------------------------------------
+    // 🎵 Audio 元素初始化與預載
+    // ------------------------------------
+    playbackAudio = new Audio(url);
+    playbackAudio.preload = 'auto'; 
+    playbackAudio.load();
+    
+    // 預設禁用播放按鈕，直到元數據載入完成
+    btn.disabled = true;
+    btn.style.opacity = '0.5';
 
-  const btn = document.getElementById('playBtn');
-  const label = document.getElementById('timeLabel');
-  const bar = document.getElementById('waveFill');
-  const progressBar = document.getElementById('progressBar');
-  let playing = false;
-  let isDragging = false;
-  let rafId = null;
-  let metadataReady = false;
-
-  /* === 預載與背景靜音預播放 === */
-  function preloadAndPrimeAudio() {
-    playbackAudio.muted = true;
-    const startPreview = () => {
-      playbackAudio.play()
-        .then(() => {
-          console.log('🎧 預播放中（靜音）');
-          const check = setInterval(() => {
-            if (isFinite(playbackAudio.duration) && playbackAudio.duration > 0) {
-              metadataReady = true;
-              clearInterval(check);
-              playbackAudio.pause();
-              playbackAudio.currentTime = 0;
-              playbackAudio.muted = false;
-              console.log('✅ metadata ready via 預播放:', playbackAudio.duration);
-            }
-          }, 200);
-        })
-        .catch(() => console.warn('🔇 無法自動預播放，將等待使用者互動'));
-    };
-    // 某些瀏覽器要等互動後再啟動
-    document.addEventListener('click', startPreview, { once: true });
-    // 若允許自動播放，立即試一次
-    startPreview();
-  }
-  preloadAndPrimeAudio();
-
-  /* === 播放控制 === */
-  btn.onclick = async () => {
-    if (!playing) {
-      await playbackAudio.play();
-      setPauseIcon();
-      playing = true;
-      updateProgress();
-    } else {
-      playbackAudio.pause();
-      setPlayIcon();
-      playing = false;
-      cancelAnimationFrame(rafId);
+    // ------------------------------------
+    // ✅ Metadata 載入與播放器啟用邏輯
+    // ------------------------------------
+    function enablePlayer() {
+        if (metadataReady) return; // 避免重複執行
+        
+        metadataReady = true;
+        console.log('✅ Metadata ready. Duration:', playbackAudio.duration);
+        
+        // 啟用播放按鈕
+        btn.disabled = false;
+        btn.style.opacity = '1';
+        
+        // 初始化時間標籤顯示 0:00 / 總時長
+        updateTimeLabel(0); 
     }
-  };
 
-  playbackAudio.onended = () => {
-    setPlayIcon();
-    playing = false;
-    cancelAnimationFrame(rafId);
-    bar.style.width = '100%';
-  };
+    // 1. 透過事件監聽：當瀏覽器載入音訊元數據時觸發
+    playbackAudio.addEventListener('loadedmetadata', enablePlayer);
+    
+    // 2. 備用檢查：如果音訊已在快取中，loadedmetadata 可能不會觸發，檢查 readyState
+    if (playbackAudio.readyState >= 1) {
+        enablePlayer();
+    }
+    
+    // ------------------------------------
+    // ▶️ 播放控制邏輯
+    // ------------------------------------
+    btn.onclick = async () => {
+        if (!metadataReady) return; // 元數據未載入，忽略點擊
+
+        if (!playing) {
+            // 確保解除靜音，如果先前有靜音處理的話 (雖然這裡已移除預播靜音)
+            // playbackAudio.muted = false; 
+            await playbackAudio.play();
+            setPauseIcon();
+            playing = true;
+            updateProgress(); // 開始更新進度
+        } else {
+            playbackAudio.pause();
+            setPlayIcon();
+            playing = false;
+            cancelAnimationFrame(rafId);
+        }
+    };
+
+    playbackAudio.onended = () => {
+        setPlayIcon();
+        playing = false;
+        cancelAnimationFrame(rafId);
+        bar.style.width = '100%';
+        updateTimeLabel(0); // 播放結束後重設時間顯示
+    };
 
   /* === 更新進度條 === */
   function updateProgress() {
@@ -1750,11 +1766,24 @@ function handlePinchZoom(newScale, cx, cy) {
       : playbackAudio.duration || 0;
   }
 
-  function updateTimeLabel(currentTime) {
-    const min = Math.floor(currentTime / 60);
-    const sec = Math.floor(currentTime % 60).toString().padStart(2, '0');
-    label.textContent = `${min}:${sec}`;
+/* === 修改：增加總時長顯示，並顯示載入狀態 === */
+function updateTimeLabel(currentTime) {
+  const duration = getDuration();
+  const label = document.getElementById('timeLabel');
+  
+  const min = Math.floor(currentTime / 60);
+  const sec = Math.floor(currentTime % 60).toString().padStart(2, '0');
+  
+  if (duration > 0) {
+      const d_min = Math.floor(duration / 60);
+      const d_sec = Math.floor(duration % 60).toString().padStart(2, '0');
+      // 顯示當前時間 / 總時長
+      label.textContent = `${min}:${sec} / ${d_min}:${d_sec}`; 
+  } else {
+      // 載入中時的提示
+      label.textContent = `載入中... ${min}:${sec}`; 
   }
+}
 
   function setPauseIcon() {
     btn.innerHTML = `<div style="
@@ -1792,9 +1821,10 @@ function handlePinchZoom(newScale, cx, cy) {
 
   // 滑鼠按下開始拖曳
   progressBar.addEventListener('mousedown', (e) => {
-    isDragging = true;
-    const time = getTimeFromPosition(e.clientX);
-    setAudioTime(time);
+    if (!metadataReady) return; // 元數據未載入時禁用拖曳
+  isDragging = true;
+  const time = getTimeFromPosition(e.clientX);
+  setAudioTime(time);
 
     // 添加全局事件監聽
     const handleMouseMove = (moveEvent) => {
@@ -1820,22 +1850,52 @@ function handlePinchZoom(newScale, cx, cy) {
   });
 
   // 點擊進度條跳轉
-  progressBar.addEventListener('click', (e) => {
-    const time = getTimeFromPosition(e.clientX);
-    setAudioTime(time);
+    progressBar.addEventListener('click', (e) => {
+        if (!metadataReady) return;
+        const time = getTimeFromPosition(e.clientX);
+        setAudioTime(time);
 
-    // 如果原本在播放狀態，確保進度條繼續更新
-    if (playing) {
-      updateProgress();
-    }
-  });
+        // 如果原本在播放狀態，確保進度條繼續更新
+        if (playing) {
+            updateProgress();
+        }
+    });
 
-  // 拖曳時暫停自動更新，避免衝突
-  progressBar.addEventListener('mousedown', () => {
-    if (playing) {
-      cancelAnimationFrame(rafId);
-    }
-  });
+  // 滑鼠按下開始拖曳
+    progressBar.addEventListener('mousedown', (e) => {
+        if (!metadataReady) return; 
+        isDragging = true;
+        
+        // 如果在播放中，暫停自動更新
+        if (playing) {
+            cancelAnimationFrame(rafId);
+        }
+        
+        const time = getTimeFromPosition(e.clientX);
+        setAudioTime(time);
+
+        // 添加全局事件監聽 (handleMouseMove, handleMouseUp 保持不變)
+        const handleMouseMove = (moveEvent) => {
+            if (isDragging) {
+                const newTime = getTimeFromPosition(moveEvent.clientX);
+                setAudioTime(newTime);
+            }
+        };
+
+        const handleMouseUp = () => {
+            isDragging = false;
+            document.removeEventListener('mousemove', handleMouseMove);
+            document.removeEventListener('mouseup', handleMouseUp);
+
+            // 如果原本在播放狀態，繼續播放
+            if (playing) {
+                updateProgress();
+            }
+        };
+
+        document.addEventListener('mousemove', handleMouseMove);
+        document.addEventListener('mouseup', handleMouseUp);
+    });
 }
 
     function handleBack() {
