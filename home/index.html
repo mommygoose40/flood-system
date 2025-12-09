@@ -316,6 +316,17 @@ function createCustomAlert(title, message = '', isSuccess = false) {
   overlay.appendChild(box);
   document.body.appendChild(overlay);
 }
+
+  window.addEventListener("pageshow", function (event) {
+  // 若是瀏覽器的 bfcache 回復 → event.persisted 為 true
+  if (event.persisted) {
+    document.querySelectorAll(".btn").forEach(btn => {
+      delete btn.dataset.clicked;
+      btn.style.pointerEvents = "auto";
+      btn.style.opacity = "1";
+    });
+  }
+});
 </script>
 
 </body>
