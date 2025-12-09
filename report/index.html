@@ -2247,40 +2247,6 @@ function toggleDisasterTypes() {
     });
   });
 
-/* === Firebase 上傳（加 Debug 版） === */
-async function compressImage(file) {
-  addLog(`compressImage() 呼叫，file = ${file ? '有檔案' : 'undefined'}`);
-
-  return new Promise(res => {
-    const img = new Image();
-
-    img.onload = () => {
-      addLog(`compressImage() 圖片讀取成功，原始尺寸 ${img.width}x${img.height}`);
-
-      const c = document.createElement('canvas');
-      const scale = Math.min(1, 1280 / img.width);
-
-      c.width = img.width * scale;
-      c.height = img.height * scale;
-
-      addLog(`compressImage() 壓縮後尺寸 ${c.width}x${c.height}`);
-
-      c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
-
-      c.toBlob(b => {
-        addLog(`compressImage() 壓縮完成，Blob size=${b.size}`);
-        res(new File([b], 'photo.jpg', { type: 'image/jpeg' }));
-      }, 'image/jpeg', 0.7);
-    };
-
-    img.onerror = (e) => {
-      addLog(`compressImage() 圖片讀取失敗`);
-    };
-
-    img.src = URL.createObjectURL(file);
-  });
-}
-
 function addTranscribeLog(msg) {
   const box = document.getElementById('transcribeLog');
   const time = new Date().toLocaleTimeString();
