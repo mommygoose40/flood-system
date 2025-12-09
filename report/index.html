@@ -722,10 +722,11 @@ async function makePreviewURLs(files) {
 
 function addLog(msg) {
   const logBox = document.getElementById("debugLog");
+  if (!logBox) return; // ← 防止報錯
+
   logBox.style.display = "block";
 
   const time = new Date().toLocaleTimeString();
-
   logBox.textContent += `[${time}] ${msg}\n`;
   logBox.scrollTop = logBox.scrollHeight;
 }
