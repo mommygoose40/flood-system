@@ -2400,17 +2400,8 @@ function smoothProgress(target) {
   }, 60);
 }
 
-/* === 提交表單（加 Debug 版，並優化上傳提示） === */
+/* === 提交表單 (精簡版) === */
 async function submitForm() {
-
-  addLog("=== submitForm() 開始 ===");
-
-  addLog(`photos.length = ${photos.length}`);
-  if (photos.length > 0) {
-    addLog(`photos[0] = ${JSON.stringify(photos[0])}`);
-  }
-
-  addLog(`audioBlob = ${audioBlob ? '存在' : '不存在'}`);
 
   const summary = document.getElementById('summary').value.trim();
   const disaster = document.querySelector('input[name="disaster"]:checked')?.value || '';
@@ -2422,11 +2413,7 @@ async function submitForm() {
   const rid = `report_${timestamp}`;
   window.currentReportId = rid;
 
-  addLog(`報告 ID = ${rid}`);
-
   // localStorage 資訊
-  // 注意：您 Debug 版使用的是 'vid', 'name', 'team'；新版使用的是 'volunteerId', 'volunteerName', 'team'
-  // 這裡保持 Debug 版的 key，避免邏輯錯誤
   const volunteerId = localStorage.getItem("vid") || ""; 
   const volunteerName = localStorage.getItem("name") || ""; 
   const team = localStorage.getItem("team") || "";
@@ -2434,24 +2421,21 @@ async function submitForm() {
   // 表單檢查
   const reportType = document.querySelector('input[name="patrolType"]:checked')?.value || '';
   if (!reportType) {
-    addLog("❌ reportType 未選擇");
     showWarningAlert('請選擇通報類型');
   	return;
   }
 
   if (!photos || photos.length === 0) {
-    addLog("❌ 沒有照片，submitForm 中止");
     showWarningAlert('請至少上傳一張照片');
   	return;
   }
   
-  // 處理同行者檢查 (Debug 版缺少這段，為保持邏輯完整性，從新版加入檢查)
+  // 處理同行者檢查
   const companionsChecked = Array.from(document.querySelectorAll('input[name="companions"]:checked'))
     .map(e => e.value);
   const otherCompanionName = document.getElementById('otherCompanionName')?.value.trim() || '';
 
   if (companionsChecked.includes('其他') && !otherCompanionName) {
-    addLog("❌ 同行者選擇 '其他' 但未輸入姓名");
     showWarningAlert('請輸入同行志工姓名');
     return;
   }
@@ -2461,8 +2445,8 @@ async function submitForm() {
   // 上傳 modal
   document.getElementById('submitBtn').disabled = true;
   
-  // 🚩 替換點 1: 顯示「準備上傳中」
-  //showUploadModal('準備上傳中...'); 
+  // 顯示「準備上傳中」
+  showUploadModal('準備上傳中...'); 
 
   const photoUrls = [];
   let audioUrl = '';
@@ -2472,52 +2456,41 @@ async function submitForm() {
 
     /* === 上傳照片 === */
     for (let i = 0; i < photos.length; i++) {
-      addLog(`開始壓縮第 ${i + 1} 張照片`);
 
       const raw = photos[i];
-      addLog(`raw photo object: ${JSON.stringify(raw)}`);
-
       const file = raw.file || raw.blob || raw;
-      addLog(`取得照片 file = ${file ? 'OK' : 'undefined'}`);
 
       if (!file) {
-        addLog(`❌ 第 ${i} 張照片 file undefined`);
         throw new Error("照片資料錯誤（file undefined）");
       }
       
-      // 🚩 替換點 2: 顯示照片上傳進度
+      // 顯示照片上傳進度
       const title = `照片上傳中 (${i + 1}/${photos.length})`;
       showUploadModal(title); 
 
       const comp = await compressImage(file);
-      addLog(`第 ${i + 1} 張壓縮完成 size=${comp.size}`);
-
       const url = await uploadToFirebaseOnce(comp, `reports/${rid}/photo_${i}.jpg`);
-      addLog(`第 ${i + 1} 張上傳成功 URL=${url}`);
 
       photoUrls.push(url);
     }
 
     /* === 上傳語音與轉文字 === */
     if (audioBlob) {
-      addLog("開始上傳語音…");
-      // 🚩 替換點 3: 顯示語音上傳中
+      // 顯示語音上傳中
       showUploadModal('語音上傳中');
       
       audioUrl = await uploadToFirebaseOnce(audioBlob, `reports/${rid}/recording.wav`);
 
       if (abnormal) {
-        addLog("開始語音轉文字…");
-        // 🚩 替換點 4: 顯示語音轉文字中
-        //showUploadModal('語音轉文字中');
+        // 顯示語音轉文字中
+        showUploadModal('語音轉文字中');
         
         txt = await transcribeAudio(audioBlob, rid);
       }
     }
 
     /* === 提交資料至 GAS === */
-    addLog("準備提交至 GAS…");
-    // 🚩 替換點 5: 顯示提交中
+    // 顯示提交中
     showUploadModal('提交中');
 
     const fd = new FormData();
@@ -2536,7 +2509,7 @@ async function submitForm() {
     fd.append("volunteerName", volunteerName);
     fd.append("team", team);
 
-    // 處理同行者資料 (沿用 Debug 版的邏輯，但已在檢查階段取得 companionsChecked 和 otherCompanionName)
+    // 處理同行者資料
     const companionsToSend = companionsChecked.map(c =>
       c === '其他' && otherCompanionName ? `其他(${otherCompanionName})` : c
     );
@@ -2544,12 +2517,8 @@ async function submitForm() {
 
     fd.append('transcription', txt || '');
 
-    addLog("送出 GAS 請求…");
-
     const res = await fetch(WEB_APP_URL, { method: 'POST', body: fd });
     const rj = await res.json();
-
-    addLog(`GAS 回應 = ${JSON.stringify(rj)}`);
 
     hideUploadModal();
 
@@ -2570,24 +2539,20 @@ async function submitForm() {
 
       localStorage.setItem('tempReportData', JSON.stringify(reportData));
 
-      addLog("跳轉至 Display 頁面");
+      // 跳轉至 Display 頁面
       window.location.href = `display/index.html?id=${rid}&source=form`;
       return;
     } else {
-      addLog("❌ GAS 回傳失敗");
       showWarningAlert('提交失敗：' + (rj.message || ''));
     }
 
   } catch (e) {
-    addLog(`❌ submitForm 錯誤：${e.message}`);
     hideUploadModal();
     showWarningAlert('錯誤: ' + e.message);
 
   } finally {
     document.getElementById('submitBtn').disabled = false;
   }
-
-  addLog("=== submitForm() 完成 ===");
 }
   
 /* === 強制轉換音訊為 WAV PCM 16-bit（Whisper 100% 相容）=== */
