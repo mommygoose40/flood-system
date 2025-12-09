@@ -1094,8 +1094,19 @@ setupTranscriptionEditing(currentReportId);
 
     async function loadAudioFromFirebase(reportId) {
   const { ref, getDownloadURL } = window.firebaseStorage;
-  // 🔹 修正順序：將 M4A/MP3 放在前面，避免優先載入 WAV/WEBM 造成問題
-  const exts = ['.m4a', '.mp3', '.webm', '.wav'];
+  
+  // 檢查是否為 iOS/Safari 裝置
+  const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+
+  let exts;
+  if (isIOS) {
+      // 針對 iOS：只嘗試原生優化格式
+      exts = ['.m4a', '.mp3', '.wav']; 
+  } else {
+      // 針對其他瀏覽器/Android：WebM 放在前面
+      exts = ['.webm', '.m4a', '.mp3', '.wav']; 
+  }
+  
   for (const ext of exts) {
     try {
       const r = ref(window.firebaseStorage.storage, `reports/${reportId}/recording${ext}`);
