@@ -2439,6 +2439,10 @@ async function submitForm() {
 
   addLog("=== submitForm() 開始 ===");
 
+  const timestamp = Date.now();
+  const rid = `report_${timestamp}`;
+  window.currentReportId = rid;
+
   addLog(`photos.length = ${photos.length}`);
   if (photos.length > 0) {
     addLog(`photos[0] = ${JSON.stringify(photos[0])}`);
@@ -2451,9 +2455,6 @@ async function submitForm() {
   const abnormal = disaster === '異常';
   const types = Array.from(document.querySelectorAll('input[name="disasterType"]:checked'))
     .map(e => e.value).join(',');
-
-  const timestamp = Date.now();
-  window.currentReportId = rid;
 
   addLog(`報告 ID = ${rid}`);
 
@@ -2483,7 +2484,6 @@ async function submitForm() {
   showUploadModal('準備上傳中...');
 
   const ts = Date.now();
-  const rid = `report_${ts}`;
   const photoUrls = [];
   let audioUrl = '';
   let txt = '';
