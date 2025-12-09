@@ -1004,7 +1004,7 @@ setupTranscriptionEditing(currentReportId);
     }
 
     async function loadReportInfoFromSheet(reportId) {
-      const url = `https://script.google.com/macros/s/AKfycbyNEuJq3d8d6GBtrh62DwAo7h3ChJGkmpVwVe0RMbBKIjC6QOKEm61KZXzUhxr-Z35kHg/exec?id=${reportId}&callback=handleResponse`;
+      const url = `https://script.google.com/macros/s/AKfycbw_zWtC5douqiQkviNskaaRihnk3d63kJf8eAzvphNxw4rpN43hbbnz5weST-p4UrO0Xw/exec?id=${reportId}&callback=handleResponse`;
       const script = document.createElement('script');
       script.src = url;
       document.body.appendChild(script);
@@ -1980,7 +1980,7 @@ function updateTimeLabel(currentTime) {
 
 async function saveTranscriptionToServer(reportId, newText) {
   try {
-    const url = `https://script.google.com/macros/s/AKfycbyNEuJq3d8d6GBtrh62DwAo7h3ChJGkmpVwVe0RMbBKIjC6QOKEm61KZXzUhxr-Z35kHg/exec`;
+    const url = `https://script.google.com/macros/s/AKfycbw_zWtC5douqiQkviNskaaRihnk3d63kJf8eAzvphNxw4rpN43hbbnz5weST-p4UrO0Xw/exec`;
     const params = new URLSearchParams({
   action: 'updateTranscription',
   id: reportId,
