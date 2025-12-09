@@ -1094,19 +1094,8 @@ setupTranscriptionEditing(currentReportId);
 
     async function loadAudioFromFirebase(reportId) {
   const { ref, getDownloadURL } = window.firebaseStorage;
-  
-  // 檢查是否為 iOS/Safari 裝置
-  const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
-
-  let exts;
-  if (isIOS) {
-      // 針對 iOS：只嘗試原生優化格式
-      exts = ['.m4a', '.mp3', '.wav']; 
-  } else {
-      // 針對其他瀏覽器/Android：WebM 放在前面
-      exts = ['.webm', '.m4a', '.mp3', '.wav']; 
-  }
-  
+  // 🔹 修正順序：將 M4A/MP3 放在前面，避免優先載入 WAV/WEBM 造成問題
+  const exts = ['.m4a', '.mp3', '.webm', '.wav'];
   for (const ext of exts) {
     try {
       const r = ref(window.firebaseStorage.storage, `reports/${reportId}/recording${ext}`);
@@ -1729,26 +1718,6 @@ function handlePinchZoom(newScale, cx, cy) {
     if (playbackAudio.readyState >= 1) {
         enablePlayer();
     }
-
-      /* === 播放控制與緩衝監聽 === */
-
-// 當音訊緩衝不足導致暫停時觸發
-playbackAudio.addEventListener('waiting', () => {
-    // 顯示載入中的提示，讓使用者知道不是播放器故障
-    console.log('⏳ 緩衝不足，等待中...');
-    showMicLoading(0); // 這裡使用您已定義的載入提示函數
-});
-
-// 當緩衝完成，可以繼續播放時觸發
-playbackAudio.addEventListener('playing', () => {
-    // 隱藏載入提示
-    console.log('▶️ 緩衝完成，繼續播放');
-    hideMicLoading();
-});
-
-// 當使用者暫停或播放結束時，也需隱藏載入提示
-playbackAudio.addEventListener('pause', hideMicLoading);
-playbackAudio.addEventListener('ended', hideMicLoading);
     
     // ------------------------------------
     // ▶️ 播放控制邏輯
