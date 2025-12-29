@@ -1304,11 +1304,11 @@ function isPhotoPage(url) {
 }
 
 function backToList() {
-    // ★★★ 新增：如果報表層存在，點擊回上一頁時將其移除 ★★★
+    // 如果報表層開著，優先執行關閉報表
     const reportOverlay = document.getElementById("reportOverlay");
     if (reportOverlay) {
-        reportOverlay.remove();
-        return; // 結束函式，不執行後面的轉址或切換
+        closeReportLayer(); // 使用我們新做的專屬關閉函式
+        return;
     }
 
     const detail = document.getElementById("detailView");
@@ -1861,10 +1861,22 @@ document.getElementById("adminSearchBtn").onclick = () => {
     }
 
     const isMobile = window.innerWidth < 769;
-    let tableRows = "";
+    
+    // 1. ★ 隱藏電腦版小圓鈕 ★
+    const fb = document.getElementById("floatingButtons");
+    if (fb) fb.style.setProperty("display", "none", "important");
 
+    // 2. ★ 加入歷史紀錄攔截 (防止按手機返回鍵直接跳出) ★
+    history.pushState({ action: "closeReport" }, "");
+    window.onpopstate = function(event) {
+        const overlay = document.getElementById("reportOverlay");
+        if (overlay) {
+            closeReportLayer();
+        }
+    };
+
+    let tableRows = "";
     filteredData.forEach(r => {
-        // --- A. 解析時間 ---
         let hh = "--", mm = "--";
         try {
             const match = r.詳細紀錄.match(/report_(\d+)/);
@@ -1875,17 +1887,10 @@ document.getElementById("adminSearchBtn").onclick = () => {
             }
         } catch(e) {}
 
-        // --- B. 說明 / 語音轉文字 (確保說明在前面) ---
         const note = (r.詳細紀錄說明 || "").trim();
         const voice = (r.語音轉文字 || "").trim();
-        let combinedNote = "";
-        if (note && voice) {
-            combinedNote = `${note} / ${voice}`;
-        } else {
-            combinedNote = note || voice; 
-        }
+        let combinedNote = (note && voice) ? `${note} / ${voice}` : (note || voice);
 
-        // --- C. 回報者 , 同行者 (用逗號隔開) ---
         let reporterInfo = (r.回報者 || "").trim();
         if (r.同行者 && r.同行者.trim() !== "") {
             reporterInfo += `, ${r.同行者.trim()}`;
@@ -1907,6 +1912,84 @@ document.getElementById("adminSearchBtn").onclick = () => {
             </tr>
         `;
     });
+
+    // 3. ★ 報表外層：電腦版為半透明底，手機版為滿版 ★
+    const reportHtml = `
+        <div id="reportOverlay" style="
+            position:fixed; top:0; left:0; width:100%; height:100%; 
+            background: ${isMobile ? 'white' : 'rgba(0,0,0,0.5)'}; 
+            z-index: 9995; display: flex; justify-content: center; align-items: flex-start;
+            font-family:sans-serif;
+        ">
+            <div id="reportContent" style="
+                background: white; 
+                width: ${isMobile ? '100%' : '90%'}; 
+                height: ${isMobile ? 'calc(100% - 70px)' : '85vh'}; 
+                margin-top: ${isMobile ? '0' : '30px'};
+                padding: 20px; 
+                box-sizing: border-box; 
+                overflow-y: auto; 
+                box-shadow: ${isMobile ? 'none' : '0 10px 30px rgba(0,0,0,0.3)'};
+                border-radius: ${isMobile ? '0' : '12px'};
+                position: relative;
+            ">
+                <div style="margin-bottom:20px; display:flex; justify-content:space-between; align-items:center;" class="no-print">
+                    <div style="display: ${isMobile ? 'none' : 'block'};">
+                        <button onclick="closeReportLayer()" style="padding:10px 20px; background:#f8f9fa; border:1px solid #ddd; border-radius:8px; cursor:pointer; font-weight:bold;">✕ 關閉視窗</button>
+                    </div>
+                    <div>
+                        <button onclick="window.print()" style="padding:10px 20px; background:#198754; color:white; border:none; border-radius:8px; cursor:pointer; font-weight:bold;">列印 / 存為 PDF</button>
+                        ${isMobile ? '<div style="font-size:11px; color:#666; margin-top:4px;">(手機請選擇「列印」後另存 PDF)</div>' : ''}
+                    </div>
+                </div>
+                
+                <h2 style="text-align:center; margin-bottom:5px;">巡視紀錄明細報表</h2>
+                <p style="text-align:center; color:#666; font-size:14px; margin-bottom:20px;">產出時間：${new Date().toLocaleString()}</p>
+                
+                <table style="width:100%; border-collapse:collapse; font-size:13px;">
+                    <thead>
+                        <tr style="background:#f2f2f2;">
+                            <th>日期</th><th>時間</th><th>通報類型</th><th>狀態</th><th>異常分類</th><th>詳細紀錄</th><th>說明 / 語音轉文字</th><th>回報者 (同行者)</th><th>大隊</th>
+                        </tr>
+                    </thead>
+                    <tbody>${tableRows}</tbody>
+                </table>
+                <div style="margin-top:20px; text-align:right; font-weight:bold;">總計：${filteredData.length} 筆</div>
+            </div>
+
+            <style>
+                @media print { 
+                    .no-print { display: none !important; } 
+                    #reportOverlay { position: static !important; background: white !important; }
+                    #reportContent { width: 100% !important; height: auto !important; margin: 0 !important; box-shadow: none !important; position: static !important; }
+                }
+                th, td { border: 1px solid #ccc; padding: 8px; text-align: left; word-break: break-all; }
+                tr:nth-child(even) { background-color: #fafafa; }
+            </style>
+        </div>
+    `;
+
+    const div = document.createElement('div');
+    div.innerHTML = reportHtml;
+    document.body.appendChild(div.firstElementChild);
+}
+
+// 4. ★ 專屬關閉函式：恢復圓鈕與紀錄狀態 ★
+function closeReportLayer() {
+    const overlay = document.getElementById("reportOverlay");
+    if (overlay) {
+        overlay.remove();
+        // 恢復電腦版小圓鈕
+        const fb = document.getElementById("floatingButtons");
+        if (fb && window.innerWidth >= 769) {
+            fb.style.display = "flex";
+        }
+        // 如果是因為按按鈕關閉的，要把歷史紀錄退回一格，避免之後按返回鍵出錯
+        if (history.state && history.state.action === "closeReport") {
+            history.back();
+        }
+    }
+}
 
     // 建立明細層 HTML
     const reportHtml = `
@@ -1943,7 +2026,7 @@ document.getElementById("adminSearchBtn").onclick = () => {
                         <th style="border:1px solid #ccc; padding:8px;">異常分類</th>
                         <th style="border:1px solid #ccc; padding:8px;">詳細紀錄</th>
                         <th style="border:1px solid #ccc; padding:8px;">說明 / 語音轉文字</th>
-                        <th style="border:1px solid #ccc; padding:8px;">回報者 (同行者)</th>
+                        <th style="border:1px solid #ccc; padding:8px;">回報者</th>
                         <th style="border:1px solid #ccc; padding:8px;">大隊</th>
                     </tr>
                 </thead>
