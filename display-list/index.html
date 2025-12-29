@@ -1865,7 +1865,7 @@ document.getElementById("adminSearchBtn").onclick = () => {
     // 2. 準備報表內容 (HTML 格式)
     let tableRows = "";
     filteredData.forEach(r => {
-        // 解析時間 (從詳細紀錄的 report_timestamp 抓取)
+        // --- A. 解析時間 ---
         let hh = "--", mm = "--";
         try {
             const match = r.詳細紀錄.match(/report_(\d+)/);
@@ -1874,43 +1874,54 @@ document.getElementById("adminSearchBtn").onclick = () => {
                 hh = String(dateObj.getHours()).padStart(2, "0");
                 mm = String(dateObj.getMinutes()).padStart(2, "0");
             }
-        } catch(e) {
-            console.error("時間解析失敗", e);
+        } catch(e) {}
+
+        // --- B. 處理 說明/語音轉文字 (若皆無則留空) ---
+        let combinedNote = "";
+        const note = (r.詳細紀錄說明 || "").trim();
+        const voice = (r.語音轉文字 || "").trim();
+        if (note && voice) {
+            combinedNote = `${note} / ${voice}`;
+        } else {
+            combinedNote = note || voice; // 其中一個有值就顯示該值，都沒值就是空字串
         }
 
-        // 合併說明與語音轉文字
-        const combinedNote = `${r.詳細紀錄說明 || ''} / ${r.語音轉文字 || ''}`;
-        
-        // 建立超連結 HTML
-        const detailLink = `<a href="${r.詳細紀錄}" target="_blank" style="color: #0b5ed7; text-decoration: underline;">連結</a>`;
+        // --- C. 併入同行者到回報者 ---
+        let reporterInfo = r.回報者 || "";
+        if (r.同行者 && r.同行者.trim() !== "") {
+            reporterInfo += ` (${r.同行者})`;
+        }
 
+        // --- D. 建立連結 ---
+        const detailLink = `<a href="${r.詳細紀錄}" target="_blank" style="color: #0d6efd; text-decoration: underline;">連結</a>`;
+
+        // --- E. 依照要求順序填入表格 ---
         tableRows += `
             <tr>
                 <td>${normalizeDate(r.日期)}</td>
                 <td>${hh}:${mm}</td>
                 <td>${r.通報類型 || ''}</td>
-                <td>${r.狀態 || ''}</td>
+                <td style="color: ${r.狀態 === '異常' ? 'red' : 'black'}">${r.狀態 || ''}</td>
                 <td>${r.異常分類 || ''}</td>
-                <td>${combinedNote}</td>
                 <td style="text-align:center;">${detailLink}</td>
-                <td>${r.回報者 || ''}</td>
-                <td>${r.同行者 || ''}</td>
+                <td>${combinedNote}</td>
+                <td>${reporterInfo}</td>
                 <td>${r.所屬大隊 || ''}</td>
             </tr>
         `;
     });
 
     const reportHtml = `
-        <div id="reportOverlay" style="position:fixed; top:0; left:0; width:100%; height:100%; background:white; z-index:10000; overflow-y:auto; padding:20px; box-sizing:border-box; font-family:sans-serif;">
+        <div id="reportOverlay" style="position:fixed; top:0; left:0; width:100%; height:100%; background:white; z-index:10000; overflow-y:auto; padding:20px 20px 80px 20px; box-sizing:border-box; font-family:sans-serif;">
             <div style="margin-bottom:20px; display:flex; justify-content:space-between; align-items:center;" class="no-print">
-                <button onclick="document.getElementById('reportOverlay').remove()" style="padding:10px 20px; font-size:16px; background:#6c757d; color:white; border:none; border-radius:5px; cursor:pointer;">關閉報表</button>
-                <button onclick="window.print()" style="padding:10px 20px; font-size:16px; background:#198754; color:white; border:none; border-radius:5px; cursor:pointer;">列印 / 存為 PDF</button>
+                <button onclick="document.getElementById('reportOverlay').remove()" style="padding:8px 15px; background:#6c757d; color:white; border:none; border-radius:5px;">← 關閉</button>
+                <button onclick="window.print()" style="padding:8px 15px; background:#198754; color:white; border:none; border-radius:5px;">列印報表 / 存 PDF</button>
             </div>
             
             <h2 style="text-align:center; margin-bottom:5px;">巡視紀錄明細報表</h2>
-            <p style="text-align:center; margin-bottom:20px; color:#666;">產出日期：${new Date().toLocaleString()}</p>
+            <p style="text-align:center; color:#666; font-size:14px;">產出時間：${new Date().toLocaleString()}</p>
             
-            <table style="width:100%; border-collapse:collapse; font-size:13px; line-height:1.5;">
+            <table style="width:100%; border-collapse:collapse; font-size:13px;">
                 <thead>
                     <tr style="background:#f2f2f2;">
                         <th style="border:1px solid #ccc; padding:8px;">日期</th>
@@ -1918,11 +1929,10 @@ document.getElementById("adminSearchBtn").onclick = () => {
                         <th style="border:1px solid #ccc; padding:8px;">通報類型</th>
                         <th style="border:1px solid #ccc; padding:8px;">狀態</th>
                         <th style="border:1px solid #ccc; padding:8px;">異常分類</th>
-                        <th style="border:1px solid #ccc; padding:8px;">說明 / 語音轉文字</th>
                         <th style="border:1px solid #ccc; padding:8px;">詳細紀錄</th>
-                        <th style="border:1px solid #ccc; padding:8px;">回報者</th>
-                        <th style="border:1px solid #ccc; padding:8px;">同行者</th>
-                        <th style="border:1px solid #ccc; padding:8px;">所屬大隊</th>
+                        <th style="border:1px solid #ccc; padding:8px;">說明 / 語音轉文字</th>
+                        <th style="border:1px solid #ccc; padding:8px;">回報者 (同行者)</th>
+                        <th style="border:1px solid #ccc; padding:8px;">大隊</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -1931,11 +1941,15 @@ document.getElementById("adminSearchBtn").onclick = () => {
             </table>
             
             <div style="margin-top:20px; text-align:right; font-weight:bold;">資料總計：${filteredData.length} 筆</div>
+
+            <div class="no-print" style="position:fixed; bottom:0; left:0; width:100%; background:#f8f9fa; border-top:1px solid #dee2e6; padding:15px; display:flex; justify-content:space-around; box-sizing:border-box;">
+                <button onclick="document.getElementById('reportOverlay').remove()" style="flex:1; margin:0 10px; padding:12px; background:#6c757d; color:white; border:none; border-radius:5px; font-size:16px;">回上一頁</button>
+                <button onclick="location.reload()" style="flex:1; margin:0 10px; padding:12px; background:#0d6efd; color:white; border:none; border-radius:5px; font-size:16px;">回主選單</button>
+            </div>
             
             <style>
                 @media print { 
                     .no-print { display: none !important; } 
-                    body { padding: 0; }
                     #reportOverlay { position: static; height: auto; padding: 0; }
                 }
                 th, td { border: 1px solid #ccc; padding: 8px; text-align: left; word-break: break-all; }
@@ -1944,7 +1958,7 @@ document.getElementById("adminSearchBtn").onclick = () => {
         </div>
     `;
 
-    // 3. 插入到頁面中
+    // 3. 插入到頁面
     const div = document.createElement('div');
     div.innerHTML = reportHtml;
     document.body.appendChild(div.firstElementChild);
