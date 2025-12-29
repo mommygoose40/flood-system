@@ -1304,27 +1304,27 @@ function isPhotoPage(url) {
 }
 
 function backToList() {
+    // ★★★ 新增：如果報表層存在，點擊回上一頁時將其移除 ★★★
+    const reportOverlay = document.getElementById("reportOverlay");
+    if (reportOverlay) {
+        reportOverlay.remove();
+        return; // 結束函式，不執行後面的轉址或切換
+    }
+
     const detail = document.getElementById("detailView");
     const list = document.getElementById("listView");
     const fb = document.getElementById("floatingButtons");
-    const iframe = document.getElementById("detailFrame"); // 新增：取得 iFrame 元素
+    const iframe = document.getElementById("detailFrame");
 
     if (detail.style.display === "block") {
-        
-        // ★★★ 【關閉時清理 iFrame】★★★
-        iframe.src = 'about:blank'; // 徹底清空 iFrame 內容
-        iframe.style.display = 'none'; // 徹底隱藏 iFrame 元素
-
-        detail.style.display = "none"; // 隱藏 detailView 容器
-        list.style.display = "block"; // 顯示 listView
-        
+        iframe.src = 'about:blank';
+        iframe.style.display = 'none';
+        detail.style.display = "none";
+        list.style.display = "block";
         document.body.classList.remove("show-detail");
-
-        // 電腦版回列表 → 圓鈕貼卡片邊
         if (window.innerWidth >= 769) {
             fb.style.display = "flex";
         }
-
         return;
     }
 
