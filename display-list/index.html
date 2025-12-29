@@ -1973,21 +1973,57 @@ function exportReport() {
 }
 
   function downloadExcelWithMsg() {
-    downloadExcel(); // 執行原本的下載邏輯
+    downloadExcel();
     showMessage("報表匯出成功！<br><small>請檢查瀏覽器下載資料夾</small>");
 }
 
 function downloadExcel() {
     const table = document.getElementById("targetTable");
-    const html = table.outerHTML;
+    const rows = table.querySelectorAll("tr");
     
-    const template = `
-        <html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40">
-        <head><meta charset="UTF-8"></head>
-        <body>${html}</body></html>
-    `;
+    // 取得標頭與資料列內容
+    let excelRows = "";
+    rows.forEach(row => {
+        excelRows += "      <Row>\n";
+        const cells = row.querySelectorAll("th, td");
+        cells.forEach(cell => {
+            // 處理特殊字元防止毀損
+            const data = cell.innerText.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+            excelRows += `        <Cell><Data ss:Type="String">${data}</Data></Cell>\n`;
+        });
+        excelRows += "      </Row>\n";
+    });
 
-    const blob = new Blob([template], { type: "application/vnd.ms-excel" });
+    // 使用 XML 格式封裝，解決警告並固定字體大小 (11pt)
+    const xmlTemplate = `<?xml version="1.0" encoding="utf-8"?>
+<?mso-application progid="Excel.Sheet"?>
+<Workbook xmlns="urn:schemas-microsoft-com:office:spreadsheet" 
+          xmlns:o="urn:schemas-microsoft-com:office:office" 
+          xmlns:x="urn:schemas-microsoft-com:office:excel" 
+          xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet" 
+          xmlns:html="http://www.w3.org/TR/REC-html40">
+  <Styles>
+    <Style ss:ID="Default" ss:Name="Normal">
+      <Alignment ss:Vertical="Center" />
+      <Font ss:FontName="微軟正黑體" x:CharSet="136" ss:Size="11" /> </Style>
+  </Styles>
+  <Worksheet ss:Name="巡視紀錄">
+    <Table>
+      <Column ss:AutoFitWidth="1" ss:Width="100"/>
+      <Column ss:AutoFitWidth="1" ss:Width="60"/>
+      <Column ss:AutoFitWidth="1" ss:Width="80"/>
+      <Column ss:AutoFitWidth="1" ss:Width="50"/>
+      <Column ss:AutoFitWidth="1" ss:Width="100"/>
+      <Column ss:AutoFitWidth="1" ss:Width="200"/>
+      <Column ss:AutoFitWidth="1" ss:Width="250"/>
+      <Column ss:AutoFitWidth="1" ss:Width="120"/>
+      <Column ss:AutoFitWidth="1" ss:Width="80"/>
+${excelRows}
+    </Table>
+  </Worksheet>
+</Workbook>`;
+
+    const blob = new Blob([xmlTemplate], { type: "application/vnd.ms-excel" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     
