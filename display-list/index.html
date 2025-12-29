@@ -1862,77 +1862,77 @@ document.getElementById("adminSearchBtn").onclick = () => {
         return;
     }
 
-    // 2. 建立報表視窗
-    const reportWindow = window.open('', '_blank');
-    
-    // 3. 準備報表內容 (HTML 格式)
-    let tableHtml = `
-        <html>
-        <head>
-            <title>巡視紀錄報表</title>
-            <style>
-                body { font-family: sans-serif; padding: 20px; }
-                h2 { text-align: center; }
-                table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-                th, td { border: 1px solid #ccc; padding: 8px; text-align: left; font-size: 14px; }
-                th { background-color: #f2f2f2; }
-                .footer { margin-top: 20px; font-size: 12px; text-align: right; }
-                @media print {
-                    .no-print { display: none; }
-                }
-            </style>
-        </head>
-        <body>
-            <h2>回報紀錄報表</h2>
-            <p>產出日期：${new Date().toLocaleString()}</p>
-            <button class="no-print" onclick="window.print()">列印報表 / 另存 PDF</button>
-            <table>
-                <thead>
-                    <tr>
-                        <th>日期</th>
-                        <th>時間</th>
-                        <th>大隊</th>
-                        <th>回報者</th>
-                        <th>類型</th>
-                        <th>狀態</th>
-                    </tr>
-                </thead>
-                <tbody>
-    `;
-
+    // 2. 準備報表內容 (HTML 格式)
+    let tableRows = "";
     filteredData.forEach(r => {
-        // 解析時間 (複用你原有的邏輯)
+        // 解析時間
         let hh = "--", mm = "--";
-        const match = r.詳細紀錄.match(/report_(\d+)/);
-        if (match) {
-            const dateObj = new Date(parseInt(match[1], 10));
-            hh = String(dateObj.getHours()).padStart(2, "0");
-            mm = String(dateObj.getMinutes()).padStart(2, "0");
-        }
+        try {
+            const match = r.詳細紀錄.match(/report_(\d+)/);
+            if (match) {
+                const dateObj = new Date(parseInt(match[1], 10));
+                hh = String(dateObj.getHours()).padStart(2, "0");
+                mm = String(dateObj.getMinutes()).padStart(2, "0");
+            }
+        } catch(e) {}
 
-        tableHtml += `
+        tableRows += `
             <tr>
                 <td>${normalizeDate(r.日期)}</td>
                 <td>${hh}:${mm}</td>
-                <td>${r.所屬大隊 || ''}</td>
-                <td>${r.回報者 || ''}</td>
                 <td>${r.通報類型 || ''}</td>
                 <td style="color: ${r.狀態 === '異常' ? 'red' : 'black'}">${r.狀態 || ''}</td>
+                <td>${r.異常分類 || ''}</td>
+                <td>${r.詳細紀錄說明 || ''}</td>
+                <td>${r.語音轉文字 || ''}</td>
+                <td>${r.回報者 || ''}</td>
+                <td>${r.回報者ID || ''}</td>
+                <td>${r.同行者 || ''}</td>
+                <td>${r.所屬大隊 || ''}</td>
             </tr>
         `;
     });
 
-    tableHtml += `
+    const reportHtml = `
+        <div id="reportOverlay" style="position:fixed; top:0; left:0; width:100%; height:100%; background:white; z-index:10000; overflow-y:auto; padding:20px; box-sizing:border-box; font-family:sans-serif;">
+            <div style="margin-bottom:20px; display:flex; justify-content:space-between; align-items:center;" class="no-print">
+                <button onclick="document.getElementById('reportOverlay').remove()" style="padding:10px 20px; font-size:16px; background:#6c757d; color:white; border:none; border-radius:5px;">關閉報表</button>
+                <button onclick="window.print()" style="padding:10px 20px; font-size:16px; background:#198754; color:white; border:none; border-radius:5px;">列印 / 存為 PDF</button>
+            </div>
+            <h2 style="text-align:center;">巡視紀錄明細報表</h2>
+            <p>產出日期：${new Date().toLocaleString()}</p>
+            <table style="width:100%; border-collapse:collapse; font-size:12px;">
+                <thead>
+                    <tr style="background:#f2f2f2;">
+                        <th style="border:1px solid #ccc; padding:5px;">日期</th>
+                        <th style="border:1px solid #ccc; padding:5px;">時間</th>
+                        <th style="border:1px solid #ccc; padding:5px;">通報類型</th>
+                        <th style="border:1px solid #ccc; padding:5px;">狀態</th>
+                        <th style="border:1px solid #ccc; padding:5px;">異常分類</th>
+                        <th style="border:1px solid #ccc; padding:5px;">詳細說明</th>
+                        <th style="border:1px solid #ccc; padding:5px;">語音轉文字</th>
+                        <th style="border:1px solid #ccc; padding:5px;">回報者</th>
+                        <th style="border:1px solid #ccc; padding:5px;">ID</th>
+                        <th style="border:1px solid #ccc; padding:5px;">同行者</th>
+                        <th style="border:1px solid #ccc; padding:5px;">大隊</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    ${tableRows}
                 </tbody>
             </table>
-            <div class="footer">總計：${filteredData.length} 筆紀錄</div>
-        </body>
-        </html>
+            <div style="margin-top:20px; text-align:right;">總計：${filteredData.length} 筆</div>
+            <style>
+                @media print { .no-print { display: none !important; } }
+                th, td { word-break: break-all; }
+            </style>
+        </div>
     `;
 
-    // 4. 寫入並開啟
-    reportWindow.document.write(tableHtml);
-    reportWindow.document.close();
+    // 3. 直接插入到當前頁面，避免被彈窗攔截
+    const div = document.createElement('div');
+    div.innerHTML = reportHtml;
+    document.body.appendChild(div.firstElementChild);
 }
 
 // 按鈕視覺切換
