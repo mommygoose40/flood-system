@@ -1865,7 +1865,7 @@ document.getElementById("adminSearchBtn").onclick = () => {
     // 2. 準備報表內容 (HTML 格式)
     let tableRows = "";
     filteredData.forEach(r => {
-        // 解析時間
+        // 解析時間 (從詳細紀錄的 report_timestamp 抓取)
         let hh = "--", mm = "--";
         try {
             const match = r.詳細紀錄.match(/report_(\d+)/);
@@ -1874,19 +1874,26 @@ document.getElementById("adminSearchBtn").onclick = () => {
                 hh = String(dateObj.getHours()).padStart(2, "0");
                 mm = String(dateObj.getMinutes()).padStart(2, "0");
             }
-        } catch(e) {}
+        } catch(e) {
+            console.error("時間解析失敗", e);
+        }
+
+        // 合併說明與語音轉文字
+        const combinedNote = `${r.詳細紀錄說明 || ''} / ${r.語音轉文字 || ''}`;
+        
+        // 建立超連結 HTML
+        const detailLink = `<a href="${r.詳細紀錄}" target="_blank" style="color: #0b5ed7; text-decoration: underline;">連結</a>`;
 
         tableRows += `
             <tr>
                 <td>${normalizeDate(r.日期)}</td>
                 <td>${hh}:${mm}</td>
                 <td>${r.通報類型 || ''}</td>
-                <td style="color: ${r.狀態 === '異常' ? 'red' : 'black'}">${r.狀態 || ''}</td>
+                <td>${r.狀態 || ''}</td>
                 <td>${r.異常分類 || ''}</td>
-                <td>${r.詳細紀錄說明 || ''}</td>
-                <td>${r.語音轉文字 || ''}</td>
+                <td>${combinedNote}</td>
+                <td style="text-align:center;">${detailLink}</td>
                 <td>${r.回報者 || ''}</td>
-                <td>${r.回報者ID || ''}</td>
                 <td>${r.同行者 || ''}</td>
                 <td>${r.所屬大隊 || ''}</td>
             </tr>
@@ -1896,45 +1903,53 @@ document.getElementById("adminSearchBtn").onclick = () => {
     const reportHtml = `
         <div id="reportOverlay" style="position:fixed; top:0; left:0; width:100%; height:100%; background:white; z-index:10000; overflow-y:auto; padding:20px; box-sizing:border-box; font-family:sans-serif;">
             <div style="margin-bottom:20px; display:flex; justify-content:space-between; align-items:center;" class="no-print">
-                <button onclick="document.getElementById('reportOverlay').remove()" style="padding:10px 20px; font-size:16px; background:#6c757d; color:white; border:none; border-radius:5px;">關閉報表</button>
-                <button onclick="window.print()" style="padding:10px 20px; font-size:16px; background:#198754; color:white; border:none; border-radius:5px;">列印 / 存為 PDF</button>
+                <button onclick="document.getElementById('reportOverlay').remove()" style="padding:10px 20px; font-size:16px; background:#6c757d; color:white; border:none; border-radius:5px; cursor:pointer;">關閉報表</button>
+                <button onclick="window.print()" style="padding:10px 20px; font-size:16px; background:#198754; color:white; border:none; border-radius:5px; cursor:pointer;">列印 / 存為 PDF</button>
             </div>
-            <h2 style="text-align:center;">巡視紀錄明細報表</h2>
-            <p>產出日期：${new Date().toLocaleString()}</p>
-            <table style="width:100%; border-collapse:collapse; font-size:12px;">
+            
+            <h2 style="text-align:center; margin-bottom:5px;">巡視紀錄明細報表</h2>
+            <p style="text-align:center; margin-bottom:20px; color:#666;">產出日期：${new Date().toLocaleString()}</p>
+            
+            <table style="width:100%; border-collapse:collapse; font-size:13px; line-height:1.5;">
                 <thead>
                     <tr style="background:#f2f2f2;">
-                        <th style="border:1px solid #ccc; padding:5px;">日期</th>
-                        <th style="border:1px solid #ccc; padding:5px;">時間</th>
-                        <th style="border:1px solid #ccc; padding:5px;">通報類型</th>
-                        <th style="border:1px solid #ccc; padding:5px;">狀態</th>
-                        <th style="border:1px solid #ccc; padding:5px;">異常分類</th>
-                        <th style="border:1px solid #ccc; padding:5px;">詳細說明</th>
-                        <th style="border:1px solid #ccc; padding:5px;">語音轉文字</th>
-                        <th style="border:1px solid #ccc; padding:5px;">回報者</th>
-                        <th style="border:1px solid #ccc; padding:5px;">ID</th>
-                        <th style="border:1px solid #ccc; padding:5px;">同行者</th>
-                        <th style="border:1px solid #ccc; padding:5px;">大隊</th>
+                        <th style="border:1px solid #ccc; padding:8px;">日期</th>
+                        <th style="border:1px solid #ccc; padding:8px;">時間</th>
+                        <th style="border:1px solid #ccc; padding:8px;">通報類型</th>
+                        <th style="border:1px solid #ccc; padding:8px;">狀態</th>
+                        <th style="border:1px solid #ccc; padding:8px;">異常分類</th>
+                        <th style="border:1px solid #ccc; padding:8px;">說明 / 語音轉文字</th>
+                        <th style="border:1px solid #ccc; padding:8px;">詳細紀錄</th>
+                        <th style="border:1px solid #ccc; padding:8px;">回報者</th>
+                        <th style="border:1px solid #ccc; padding:8px;">同行者</th>
+                        <th style="border:1px solid #ccc; padding:8px;">所屬大隊</th>
                     </tr>
                 </thead>
                 <tbody>
                     ${tableRows}
                 </tbody>
             </table>
-            <div style="margin-top:20px; text-align:right;">總計：${filteredData.length} 筆</div>
+            
+            <div style="margin-top:20px; text-align:right; font-weight:bold;">資料總計：${filteredData.length} 筆</div>
+            
             <style>
-                @media print { .no-print { display: none !important; } }
-                th, td { word-break: break-all; }
+                @media print { 
+                    .no-print { display: none !important; } 
+                    body { padding: 0; }
+                    #reportOverlay { position: static; height: auto; padding: 0; }
+                }
+                th, td { border: 1px solid #ccc; padding: 8px; text-align: left; word-break: break-all; }
+                tr:nth-child(even) { background-color: #fafafa; }
             </style>
         </div>
     `;
 
-    // 3. 直接插入到當前頁面，避免被彈窗攔截
+    // 3. 插入到頁面中
     const div = document.createElement('div');
     div.innerHTML = reportHtml;
     document.body.appendChild(div.firstElementChild);
 }
-
+  
 // 按鈕視覺切換
 function updateSwitchUI() {
   const btnSelf = document.getElementById("btnSelf");
