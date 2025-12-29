@@ -1089,7 +1089,7 @@ function saveLocalReportsCache(records) {
         
         records.forEach(record => {
             // 從 '詳細紀錄' 連結中解析 reportId (例如 report_170245...)
-            const detailLink = record['詳細紀錄'] || '';
+            const detailLink = `<a href="${r.詳細紀錄}" target="_blank" style="color: #0d6efd; text-decoration: underline;">連結</a>`;
             const match = detailLink.match(/id=(report_[0-9]+)/);
 
             if (match) {
@@ -1904,7 +1904,7 @@ function exportReport() {
                 <td>${r.通報類型 || ''}</td>
                 <td style="color: ${r.狀態 === '異常' ? 'red' : 'black'}; font-weight: ${r.狀態 === '異常' ? 'bold' : 'normal'}">${r.狀態 || ''}</td>
                 <td>${r.異常分類 || ''}</td>
-                <td>${r.詳細紀錄}</td>
+                <td style="text-align:center;">${detailLink}</td>
                 <td>${combinedNote}</td>
                 <td>${reporterInfo}</td>
                 <td>${r.所屬大隊 || ''}</td>
@@ -1967,6 +1967,32 @@ function exportReport() {
     const div = document.createElement('div');
     div.innerHTML = reportHtml;
     document.body.appendChild(div.firstElementChild);
+}
+
+  function downloadExcelWithMsg() {
+    downloadExcel(); // 執行原本的下載邏輯
+    showMessage("報表匯出成功！<br><small>請檢查瀏覽器下載資料夾</small>");
+}
+
+function downloadExcel() {
+    const table = document.getElementById("targetTable");
+    const html = table.outerHTML;
+    
+    const template = `
+        <html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40">
+        <head><meta charset="UTF-8"></head>
+        <body>${html}</body></html>
+    `;
+
+    const blob = new Blob([template], { type: "application/vnd.ms-excel" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    
+    const timestamp = new Date().toISOString().replace(/[:.]/g, "-").slice(0, 19);
+    a.href = url;
+    a.download = `巡視紀錄明細_${timestamp}.xls`;
+    a.click();
+    URL.revokeObjectURL(url);
 }
 
 function showMessage(text, onConfirm) {
