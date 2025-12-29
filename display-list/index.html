@@ -1854,16 +1854,15 @@ document.getElementById("adminSearchBtn").onclick = () => {
 };
 
   function exportReport() {
-    // 1. 取得目前篩選後的資料
     const filteredData = filterAdminRecords();
-
     if (filteredData.length === 0) {
-        alert("目前篩選條件下無資料可產出報表");
+        alert("目前無資料可產出報表");
         return;
     }
 
-    // 2. 準備報表內容 (HTML 格式)
+    const isMobile = window.innerWidth < 769;
     let tableRows = "";
+
     filteredData.forEach(r => {
         // --- A. 解析時間 ---
         let hh = "--", mm = "--";
@@ -1876,26 +1875,24 @@ document.getElementById("adminSearchBtn").onclick = () => {
             }
         } catch(e) {}
 
-        // --- B. 處理 說明/語音轉文字 (若皆無則留空) ---
-        let combinedNote = "";
+        // --- B. 說明 / 語音轉文字 (確保說明在前面) ---
         const note = (r.詳細紀錄說明 || "").trim();
         const voice = (r.語音轉文字 || "").trim();
+        let combinedNote = "";
         if (note && voice) {
             combinedNote = `${note} / ${voice}`;
         } else {
-            combinedNote = note || voice; // 其中一個有值就顯示該值，都沒值就是空字串
+            combinedNote = note || voice; 
         }
 
-        // --- C. 併入同行者到回報者 ---
-        let reporterInfo = r.回報者 || "";
+        // --- C. 回報者 , 同行者 (用逗號隔開) ---
+        let reporterInfo = (r.回報者 || "").trim();
         if (r.同行者 && r.同行者.trim() !== "") {
-            reporterInfo += ` (${r.同行者})`;
+            reporterInfo += `, ${r.同行者.trim()}`;
         }
 
-        // --- D. 建立連結 ---
         const detailLink = `<a href="${r.詳細紀錄}" target="_blank" style="color: #0d6efd; text-decoration: underline;">連結</a>`;
 
-        // --- E. 依照要求順序填入表格 ---
         tableRows += `
             <tr>
                 <td>${normalizeDate(r.日期)}</td>
@@ -1911,15 +1908,30 @@ document.getElementById("adminSearchBtn").onclick = () => {
         `;
     });
 
+    // 建立明細層 HTML
     const reportHtml = `
-        <div id="reportOverlay" style="position:fixed; top:0; left:0; width:100%; height:100%; background:white; z-index:10000; overflow-y:auto; padding:20px 20px 80px 20px; box-sizing:border-box; font-family:sans-serif;">
+        <div id="reportOverlay" style="
+            position:fixed; 
+            top:0; 
+            left:0; 
+            width:100%; 
+            height: ${isMobile ? 'calc(100% - 70px)' : '100%'}; 
+            background:white; 
+            z-index: 9990; 
+            overflow-y:auto; 
+            padding:20px; 
+            box-sizing:border-box; 
+            font-family:sans-serif;
+        ">
             <div style="margin-bottom:20px; display:flex; justify-content:space-between; align-items:center;" class="no-print">
-                <button onclick="document.getElementById('reportOverlay').remove()" style="padding:8px 15px; background:#6c757d; color:white; border:none; border-radius:5px;">← 關閉</button>
-                <button onclick="window.print()" style="padding:8px 15px; background:#198754; color:white; border:none; border-radius:5px;">列印報表 / 存 PDF</button>
+                <div style="display: ${isMobile ? 'none' : 'block'};">
+                    <button onclick="document.getElementById('reportOverlay').remove()" style="padding:8px 15px; background:#6c757d; color:white; border:none; border-radius:5px; cursor:pointer;">← 關閉報表</button>
+                </div>
+                <button onclick="window.print()" style="padding:8px 15px; background:#198754; color:white; border:none; border-radius:5px; cursor:pointer;">列印報表 / 存 PDF</button>
             </div>
             
             <h2 style="text-align:center; margin-bottom:5px;">巡視紀錄明細報表</h2>
-            <p style="text-align:center; color:#666; font-size:14px;">產出時間：${new Date().toLocaleString()}</p>
+            <p style="text-align:center; color:#666; font-size:14px; margin-bottom:20px;">產出時間：${new Date().toLocaleString()}</p>
             
             <table style="width:100%; border-collapse:collapse; font-size:13px;">
                 <thead>
@@ -1942,11 +1954,6 @@ document.getElementById("adminSearchBtn").onclick = () => {
             
             <div style="margin-top:20px; text-align:right; font-weight:bold;">資料總計：${filteredData.length} 筆</div>
 
-            <div class="no-print" style="position:fixed; bottom:0; left:0; width:100%; background:#f8f9fa; border-top:1px solid #dee2e6; padding:15px; display:flex; justify-content:space-around; box-sizing:border-box;">
-                <button onclick="document.getElementById('reportOverlay').remove()" style="flex:1; margin:0 10px; padding:12px; background:#6c757d; color:white; border:none; border-radius:5px; font-size:16px;">回上一頁</button>
-                <button onclick="location.reload()" style="flex:1; margin:0 10px; padding:12px; background:#0d6efd; color:white; border:none; border-radius:5px; font-size:16px;">回主選單</button>
-            </div>
-            
             <style>
                 @media print { 
                     .no-print { display: none !important; } 
@@ -1958,7 +1965,7 @@ document.getElementById("adminSearchBtn").onclick = () => {
         </div>
     `;
 
-    // 3. 插入到頁面
+    // 插入到頁面
     const div = document.createElement('div');
     div.innerHTML = reportHtml;
     document.body.appendChild(div.firstElementChild);
