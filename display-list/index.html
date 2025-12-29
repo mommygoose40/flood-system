@@ -1953,61 +1953,44 @@ function exportReport() {
 }
 
   function downloadExcelWithMsg() {
-    downloadExcel();
-    showMessage("報表匯出成功！<br><small>Excel 檔案已排除詳細紀錄欄位</small>");
+    downloadCSV();
+    showMessage("報表匯出成功！<br><small>已採用 CSV 格式 (無安全警告)</small>");
 }
 
-function downloadExcel() {
+function downloadCSV() {
     const table = document.getElementById("targetTable");
     const rows = table.querySelectorAll("tr");
     
-    // 找出「詳細紀錄」是在第幾個索引 (index)
+    // 1. 找出「詳細紀錄」是在第幾個索引 (index)
     let detailIndex = -1;
     const headers = table.querySelectorAll("thead th");
     headers.forEach((th, idx) => {
         if (th.innerText.includes("詳細紀錄")) detailIndex = idx;
     });
 
-    let excelRows = "";
+    let csvContent = "";
     rows.forEach(row => {
-        excelRows += "      <Row>\n";
         const cells = row.querySelectorAll("th, td");
+        let rowData = [];
         cells.forEach((cell, idx) => {
-            // ★ 關鍵：如果是詳細紀錄那一欄，就跳過不處理
+            // ★ 跳過詳細紀錄欄位
             if (idx === detailIndex) return;
 
-            const data = cell.innerText.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-            excelRows += `        <Cell><Data ss:Type="String">${data}</Data></Cell>\n`;
+            // 處理 CSV 格式：若文字內有逗號則包覆引號
+            let text = cell.innerText.replace(/"/g, '""'); 
+            rowData.push(`"${text}"`);
         });
-        excelRows += "      </Row>\n";
+        csvContent += rowData.join(",") + "\n";
     });
 
-    const xmlTemplate = `<?xml version="1.0" encoding="utf-8"?>
-<?mso-application progid="Excel.Sheet"?>
-<Workbook xmlns="urn:schemas-microsoft-com:office:spreadsheet" xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet" xmlns:html="http://www.w3.org/TR/REC-html40">
-  <Styles>
-    <Style ss:ID="Default" ss:Name="Normal">
-      <Alignment ss:Vertical="Center" ss:WrapText="1" />
-      <Font ss:FontName="微軟正黑體" x:CharSet="136" ss:Size="11" />
-    </Style>
-    <Style ss:ID="Header">
-      <Font ss:FontName="微軟正黑體" x:CharSet="136" ss:Size="11" ss:Bold="1" />
-      <Interior ss:Color="#F2F2F2" ss:Pattern="Solid" />
-    </Style>
-  </Styles>
-  <Worksheet ss:Name="巡視紀錄">
-    <Table ss:DefaultColumnWidth="100">
-      <Column ss:Width="80"/> <Column ss:Width="60"/> <Column ss:Width="80"/> <Column ss:Width="60"/> <Column ss:Width="100"/> <Column ss:Width="250"/> <Column ss:Width="120"/> <Column ss:Width="80"/>  ${excelRows}
-    </Table>
-  </Worksheet>
-</Workbook>`;
-
-    const blob = new Blob([xmlTemplate], { type: "application/vnd.ms-excel" });
+    // 2. 解決亂碼關鍵：加入 UTF-8 BOM (\uFEFF)
+    const blob = new Blob(["\uFEFF" + csvContent], { type: "text/csv;charset=utf-8;" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
+    
     const timestamp = new Date().toISOString().replace(/[:.]/g, "-").slice(0, 19);
     a.href = url;
-    a.download = `巡視紀錄_${timestamp}.xls`;
+    a.download = `巡視紀錄_${timestamp}.csv`; // 檔名改為 .csv
     a.click();
     URL.revokeObjectURL(url);
 }
