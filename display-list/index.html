@@ -1884,23 +1884,23 @@ function exportReport() {
             }
         } catch(e) {}
 
-        const note = (r.詳細紀錄說明 || "").trim();
+        const note = (r.說明 || "").trim();
         const voice = (r.語音轉文字 || "").trim();
         let combinedNote = (note && voice) ? `${note} / ${voice}` : (note || voice);
 
         let reporterInfo = (r.回報者 || "").trim();
         if (r.同行者 && r.同行者.trim() !== "") {
-            reporterInfo += `, ${r.同行者.trim()}`;
+            reporterInfo += `,${r.同行者.trim()}`;
         }
 
-        const detailLink = `<a href="${r.詳細紀錄}" target="_blank">連結</a>`;
+        const detailLink = `<a href="${r.詳細紀錄}" target="_blank" style="color: #0d6efd;">連結</a>`;
 
         tableRows += `
             <tr>
                 <td>${normalizeDate(r.日期)}</td>
                 <td>${hh}:${mm}</td>
                 <td>${r.通報類型 || ''}</td>
-                <td class="${r.狀態 === '異常' ? 'text-red' : ''}">${r.狀態 || ''}</td>
+                <td style="color: ${r.狀態 === '異常' ? 'red' : 'black'}; font-weight: ${r.狀態 === '異常' ? 'bold' : 'normal'}">${r.狀態 || ''}</td>
                 <td>${r.異常分類 || ''}</td>
                 <td style="text-align:center;">${detailLink}</td>
                 <td>${combinedNote}</td>
@@ -1911,77 +1911,61 @@ function exportReport() {
     });
 
     const reportHtml = `
-        <div id="reportOverlay" class="report-container">
-            <div id="reportContent" class="report-box">
-                <div class="no-print report-toolbar">
-                    <div class="pc-only">
-                        <button onclick="closeReportLayer()" class="btn-secondary">✕ 關閉視窗</button>
-                    </div>
-                    <div>
-                        <button onclick="triggerPrint()" class="btn-primary">列印 / 存為 PDF</button>
-                        ${isMobile ? '<p class="mobile-hint">(若沒反應，請點瀏覽器右上角選單選擇「列印」)</p>' : ''}
-                    </div>
+        <div id="reportOverlay" style="
+            position:fixed; top:0; left:0; width:100%; height:100%; 
+            background: ${isMobile ? 'white' : 'rgba(0,0,0,0.6)'}; 
+            z-index: 9995; display: flex; justify-content: center; align-items: flex-start;
+            font-family:sans-serif;
+        ">
+            <div id="reportContent" style="
+                background: white; 
+                width: ${isMobile ? '100%' : '95%'}; 
+                height: ${isMobile ? 'calc(100% - 70px)' : '90vh'}; 
+                margin-top: ${isMobile ? '0' : '3vh'};
+                padding: ${isMobile ? '15px' : '30px'}; 
+                box-sizing: border-box; overflow-y: auto;
+                box-shadow: ${isMobile ? 'none' : '0 10px 40px rgba(0,0,0,0.4)'};
+                border-radius: ${isMobile ? '0' : '10px'};
+                position: relative;
+            ">
+                <div class="no-print" style="display: ${isMobile ? 'none' : 'flex'}; justify-content: space-between; margin-bottom: 20px;">
+                    <button onclick="window.print()" style="padding: 10px 20px; background: #198754; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: bold;">⎙ 列印 / 存為 PDF</button>
+                    <button onclick="closeReportLayer()" style="padding: 10px 20px; background: #f8f9fa; border: 1px solid #ccc; border-radius: 6px; cursor: pointer; font-weight: bold;">✕ 關閉視窗</button>
                 </div>
                 
-                <h2 style="text-align:center; margin-top:0;">巡視紀錄明細報表</h2>
-                <p style="text-align:center; color:#666;">產出時間：${new Date().toLocaleString()}</p>
+                <h2 style="text-align:center; margin-bottom:10px; font-size: 24px;">巡視紀錄明細報表</h2>
+                <p style="text-align:center; color:#666; font-size: 14px; margin-bottom: 25px;">產出時間：${new Date().toLocaleString()}</p>
                 
-                <table class="report-table">
+                <table style="width:100%; border-collapse:collapse; font-size:13px; line-height: 1.5;">
                     <thead>
-                        <tr>
-                            <th>日期</th><th>時間</th><th>通報類型</th><th>狀態</th><th>異常分類</th><th>詳細紀錄</th><th>說明/語音</th><th>回報者(同行)</th><th>大隊</th>
+                        <tr style="background:#f2f2f2;">
+                            <th style="border:1px solid #ccc; padding:10px;">日期</th>
+                            <th style="border:1px solid #ccc; padding:10px;">時間</th>
+                            <th style="border:1px solid #ccc; padding:10px;">通報類型</th>
+                            <th style="border:1px solid #ccc; padding:10px;">狀態</th>
+                            <th style="border:1px solid #ccc; padding:10px;">異常分類</th>
+                            <th style="border:1px solid #ccc; padding:10px;">詳細紀錄</th>
+                            <th style="border:1px solid #ccc; padding:10px;">說明 / 語音轉文字</th>
+                            <th style="border:1px solid #ccc; padding:10px;">回報者</th>
+                            <th style="border:1px solid #ccc; padding:10px;">大隊</th>
                         </tr>
                     </thead>
                     <tbody>${tableRows}</tbody>
                 </table>
-                <div class="report-footer">資料總計：${filteredData.length} 筆</div>
+                <div style="margin-top:20px; text-align:right; font-weight:bold; font-size: 15px;">資料總計：${filteredData.length} 筆</div>
             </div>
 
             <style>
-                /* 螢幕顯示樣式 */
-                .report-container {
-                    position:fixed; top:0; left:0; width:100%; height:100%; 
-                    background: ${isMobile ? 'white' : 'rgba(0,0,0,0.6)'}; 
-                    z-index: 9995; display: flex; justify-content: center; align-items: flex-start;
-                    font-family:sans-serif;
-                }
-                .report-box {
-                    background: white; 
-                    width: ${isMobile ? '100%' : '98%'}; /* 視窗加大到 98% */
-                    height: ${isMobile ? 'calc(100% - 70px)' : '92vh'}; 
-                    margin-top: ${isMobile ? '0' : '2vh'};
-                    padding: 30px; box-sizing: border-box; overflow-y: auto;
-                    box-shadow: 0 10px 40px rgba(0,0,0,0.4);
-                    border-radius: ${isMobile ? '0' : '8px'};
-                }
-                .report-toolbar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
-                .report-table { width:100%; border-collapse:collapse; font-size:12px; }
-                .report-table th, .report-table td { border: 1px solid #000; padding: 6px; text-align: left; word-break: break-all; }
-                .report-table th { background: #eee; }
-                .text-red { color: red !important; font-weight: bold; }
-                .report-footer { margin-top: 15px; text-align: right; font-weight: bold; }
-                .btn-primary { padding: 10px 20px; background: #198754; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 16px; }
-                .btn-secondary { padding: 10px 20px; background: #6c757d; color: white; border: none; border-radius: 6px; cursor: pointer; }
-                .mobile-hint { font-size: 11px; color: #d9534f; margin: 4px 0 0 0; text-align: right; }
-                .pc-only { display: ${isMobile ? 'none' : 'block'}; }
-
-                /* ★ 列印關鍵樣式 ★ */
                 @media print {
-                    /* 1. 隱藏主頁面所有內容，避免跑版 */
                     body > *:not(#reportOverlay) { display: none !important; }
-                    #reportOverlay { position: absolute !important; top: 0 !important; left: 0 !important; width: 100% !important; height: auto !important; background: white !important; }
-                    .report-box { width: 100% !important; height: auto !important; margin: 0 !important; padding: 0 !important; box-shadow: none !important; }
+                    #reportOverlay { position: static !important; background: white !important; }
+                    #reportContent { width: 100% !important; height: auto !important; margin: 0 !important; padding: 0 !important; box-shadow: none !important; }
                     .no-print { display: none !important; }
-                    
-                    /* 2. 強制設定 A4 滿版 */
-                    @page {
-                        size: A4 portrait;
-                        margin: 1cm;
-                    }
-                    /* 確保連結不顯示 URL */
-                    a { text-decoration: none; color: black; }
-                    a::after { content: ""; }
+                    table { font-size: 12px; }
+                    @page { size: A4 portrait; margin: 1.5cm; }
                 }
+                tr:nth-child(even) { background-color: #fafafa; }
+                td { border:1px solid #ccc; padding:10px; text-align: left; word-break: break-all; }
             </style>
         </div>
     `;
@@ -1991,29 +1975,27 @@ function exportReport() {
     document.body.appendChild(div.firstElementChild);
 }
 
+// 專屬關閉函式
+function closeReportLayer() {
+    const overlay = document.getElementById("reportOverlay");
+    if (overlay) {
+        overlay.remove();
+        const fb = document.getElementById("floatingButtons");
+        if (fb && window.innerWidth >= 769) {
+            fb.style.setProperty("display", "flex", "important");
+        }
+        if (history.state && history.state.action === "closeReport") {
+            history.back();
+        }
+    }
+}
+
 // 專用的觸發列印函式
 function triggerPrint() {
     try {
         window.print();
     } catch (e) {
         alert("您的瀏覽器不支援直接列印，請點選瀏覽器選單中的「列印/分享」按鈕。");
-    }
-}
-
-// 4. ★ 專屬關閉函式：恢復圓鈕與紀錄狀態 ★
-function closeReportLayer() {
-    const overlay = document.getElementById("reportOverlay");
-    if (overlay) {
-        overlay.remove();
-        // 恢復電腦版小圓鈕
-        const fb = document.getElementById("floatingButtons");
-        if (fb && window.innerWidth >= 769) {
-            fb.style.display = "flex";
-        }
-        // 如果是因為按按鈕關閉的，要把歷史紀錄退回一格，避免之後按返回鍵出錯
-        if (history.state && history.state.action === "closeReport") {
-            history.back();
-        }
     }
 }
   
