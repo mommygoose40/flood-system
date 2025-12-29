@@ -1089,7 +1089,7 @@ function saveLocalReportsCache(records) {
         
         records.forEach(record => {
             // 從 '詳細紀錄' 連結中解析 reportId (例如 report_170245...)
-            const detailLink = `<a href="${r.詳細紀錄}" target="_blank" style="color: #0d6efd; text-decoration: underline;">連結</a>`;
+            const detailLink = record['詳細紀錄'] || '';
             const match = detailLink.match(/id=(report_[0-9]+)/);
 
             if (match) {
@@ -1894,8 +1894,11 @@ function exportReport() {
 
         let reporterInfo = (r.回報者 || "").trim();
         if (r.同行者 && r.同行者.trim() !== "") {
-            reporterInfo += `,${r.同行者.trim()}`;
+            reporterInfo += `,${r.同行者.trim()}`; // 這裡加上空格與逗號
         }
+
+        // --- 修正：將網址包裝成「連結」 ---
+        const detailLink = `<a href="${r.詳細紀錄}" target="_blank" style="color: #0b5ed7; text-decoration: underline;">連結</a>`;
 
         tableRows += `
             <tr>
