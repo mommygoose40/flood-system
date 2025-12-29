@@ -1856,17 +1856,14 @@ document.getElementById("adminSearchBtn").onclick = () => {
 function exportReport() {
     const filteredData = filterAdminRecords();
     
-    // --- 替換 alert 為自訂視窗 ---
     if (filteredData.length === 0) {
-        showMessage("目前篩選條件下無資料可產出報表", () => {
-            console.log("使用者已確認無資料");
-        });
+        showMessage("目前篩選條件下無資料可產出報表");
         return;
     }
 
     const isMobile = window.innerWidth < 769;
     
-    // 隱藏原本的小圓鈕
+    // 隱藏小圓鈕
     const fb = document.getElementById("floatingButtons");
     if (fb) fb.style.setProperty("display", "none", "important");
 
@@ -1894,10 +1891,9 @@ function exportReport() {
 
         let reporterInfo = (r.回報者 || "").trim();
         if (r.同行者 && r.同行者.trim() !== "") {
-            reporterInfo += `,${r.同行者.trim()}`; // 這裡加上空格與逗號
+            reporterInfo += `,${r.同行者.trim()}`;
         }
 
-        // --- 修正：將網址包裝成「連結」 ---
         const detailLink = `<a href="${r.詳細紀錄}" target="_blank" style="color: #0b5ed7; text-decoration: underline;">連結</a>`;
 
         tableRows += `
@@ -1916,30 +1912,15 @@ function exportReport() {
     });
 
     const reportHtml = `
-        <div id="reportOverlay" style="
-            position:fixed; top:0; left:0; width:100%; height:100%; 
-            background: ${isMobile ? 'white' : 'rgba(0,0,0,0.6)'}; 
-            z-index: 9995; display: flex; justify-content: center; align-items: flex-start;
-            font-family:sans-serif;
-        ">
-            <div id="reportContent" style="
-                background: white; 
-                width: ${isMobile ? '100%' : '95%'}; 
-                height: ${isMobile ? 'calc(100% - 70px)' : '90vh'}; 
-                margin-top: ${isMobile ? '0' : '3vh'};
-                padding: ${isMobile ? '15px' : '30px'}; 
-                box-sizing: border-box; overflow-y: auto;
-                box-shadow: ${isMobile ? 'none' : '0 10px 40px rgba(0,0,0,0.4)'};
-                border-radius: ${isMobile ? '0' : '10px'};
-                position: relative;
-            ">
+        <div id="reportOverlay" style="position:fixed; top:0; left:0; width:100%; height:100%; background: ${isMobile ? 'white' : 'rgba(0,0,0,0.6)'}; z-index: 9995; display: flex; justify-content: center; align-items: flex-start; font-family:sans-serif;">
+            <div id="reportContent" style="background: white; width: ${isMobile ? '100%' : '95%'}; height: ${isMobile ? 'calc(100% - 70px)' : '90vh'}; margin-top: ${isMobile ? '0' : '3vh'}; padding: ${isMobile ? '15px' : '30px'}; box-sizing: border-box; overflow-y: auto; box-shadow: ${isMobile ? 'none' : '0 10px 40px rgba(0,0,0,0.4)'}; border-radius: ${isMobile ? '0' : '10px'}; position: relative;">
+                
                 <div class="no-print" style="display: ${isMobile ? 'none' : 'flex'}; justify-content: space-between; margin-bottom: 20px;">
                     <button onclick="downloadExcelWithMsg()" style="padding: 10px 20px; background: #198754; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: bold;">📊 匯出為 Excel 檔</button>
                     <button onclick="closeReportLayer()" style="padding: 10px 20px; background: #f8f9fa; border: 1px solid #ccc; border-radius: 6px; cursor: pointer; font-weight: bold;">✕ 關閉視窗</button>
                 </div>
                 
                 <h2 style="text-align:center; margin-bottom:10px; font-size: 24px;">巡視紀錄明細報表</h2>
-                <p style="text-align:center; color:#666; font-size: 14px; margin-bottom: 25px;">產出時間：${new Date().toLocaleString()}</p>
                 
                 <table id="targetTable" style="width:100%; border-collapse:collapse; font-size:13px; line-height: 1.5;">
                     <thead>
@@ -1959,7 +1940,6 @@ function exportReport() {
                 </table>
                 <div style="margin-top:20px; text-align:right; font-weight:bold; font-size: 15px;">資料總計：${filteredData.length} 筆</div>
             </div>
-            
             <style>
                 tr:nth-child(even) { background-color: #fafafa; }
                 td { border:1px solid #ccc; padding:10px; text-align: left; word-break: break-all; }
@@ -1974,51 +1954,50 @@ function exportReport() {
 
   function downloadExcelWithMsg() {
     downloadExcel();
-    showMessage("報表匯出成功！<br><small>請檢查瀏覽器下載資料夾</small>");
+    showMessage("報表匯出成功！<br><small>Excel 檔案已排除詳細紀錄欄位</small>");
 }
 
 function downloadExcel() {
     const table = document.getElementById("targetTable");
     const rows = table.querySelectorAll("tr");
     
-    // 取得標頭與資料列內容
+    // 找出「詳細紀錄」是在第幾個索引 (index)
+    let detailIndex = -1;
+    const headers = table.querySelectorAll("thead th");
+    headers.forEach((th, idx) => {
+        if (th.innerText.includes("詳細紀錄")) detailIndex = idx;
+    });
+
     let excelRows = "";
     rows.forEach(row => {
         excelRows += "      <Row>\n";
         const cells = row.querySelectorAll("th, td");
-        cells.forEach(cell => {
-            // 處理特殊字元防止毀損
+        cells.forEach((cell, idx) => {
+            // ★ 關鍵：如果是詳細紀錄那一欄，就跳過不處理
+            if (idx === detailIndex) return;
+
             const data = cell.innerText.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
             excelRows += `        <Cell><Data ss:Type="String">${data}</Data></Cell>\n`;
         });
         excelRows += "      </Row>\n";
     });
 
-    // 使用 XML 格式封裝，解決警告並固定字體大小 (11pt)
     const xmlTemplate = `<?xml version="1.0" encoding="utf-8"?>
 <?mso-application progid="Excel.Sheet"?>
-<Workbook xmlns="urn:schemas-microsoft-com:office:spreadsheet" 
-          xmlns:o="urn:schemas-microsoft-com:office:office" 
-          xmlns:x="urn:schemas-microsoft-com:office:excel" 
-          xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet" 
-          xmlns:html="http://www.w3.org/TR/REC-html40">
+<Workbook xmlns="urn:schemas-microsoft-com:office:spreadsheet" xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet" xmlns:html="http://www.w3.org/TR/REC-html40">
   <Styles>
     <Style ss:ID="Default" ss:Name="Normal">
-      <Alignment ss:Vertical="Center" />
-      <Font ss:FontName="微軟正黑體" x:CharSet="136" ss:Size="11" /> </Style>
+      <Alignment ss:Vertical="Center" ss:WrapText="1" />
+      <Font ss:FontName="微軟正黑體" x:CharSet="136" ss:Size="11" />
+    </Style>
+    <Style ss:ID="Header">
+      <Font ss:FontName="微軟正黑體" x:CharSet="136" ss:Size="11" ss:Bold="1" />
+      <Interior ss:Color="#F2F2F2" ss:Pattern="Solid" />
+    </Style>
   </Styles>
   <Worksheet ss:Name="巡視紀錄">
-    <Table>
-      <Column ss:AutoFitWidth="1" ss:Width="100"/>
-      <Column ss:AutoFitWidth="1" ss:Width="60"/>
-      <Column ss:AutoFitWidth="1" ss:Width="80"/>
-      <Column ss:AutoFitWidth="1" ss:Width="50"/>
-      <Column ss:AutoFitWidth="1" ss:Width="100"/>
-      <Column ss:AutoFitWidth="1" ss:Width="200"/>
-      <Column ss:AutoFitWidth="1" ss:Width="250"/>
-      <Column ss:AutoFitWidth="1" ss:Width="120"/>
-      <Column ss:AutoFitWidth="1" ss:Width="80"/>
-${excelRows}
+    <Table ss:DefaultColumnWidth="100">
+      <Column ss:Width="80"/> <Column ss:Width="60"/> <Column ss:Width="80"/> <Column ss:Width="60"/> <Column ss:Width="100"/> <Column ss:Width="250"/> <Column ss:Width="120"/> <Column ss:Width="80"/>  ${excelRows}
     </Table>
   </Worksheet>
 </Workbook>`;
@@ -2026,14 +2005,13 @@ ${excelRows}
     const blob = new Blob([xmlTemplate], { type: "application/vnd.ms-excel" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
-    
     const timestamp = new Date().toISOString().replace(/[:.]/g, "-").slice(0, 19);
     a.href = url;
-    a.download = `巡視紀錄明細_${timestamp}.xls`;
+    a.download = `巡視紀錄_${timestamp}.xls`;
     a.click();
     URL.revokeObjectURL(url);
 }
-
+  
 function showMessage(text, onConfirm) {
   document.getElementById("customModal")?.remove();
   const overlay = document.createElement("div");
