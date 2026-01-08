@@ -1520,14 +1520,26 @@ records = records.filter(r => {
 function renderList(records) {
   const container = document.getElementById("listContainer");
   const spinner = document.getElementById("centerSpinner");
-  
+  const mask = document.getElementById("loadingMask");
+
+  // --- [1] 執行渲染前，徹底隱藏清單 ---
+  container.style.display = "none";
+  // 如果是切換模式（非初次大載入），顯示小 spinner
+  if (!isInitialLoad) {
+    if (spinner) spinner.style.display = "flex";
+  }
+
   container.innerHTML = "";
-  
-  // --- 分組邏輯 (支援跨年) ---
+
+  // 分組邏輯
   const grouped = {};
   records.forEach(r => {
     const normalized = normalizeDate(r.日期);
-    const [yyyy, mm, dd] = normalized.split("/").map(Number);
+    const parts = normalized.split("/");
+    if (parts.length < 3) return;
+    const yyyy = parseInt(parts[0], 10);
+    const mm = parseInt(parts[1], 10);
+    const dd = parseInt(parts[2], 10);
     const twYear = yyyy - 1911;
 
     if (!grouped[twYear]) grouped[twYear] = {};
@@ -1538,7 +1550,8 @@ function renderList(records) {
 
   const years = Object.keys(grouped).sort((a, b) => b - a);
   const now = new Date();
-  const threeDaysAgo = new Date(now.getTime() - 3 * 24 * 60 * 60 * 1000);
+  // 計算 3 天前的門檻值
+  const threshold = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 2);
 
   years.forEach(twYear => {
     const yearBlock = createBlock(`${twYear} 年`, "year");
@@ -1558,10 +1571,9 @@ function renderList(records) {
           const div = document.createElement("div");
           div.className = "record";
           
-          // 時間解析
           let hh = "--", mmStr = "--";
           try {
-            const match = record.詳細紀錄.match(/report_(\d+)/);
+            const match = (record.詳細紀錄 || "").match(/report_(\d+)/);
             if (match) {
               const d = new Date(parseInt(match[1], 10));
               hh = String(d.getHours()).padStart(2, "0");
@@ -1570,8 +1582,6 @@ function renderList(records) {
           } catch(e) {}
 
           const status = (record.狀態 || "").trim();
-          
-          // 內容組合 (保留紅點)
           const timeSpan = document.createElement("span");
           timeSpan.textContent = status ? `${hh}:${mmStr}｜${status}` : `${hh}:${mmStr}`;
           div.appendChild(timeSpan);
@@ -1582,7 +1592,7 @@ function renderList(records) {
             div.appendChild(nameSpan);
           }
 
-          // ★ 重點：保留異常紅點
+          // ★ [保留] 異常紅點邏輯
           if (status === "異常") {
             const dot = document.createElement("span");
             dot.className = "status-dot"; 
@@ -1595,18 +1605,18 @@ function renderList(records) {
 
         monthContent.appendChild(dayBlock);
 
-        // --- 智慧展開邏輯 ---
-        // 條件：是初始載入 (isInitialLoad 為 true) 且日期在 3 天內
+        // --- [2] 智慧展開邏輯 ---
+        // 只有在 isInitialLoad 為真，且日期在 3 天內才自動展開
         if (isInitialLoad) {
           const recordDate = new Date(twYear + 1911, month - 1, day);
-          if (recordDate >= threeDaysAgo) {
+          if (recordDate >= threshold) {
             yearContent.style.display = "block";
             monthContent.style.display = "block";
             dayContent.style.display = "block";
-            // 更新箭頭圖示
-            [yearBlock, monthBlock, dayBlock].forEach(b => {
-              const icon = b.querySelector(".toggle-icon");
-              if(icon) icon.innerHTML = `<svg width="40" height="40" viewBox="0 0 24 24"><path fill="#666" d="M5 16l7-8 7 8z"/></svg>`;
+            // 切換箭頭向上
+            const icons = [yearBlock, monthBlock, dayBlock].map(b => b.querySelector(".toggle-icon"));
+            icons.forEach(ic => {
+              if(ic) ic.innerHTML = `<svg width="40" height="40" viewBox="0 0 24 24"><path fill="#666" d="M5 16l7-8 7 8z"/></svg>`;
             });
           }
         }
@@ -1616,13 +1626,13 @@ function renderList(records) {
     container.appendChild(yearBlock);
   });
 
-  // 渲染結束後將 isInitialLoad 設為 false
-  // 這樣之後點擊「搜尋按鈕」觸發 renderList 時，就不會再自動展開
-  isInitialLoad = false; 
-  
-  // 隱藏 Mask
-  document.getElementById("loadingMask").style.display = "none";
+  // --- [3] 渲染完成，關閉所有載入動畫 ---
+  if (mask) mask.style.display = "none";
+  if (spinner) spinner.style.display = "none";
   container.style.display = "block";
+
+  // 渲染完後，如果是第一次，則設為 false。搜尋按鈕觸發時就不會再走展開邏輯
+  // 注意：不要在這裡立即設 isInitialLoad = false，建議放在 loadRecordList 的最後
 }
 
 function saveListState() {
