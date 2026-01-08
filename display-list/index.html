@@ -1520,175 +1520,109 @@ records = records.filter(r => {
 function renderList(records) {
   const container = document.getElementById("listContainer");
   const spinner = document.getElementById("centerSpinner");
-  const mask = document.getElementById("loadingMask");
-
-  // 初始化時隱藏列表和 spinner，保持載入中遮罩
-  container.style.display = "none";
-  spinner.style.display = "none";
-
-  // 管理員模式：確保篩選區域顯示
-  if (globalRole === "管理員" && viewMode === "admin") {
-    document.getElementById("adminFilterArea").style.display = "block";
-  } else {
-    document.getElementById("adminFilterArea").style.display = "none";
-  }
-
-  // 只有在切換模式時才顯示小 spinner
-  if (!isInitialLoad) {
-    spinner.style.display = "flex";
-    container.style.display = "none";
-  } else {
-    spinner.style.display = "none";
-  }
-
-  // ⭐⭐⭐ 管理員前端快篩：只在 admin 模式下執行 ⭐⭐⭐
-  if (globalRole === "管理員" && viewMode === "admin") {
-    if (globalAdminRecords.length > 0) {
-      let targetTeam = document.getElementById("adminTeamSelect")?.value || "全部";
-      if (targetTeam !== "全部") {
-        records = records.filter(r => (r.所屬大隊 + "") === targetTeam);
-      }
-
-      const now = new Date();
-      const cutoff = new Date(now.getTime() - adminViewDays * 24 * 60 * 60 * 1000);
-
-      records = records.filter(r => {
-        let ds = normalizeDate(r.日期);
-        return new Date(ds) >= cutoff;
-      });
-    }
-  } else {
-    document.getElementById("adminFilterArea").style.display = "none";
-  }
-
-  let finalRecords = records;
-
-  globalRecords = records;
-
-  debug("STEP3: globalTeam = " + globalTeam);
-
-  debug("STEP3: 進入 renderList，顯示筆數=" + finalRecords.length);
-
+  
   container.innerHTML = "";
-
-  const now2 = new Date();
-  const currentYear = now2.getFullYear() - 1911;
-  const currentMonth = now2.getMonth() + 1;
-
-  // --- 修正後的渲染邏輯：支援跨年份分組 ---
-  const grouped = {}; // 結構改為 { "年份": { "月份": { "日期": [紀錄...] } } }
-
-  finalRecords.forEach(r => {
+  
+  // --- 分組邏輯 (支援跨年) ---
+  const grouped = {};
+  records.forEach(r => {
     const normalized = normalizeDate(r.日期);
-    const dateParts = normalized.split("/");
-    const yyyy = parseInt(dateParts[0], 10);
-    const m = parseInt(dateParts[1], 10);
-    const d = parseInt(dateParts[2], 10);
-
-    const twYear = yyyy - 1911; // 轉民國年
+    const [yyyy, mm, dd] = normalized.split("/").map(Number);
+    const twYear = yyyy - 1911;
 
     if (!grouped[twYear]) grouped[twYear] = {};
-    if (!grouped[twYear][m]) grouped[twYear][m] = {};
-    if (!grouped[twYear][m][d]) grouped[twYear][m][d] = [];
-    
-    grouped[twYear][m][d].push(r);
+    if (!grouped[twYear][mm]) grouped[twYear][mm] = {};
+    if (!grouped[twYear][mm][dd]) grouped[twYear][mm][dd] = [];
+    grouped[twYear][mm][dd].push(r);
   });
 
-  // 1. 處理年份 (由新到舊排序)
   const years = Object.keys(grouped).sort((a, b) => b - a);
+  const now = new Date();
+  const threeDaysAgo = new Date(now.getTime() - 3 * 24 * 60 * 60 * 1000);
 
   years.forEach(twYear => {
     const yearBlock = createBlock(`${twYear} 年`, "year");
     const yearContent = yearBlock.querySelector(".content");
 
-    // 2. 處理月份 (由新到舊排序)
-    const months = Object.keys(grouped[twYear])
-      .map(m => parseInt(m, 10))
-      .sort((a, b) => b - a);
-
+    const months = Object.keys(grouped[twYear]).map(Number).sort((a, b) => b - a);
     months.forEach(month => {
       const monthBlock = createBlock(`${month} 月`, "month");
       const monthContent = monthBlock.querySelector(".content");
 
-      // 3. 處理日期 (由新到舊排序)
-      const days = Object.keys(grouped[twYear][month]).sort((a, b) => b - a);
-
+      const days = Object.keys(grouped[twYear][month]).map(Number).sort((a, b) => b - a);
       days.forEach(day => {
         const dayBlock = createBlock(`${day} 日`, "day");
         const dayContent = dayBlock.querySelector(".content");
 
         grouped[twYear][month][day].forEach(record => {
-          // ... 這裡保留原本建立 record div 的邏輯 (hh:mm, status 等) ...
           const div = document.createElement("div");
           div.className = "record";
           
-          // (此處請沿用你原本代碼中處理 hh, mm, status, status-dot 的部分)
-          // 為了簡潔，以下略過重複的 HTML 組合邏輯，請確保保留原本的 div.onclick 等設定
-          
-          // 範例關鍵：
-          let hh = "--", mm = "--";
-          const match = (record.詳細紀錄 || "").match(/report_(\d+)/);
-          if (match) {
-            const dateObj = new Date(parseInt(match[1], 10));
-            hh = String(dateObj.getHours()).padStart(2, "0");
-            mm = String(dateObj.getMinutes()).padStart(2, "0");
-          }
+          // 時間解析
+          let hh = "--", mmStr = "--";
+          try {
+            const match = record.詳細紀錄.match(/report_(\d+)/);
+            if (match) {
+              const d = new Date(parseInt(match[1], 10));
+              hh = String(d.getHours()).padStart(2, "0");
+              mmStr = String(d.getMinutes()).padStart(2, "0");
+            }
+          } catch(e) {}
+
           const status = (record.狀態 || "").trim();
-          div.innerHTML = `<span>${hh}:${mm}｜${status}</span>`;
-          if ((viewMode === "team" || viewMode === "admin") && record.回報者) {
-            div.innerHTML += `<span>｜${record.回報者}</span>`;
-          }
-          div.onclick = () => openDetail(record.詳細紀錄);
           
+          // 內容組合 (保留紅點)
+          const timeSpan = document.createElement("span");
+          timeSpan.textContent = status ? `${hh}:${mmStr}｜${status}` : `${hh}:${mmStr}`;
+          div.appendChild(timeSpan);
+
+          if ((viewMode === "team" || viewMode === "admin") && record.回報者) {
+            const nameSpan = document.createElement("span");
+            nameSpan.textContent = `｜${record.回報者}`;
+            div.appendChild(nameSpan);
+          }
+
+          // ★ 重點：保留異常紅點
+          if (status === "異常") {
+            const dot = document.createElement("span");
+            dot.className = "status-dot"; 
+            div.appendChild(dot);
+          }
+
+          div.onclick = () => openDetail(record.詳細紀錄);
           dayContent.appendChild(div);
         });
 
         monthContent.appendChild(dayBlock);
+
+        // --- 智慧展開邏輯 ---
+        // 條件：是初始載入 (isInitialLoad 為 true) 且日期在 3 天內
+        if (isInitialLoad) {
+          const recordDate = new Date(twYear + 1911, month - 1, day);
+          if (recordDate >= threeDaysAgo) {
+            yearContent.style.display = "block";
+            monthContent.style.display = "block";
+            dayContent.style.display = "block";
+            // 更新箭頭圖示
+            [yearBlock, monthBlock, dayBlock].forEach(b => {
+              const icon = b.querySelector(".toggle-icon");
+              if(icon) icon.innerHTML = `<svg width="40" height="40" viewBox="0 0 24 24"><path fill="#666" d="M5 16l7-8 7 8z"/></svg>`;
+            });
+          }
+        }
       });
       yearContent.appendChild(monthBlock);
     });
-    container.appendChild(yearBlock); // 將年度區塊加入主容器
+    container.appendChild(yearBlock);
   });
 
-  // --- 渲染完成 ---
+  // 渲染結束後將 isInitialLoad 設為 false
+  // 這樣之後點擊「搜尋按鈕」觸發 renderList 時，就不會再自動展開
+  isInitialLoad = false; 
+  
+  // 隱藏 Mask
   document.getElementById("loadingMask").style.display = "none";
   container.style.display = "block";
-
-  if (spinner) spinner.style.display = "none";
-
-  if (globalRole === "大隊長" || globalRole === "管理員") {
-    document.getElementById("switchArea").style.display = "block";
-  }
-
-  updateSwitchUI();
-  document.getElementById("pageTitle").style.display = "block";
-
-  // ★★★ 關鍵修改：確保狀態恢復只在第一次渲染時執行，且時機正確
-  setTimeout(() => {
-    if (!restoredOnce) {
-      restoreListState();
-      restoredOnce = true;
-    } else {
-      // 非第一次渲染時，自動展開年份區塊
-      const yearHeader = document.querySelector('.year-block .header');
-      if (yearHeader && yearHeader.nextElementSibling.style.display !== 'block') {
-        yearHeader.click();
-      }
-    }
-  }, 50); // 稍微延遲確保 DOM 完全渲染
-
-  isInitialLoad = false;
-
-  document.body.classList.remove("loading");
-
-  /*
-  // ★ 移除 body.loading class，強制關閉電腦版遮罩
-  if (document.body.classList.contains("loading")) {
-      document.body.classList.remove("loading");
-  }
-  */
-
-  debug("STEP3 完成：列表渲染成功");
 }
 
 function saveListState() {
@@ -1837,15 +1771,15 @@ document.getElementById("btnTeam").onclick = async function () {
 
 document.getElementById("adminSearchBtn").onclick = () => {
   if (viewMode !== "admin") return;
-
-  // 顯示載入中
+  
+  // 重要：點擊搜尋時，不屬於「初始載入」，所以設為 false
+  isInitialLoad = false; 
+  
   renderLoadingInList();
-
-  // 使用現有資料進行前端篩選
   setTimeout(() => {
     const filtered = filterAdminRecords();
     renderList(filtered);
-  }, 100); // 稍微延遲讓載入動畫顯示
+  }, 100);
 };
 
   document.getElementById("exportReportBtn").onclick = () => {
@@ -1953,44 +1887,38 @@ function exportReport() {
 }
 
   function downloadExcelWithMsg() {
-    downloadCSV();
+    downloadExcelFixed();
     showMessage("報表匯出成功！<br><small>已採用 CSV 格式 (無安全警告)</small>");
 }
 
-function downloadCSV() {
+function downloadExcelFixed() {
     const table = document.getElementById("targetTable");
     const rows = table.querySelectorAll("tr");
-    
-    // 1. 找出「詳細紀錄」是在第幾個索引 (index)
-    let detailIndex = -1;
-    const headers = table.querySelectorAll("thead th");
-    headers.forEach((th, idx) => {
-        if (th.innerText.includes("詳細紀錄")) detailIndex = idx;
-    });
+    const timestamp = new Date().toISOString().slice(0, 10);
+    const fileName = `巡視紀錄_${timestamp}.xls`;
 
-    let csvContent = "";
-    rows.forEach(row => {
-        const cells = row.querySelectorAll("th, td");
-        let rowData = [];
-        cells.forEach((cell, idx) => {
-            // ★ 跳過詳細紀錄欄位
-            if (idx === detailIndex) return;
+    // 建立 HTML 格式，並加入 Excel 專用的 CSS 格式 (mso-number-format)
+    // 這樣可以強制日期以文字顯示，不會變成亂碼或 ####
+    let html = `
+    <html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40">
+    <head>
+      <meta charset="utf-8">
+      <style>
+        td { mso-number-format:"\\@"; white-space:nowrap; border:0.5pt solid #ccc; }
+        .date-cell { mso-number-format:"yyyy\\/mm\\/dd"; }
+        th { background-color: #f2f2f2; font-weight: bold; border:0.5pt solid #ccc; }
+      </style>
+    </head>
+    <body>
+      <table>${table.innerHTML}</table>
+    </body>
+    </html>`;
 
-            // 處理 CSV 格式：若文字內有逗號則包覆引號
-            let text = cell.innerText.replace(/"/g, '""'); 
-            rowData.push(`"${text}"`);
-        });
-        csvContent += rowData.join(",") + "\n";
-    });
-
-    // 2. 解決亂碼關鍵：加入 UTF-8 BOM (\uFEFF)
-    const blob = new Blob(["\uFEFF" + csvContent], { type: "text/csv;charset=utf-8;" });
+    const blob = new Blob([html], { type: "application/vnd.ms-excel" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
-    
-    const timestamp = new Date().toISOString().replace(/[:.]/g, "-").slice(0, 19);
     a.href = url;
-    a.download = `巡視紀錄_${timestamp}.csv`; // 檔名改為 .csv
+    a.download = fileName;
     a.click();
     URL.revokeObjectURL(url);
 }
