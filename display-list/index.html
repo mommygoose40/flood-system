@@ -778,18 +778,73 @@ body {
   letter-spacing: 1px;
 }
 
-/* 確保所有按鈕都有點擊手型 */
-#adminExportBtn, 
-#adminSearchBtn, 
-.header, 
-.record {
-  cursor: pointer !important;
+/* 搜尋區域容器：讓內容置中 */
+#adminFilterArea {
+  display: flex;
+  flex-direction: column; /* 垂直排列 */
+  align-items: center;    /* 水平置中 */
+  justify-content: center;
+  gap: 15px;              /* 欄位間的間距 */
+  margin: 20px auto;      /* 上下間距，左右自動達成置中 */
+  width: 90%;             /* 最大寬度限制 */
+  text-align: left;       /* ★ 確保內部的文字（標籤）預設靠左 */
 }
 
-/* 如果是管理員篩選區的按鈕，增加點擊回饋感 */
-#adminExportBtn:active {
-  transform: scale(0.98);
-  background-color: #e0e0e0;
+/* 搜尋欄位的包裹層：讓輸入框並排 */
+.filter-row {
+  display: flex;
+  flex-wrap: wrap;        /* 手機版會自動換行 */
+  justify-content: center;/* 讓欄位組置中 */
+  gap: 10px;
+  width: 100%;
+}
+
+/* 下拉選單與日期輸入框 */
+#adminTeamSelect, 
+#adminDateInput {
+  font-family: "Microsoft JhengHei", "微軟正黑體", sans-serif !important;
+  font-size: 16px;
+  padding: 8px 12px;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  width: 180px;           /* 固定寬度，讓整體更整齊 */
+  text-align: left;       /* ★ 內部文字靠左對齊 */
+  cursor: pointer;
+}
+
+/* 按鈕區域：並排且置中 */
+.button-row {
+  display: flex;
+  gap: 15px;
+  justify-content: center;
+  width: 100%;
+}
+
+/* 按鈕美化 */
+#adminSearchBtn, #adminExportBtn {
+  font-family: "Microsoft JhengHei", "微軟正黑體", sans-serif !important;
+  font-size: 15px;
+  font-weight: bold;
+  padding: 10px 25px;
+  border-radius: 25px;    /* 圓角設計 */
+  cursor: pointer !important;
+  border: none;
+  transition: all 0.2s;
+}
+
+#adminSearchBtn {
+  background-color: #007bff;
+  color: white;
+}
+
+#adminExportBtn {
+  background-color: #28a745;
+  color: white;
+}
+
+#adminSearchBtn:hover, #adminExportBtn:hover {
+  filter: brightness(0.9);
+  transform: translateY(-1px);
 }
 </style>
 
@@ -1930,7 +1985,6 @@ function exportReport() {
 
   function downloadExcelWithMsg() {
     downloadExcelFinal();
-    showMessage("報表匯出成功！<br><small>已採用 CSV 格式 (無安全警告)</small>");
 }
 
 function downloadExcelFinal() {
