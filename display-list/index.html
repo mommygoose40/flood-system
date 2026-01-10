@@ -1935,30 +1935,21 @@ function exportReport() {
 
 function downloadReport() {
   const data = filterAdminRecords();
-
   if (data.length === 0) {
     showMessage("目前沒有資料可匯出");
     return;
   }
 
-  const EXCEL_GAS_URL = "https://script.google.com/macros/s/AKfycbx1HhvWHr7KV9OnyQIquAYmxHxmvJmua8b1jzkRH5RT_tlmFqOWap_W_t_iCSz3z6ty/exec";
+  const encoded = btoa(unescape(encodeURIComponent(JSON.stringify(data))));
 
-  fetch(EXCEL_GAS_URL + "?action=exportExcel", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ records: data })
-  })
-  .then(res => res.json())
-  .then(result => {
-    if (result.url) {
-      window.open(result.url, "_blank"); // 直接下載
-    } else {
-      showMessage("報表產生失敗");
-    }
-  })
-  .catch(() => {
-    showMessage("無法連線產生報表");
-  });
+  const EXCEL_GAS_URL = "https://script.google.com/macros/s/AKfycbxpfHWmh10IYVzRxfSrTr7VbOCY_Nyeyy_bNVGKf4a_ZSCtgG2lOrEhj1nXNS8qAX2H/exec";
+
+  const url =
+    EXCEL_GAS_URL +
+    "?action=exportExcel&data=" +
+    encodeURIComponent(encoded);
+
+  window.open(url, "_blank"); // ★ 關鍵
 }
   
 function showMessage(text, onConfirm) {
