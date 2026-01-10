@@ -1929,11 +1929,11 @@ function exportReport() {
 }
 
   function downloadExcelWithMsg() {
-    exportReport();
+    downloadReport();
     showMessage("報表匯出成功！<br><small>已採用 CSV 格式 (無安全警告)</small>");
 }
 
-function exportReport() {
+function downloadReport() {
   const data = filterAdminRecords();
 
   if (data.length === 0) {
@@ -1943,7 +1943,7 @@ function exportReport() {
 
   const EXCEL_GAS_URL = "https://script.google.com/macros/s/AKfycbzrHegSlbGhfnu7ZGy_84RLc37sOuKk7jjkQVbF2_zHNKSdX6XZqU0DhA8m0WBaA3j4/exec";
 
-  fetch(REPORT_GAS_URL + "?action=exportExcel", {
+  fetch(EXCEL_GAS_URL + "?action=exportExcel", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ records: data })
