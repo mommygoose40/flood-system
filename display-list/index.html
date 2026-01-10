@@ -1929,37 +1929,47 @@ function exportReport() {
 }
 
   function downloadExcelWithMsg() {
-    downloadExcelFinal();
+    downloadReport();
     showMessage("報表匯出成功！<br><small>已採用 CSV 格式 (無安全警告)</small>");
 }
 
-function downloadExcelFinal() {
+function downloadReport() {
   const table = document.getElementById("targetTable");
   if (!table) return;
 
-  const timestamp = new Date().toISOString().slice(0, 10);
-  const fileName = `巡視紀錄_${timestamp}.xls`;
-
-  const ctx = {
-    worksheet: "巡視紀錄",
-    table: table.innerHTML
-  };
-
-  // 使用 Base64 編碼來「欺騙」Excel 的檔案檢查機制
-  const template = '<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40"><head><meta charset="UTF-8"><style>td{mso-number-format:"\\@";border:0.5pt solid #000;}</style></head><body><table>{table}</table></body></html>';
+  const rows = Array.from(table.querySelectorAll("tr"));
   
-  const format = function(s, c) {
-    return s.replace(/{(\w+)}/g, function(m, p) { return c[p]; });
-  };
+  // 將表格轉為 CSV 字串
+  let csvContent = rows.map(row => {
+    const cells = Array.from(row.querySelectorAll("th, td"));
+    return cells.map(cell => {
+      let text = cell.innerText.trim();
+      
+      // 關鍵技巧 1：如果是日期格式 (例如 2024/01/01)，在後面加一個製表符或空格
+      // 這能防止 Excel 把欄位縮太小變成 ####，也能防止它自動改格式
+      if (text.includes('/') && text.length >= 8) {
+          text = text + "\t"; 
+      }
+      
+      // 處理引號
+      text = text.replace(/"/g, '""');
+      return `"${text}"`;
+    }).join(",");
+  }).join("\r\n");
 
-  const base64 = function(s) {
-    return window.btoa(unescape(encodeURIComponent(s)));
-  };
+  // 關鍵技巧 2：加入 UTF-8 BOM (\ufeff) 徹底解決中文亂碼
+  const blob = new Blob(["\ufeff" + csvContent], { type: "text/csv;charset=utf-8;" });
+  
+  // 關鍵技巧 3：副檔名用 .csv，Excel 絕對不會報「格式不符」
+  const timestamp = new Date().toISOString().slice(0, 10);
+  const fileName = `巡視紀錄_${timestamp}.csv`;
 
   const link = document.createElement("a");
-  link.href = 'data:application/vnd.ms-excel;base64,' + base64(format(template, ctx));
+  link.href = URL.createObjectURL(blob);
   link.download = fileName;
+  document.body.appendChild(link);
   link.click();
+  document.body.removeChild(link);
 }
   
 function showMessage(text, onConfirm) {
