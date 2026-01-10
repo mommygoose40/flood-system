@@ -1522,9 +1522,11 @@ function renderList(records) {
   const spinner = document.getElementById("centerSpinner");
   const mask = document.getElementById("loadingMask");
 
-  // 初始化時隱藏列表和 spinner，保持載入中遮罩
+  // 1. 初始化：隱藏列表，根據狀態顯示 spinner
   container.style.display = "none";
-  spinner.style.display = "none";
+  if (!isInitialLoad) {
+    if (spinner) spinner.style.display = "flex";
+  }
 
   // 管理員模式：確保篩選區域顯示
   if (globalRole === "管理員" && viewMode === "admin") {
@@ -1533,140 +1535,133 @@ function renderList(records) {
     document.getElementById("adminFilterArea").style.display = "none";
   }
 
-  // 只有在切換模式時才顯示小 spinner
-  if (!isInitialLoad) {
-    spinner.style.display = "flex";
-    container.style.display = "none";
-  } else {
-    spinner.style.display = "none";
-  }
-
-  // ⭐⭐⭐ 管理員前端快篩：只在 admin 模式下執行 ⭐⭐⭐
+  // 管理員前端快篩邏輯 (保留原樣)
   if (globalRole === "管理員" && viewMode === "admin") {
     if (globalAdminRecords.length > 0) {
       let targetTeam = document.getElementById("adminTeamSelect")?.value || "全部";
+      if (!targetTeam) targetTeam = document.getElementById("teamText")?.innerText || "全部";
+      
       if (targetTeam !== "全部") {
         records = records.filter(r => (r.所屬大隊 + "") === targetTeam);
       }
-
       const now = new Date();
       const cutoff = new Date(now.getTime() - adminViewDays * 24 * 60 * 60 * 1000);
-
-      records = records.filter(r => {
-        let ds = normalizeDate(r.日期);
-        return new Date(ds) >= cutoff;
-      });
+      records = records.filter(r => new Date(normalizeDate(r.日期)) >= cutoff);
     }
-  } else {
-    document.getElementById("adminFilterArea").style.display = "none";
   }
 
   let finalRecords = records;
-
   globalRecords = records;
-
-  debug("STEP3: globalTeam = " + globalTeam);
-
-  debug("STEP3: 進入 renderList，顯示筆數=" + finalRecords.length);
-
   container.innerHTML = "";
 
-  const now2 = new Date();
-  const currentYear = now2.getFullYear() - 1911;
-  const currentMonth = now2.getMonth() + 1;
-
-  // --- 修正後的渲染邏輯：支援跨年份分組 ---
-  const grouped = {}; // 結構改為 { "年份": { "月份": { "日期": [紀錄...] } } }
-
+  // 2. 跨年份分組邏輯
+  const grouped = {};
   finalRecords.forEach(r => {
     const normalized = normalizeDate(r.日期);
     const dateParts = normalized.split("/");
     const yyyy = parseInt(dateParts[0], 10);
     const m = parseInt(dateParts[1], 10);
     const d = parseInt(dateParts[2], 10);
-
-    const twYear = yyyy - 1911; // 轉民國年
+    const twYear = yyyy - 1911;
 
     if (!grouped[twYear]) grouped[twYear] = {};
     if (!grouped[twYear][m]) grouped[twYear][m] = {};
     if (!grouped[twYear][m][d]) grouped[twYear][m][d] = [];
-    
     grouped[twYear][m][d].push(r);
   });
 
-  // 1. 處理年份 (由新到舊排序)
-  const years = Object.keys(grouped).sort((a, b) => b - a);
+  // 設定「最近 3 天」的門檻 (包含今天、昨天、前天)
+  const today = new Date();
+  const threeDaysAgoThreshold = new Date(today.getFullYear(), today.getMonth(), today.getDate() - 2);
 
+  // 3. 開始渲染
+  const years = Object.keys(grouped).sort((a, b) => b - a);
   years.forEach(twYear => {
     const yearBlock = createBlock(`${twYear} 年`, "year");
     const yearContent = yearBlock.querySelector(".content");
+    let yearNeedsOpen = false;
 
-    // 2. 處理月份 (由新到舊排序)
-    const months = Object.keys(grouped[twYear])
-      .map(m => parseInt(m, 10))
-      .sort((a, b) => b - a);
-
+    const months = Object.keys(grouped[twYear]).map(Number).sort((a, b) => b - a);
     months.forEach(month => {
       const monthBlock = createBlock(`${month} 月`, "month");
       const monthContent = monthBlock.querySelector(".content");
+      let monthNeedsOpen = false;
 
-      // 3. 處理日期 (由新到舊排序)
-      const days = Object.keys(grouped[twYear][month]).sort((a, b) => b - a);
-
+      const days = Object.keys(grouped[twYear][month]).map(Number).sort((a, b) => b - a);
       days.forEach(day => {
-  const dayBlock = createBlock(`${day} 日`, "day");
-  const dayContent = dayBlock.querySelector(".content");
+        const dayBlock = createBlock(`${day} 日`, "day");
+        const dayContent = dayBlock.querySelector(".content");
+        
+        // 判斷此日期是否在最近 3 天內
+        const currentDate = new Date(parseInt(twYear) + 1911, month - 1, day);
+        const isRecent = currentDate >= threeDaysAgoThreshold;
 
-  grouped[twYear][month][day].forEach(record => {
-    const div = document.createElement("div");
-    div.className = "record";
+        grouped[twYear][month][day].forEach(record => {
+          const div = document.createElement("div");
+          div.className = "record";
+          let hh = "--", mm = "--";
+          try {
+            const match = record.詳細紀錄.match(/report_(\d+)/);
+            if (match) {
+              const dObj = new Date(parseInt(match[1], 10));
+              hh = String(dObj.getHours()).padStart(2, "0");
+              mm = String(dObj.getMinutes()).padStart(2, "0");
+            }
+          } catch (e) {}
 
-    let hh = "--", mm = "--";
-    try {
-      const match = record.詳細紀錄.match(/report_(\d+)/);
-      if (match) {
-        const dateObj = new Date(parseInt(match[1], 10));
-        hh = String(dateObj.getHours()).padStart(2, "0");
-        mm = String(dateObj.getMinutes()).padStart(2, "0");
+          const status = (record.狀態 || "").trim();
+          const isAbnormal = status === "異常";
+          const timeText = document.createElement("span");
+          timeText.textContent = status ? `${hh}:${mm}｜${status}` : `${hh}:${mm}`;
+          div.appendChild(timeText);
+
+          if ((viewMode === "team" || viewMode === "admin") && record.回報者) {
+            const nameSpan = document.createElement("span");
+            nameSpan.textContent = `｜${record.回報者}`;
+            div.appendChild(nameSpan);
+          }
+
+          if (isAbnormal) {
+            const dot = document.createElement("span");
+            dot.className = "status-dot";
+            div.appendChild(dot);
+          }
+
+          div.onclick = () => openDetail(record.詳細紀錄);
+          dayContent.appendChild(div);
+        });
+
+        // 如果是最近 3 天，標記父層需要展開
+        if (isRecent) {
+          dayContent.style.display = "block";
+          const dayIcon = dayBlock.querySelector(".toggle-icon");
+          if(dayIcon) dayIcon.innerHTML = '<svg width="40" height="40" viewBox="0 0 24 24"><path fill="#666" d="M5 16l7-8 7 8z"/></svg>';
+          monthNeedsOpen = true;
+          yearNeedsOpen = true;
+        }
+        monthContent.appendChild(dayBlock);
+      });
+
+      if (monthNeedsOpen) {
+        monthContent.style.display = "block";
+        const monthIcon = monthBlock.querySelector(".toggle-icon");
+        if(monthIcon) monthIcon.innerHTML = '<svg width="40" height="40" viewBox="0 0 24 24"><path fill="#666" d="M5 16l7-8 7 8z"/></svg>';
       }
-    } catch (e) {}
-
-    const status = (record.狀態 || "").trim();
-    const isAbnormal = status === "異常";
-
-    const timeText = document.createElement("span");
-timeText.textContent = status ? `${hh}:${mm}｜${status}` : `${hh}:${mm}`;
-div.appendChild(timeText);
-
-if ((viewMode === "team" || viewMode === "admin") && record.回報者 && record.回報者.trim()) {
-  const nameSpan = document.createElement("span");
-  nameSpan.textContent = `｜${record.回報者}`;
-  div.appendChild(nameSpan);
-}
-
-if (isAbnormal) {
-  const dot = document.createElement("span");
-  dot.className = "status-dot";
-  div.appendChild(dot);
-}
-
-    div.onclick = () => openDetail(record.詳細紀錄);
-    dayContent.appendChild(div);
-  });
-
-  monthContent.appendChild(dayBlock);
-});
       yearContent.appendChild(monthBlock);
     });
-    container.appendChild(yearBlock); // 將年度區塊加入主容器
+
+    if (yearNeedsOpen) {
+      yearContent.style.display = "block";
+      const yearIcon = yearBlock.querySelector(".toggle-icon");
+      if(yearIcon) yearIcon.innerHTML = '<svg width="40" height="40" viewBox="0 0 24 24"><path fill="#666" d="M5 16l7-8 7 8z"/></svg>';
+    }
+    container.appendChild(yearBlock);
   });
 
-  // --- 渲染完成 ---
+  // 4. 渲染結束處理
   document.getElementById("loadingMask").style.display = "none";
   container.style.display = "block";
-
   if (spinner) spinner.style.display = "none";
-
   if (globalRole === "大隊長" || globalRole === "管理員") {
     document.getElementById("switchArea").style.display = "block";
   }
@@ -1674,32 +1669,17 @@ if (isAbnormal) {
   updateSwitchUI();
   document.getElementById("pageTitle").style.display = "block";
 
-  // ★★★ 關鍵修改：確保狀態恢復只在第一次渲染時執行，且時機正確
+  // 第一次進入恢復捲動位置
   setTimeout(() => {
     if (!restoredOnce) {
       restoreListState();
       restoredOnce = true;
-    } else {
-      // 非第一次渲染時，自動展開年份區塊
-      const yearHeader = document.querySelector('.year-block .header');
-      if (yearHeader && yearHeader.nextElementSibling.style.display !== 'block') {
-        yearHeader.click();
-      }
     }
-  }, 50); // 稍微延遲確保 DOM 完全渲染
+  }, 50);
 
   isInitialLoad = false;
-
   document.body.classList.remove("loading");
-
-  /*
-  // ★ 移除 body.loading class，強制關閉電腦版遮罩
-  if (document.body.classList.contains("loading")) {
-      document.body.classList.remove("loading");
-  }
-  */
-
-  debug("STEP3 完成：列表渲染成功");
+  debug("STEP3 完成：列表渲染成功，已自動展開最近3天資料");
 }
 
 function saveListState() {
