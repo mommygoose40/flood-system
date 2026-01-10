@@ -777,6 +777,20 @@ body {
   font-weight: 600;
   letter-spacing: 1px;
 }
+
+/* 確保所有按鈕都有點擊手型 */
+#adminExportBtn, 
+#adminSearchBtn, 
+.header, 
+.record {
+  cursor: pointer !important;
+}
+
+/* 如果是管理員篩選區的按鈕，增加點擊回饋感 */
+#adminExportBtn:active {
+  transform: scale(0.98);
+  background-color: #e0e0e0;
+}
 </style>
 
   <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
@@ -1915,46 +1929,47 @@ function exportReport() {
 }
 
   function downloadExcelWithMsg() {
-    downloadCSV();
+    downloadExcelFixed();
     showMessage("報表匯出成功！<br><small>已採用 CSV 格式 (無安全警告)</small>");
 }
 
-function downloadCSV() {
-    const table = document.getElementById("targetTable");
-    const rows = table.querySelectorAll("tr");
-    
-    // 1. 找出「詳細紀錄」是在第幾個索引 (index)
-    let detailIndex = -1;
-    const headers = table.querySelectorAll("thead th");
-    headers.forEach((th, idx) => {
-        if (th.innerText.includes("詳細紀錄")) detailIndex = idx;
-    });
+function downloadExcelFixed() {
+  const table = document.getElementById("targetTable");
+  if (!table) return;
 
-    let csvContent = "";
-    rows.forEach(row => {
-        const cells = row.querySelectorAll("th, td");
-        let rowData = [];
-        cells.forEach((cell, idx) => {
-            // ★ 跳過詳細紀錄欄位
-            if (idx === detailIndex) return;
+  const timestamp = new Date().toISOString().slice(0, 10);
+  const fileName = `巡視紀錄_${timestamp}.xls`;
 
-            // 處理 CSV 格式：若文字內有逗號則包覆引號
-            let text = cell.innerText.replace(/"/g, '""'); 
-            rowData.push(`"${text}"`);
-        });
-        csvContent += rowData.join(",") + "\n";
-    });
+  // 取得表格內容
+  const tableHtml = table.innerHTML;
 
-    // 2. 解決亂碼關鍵：加入 UTF-8 BOM (\uFEFF)
-    const blob = new Blob(["\uFEFF" + csvContent], { type: "text/csv;charset=utf-8;" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    
-    const timestamp = new Date().toISOString().replace(/[:.]/g, "-").slice(0, 19);
-    a.href = url;
-    a.download = `巡視紀錄_${timestamp}.csv`; // 檔名改為 .csv
-    a.click();
-    URL.revokeObjectURL(url);
+  // 封裝成標準 Excel XML 格式，這能確保 Excel 開啟時不跳警告
+  const template = `
+    <html xmlns:o="urn:schemas-microsoft-com:office:office" 
+          xmlns:x="urn:schemas-microsoft-com:office:excel" 
+          xmlns="http://www.w3.org/TR/REC-html40">
+    <head>
+      <meta charset="UTF-8">
+      <style>
+        td { mso-number-format:"\\@"; white-space:nowrap; border:0.5pt solid #000; }
+        th { background-color: #f2f2f2; font-weight: bold; border:0.5pt solid #000; }
+      </style>
+    </head>
+    <body>
+      <table>${tableHtml}</table>
+    </body>
+    </html>`;
+
+  const blob = new Blob([template], { type: "application/vnd.ms-excel" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  
+  a.href = url;
+  a.download = fileName;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
 }
   
 function showMessage(text, onConfirm) {
