@@ -1934,22 +1934,38 @@ function exportReport() {
 }
 
 function downloadReport() {
-  const data = filterAdminRecords();
-  if (data.length === 0) {
-    showMessage("目前沒有資料可匯出");
-    return;
-  }
+  const table = document.getElementById("targetTable");
+  if (!table) return;
 
-  const encoded = btoa(unescape(encodeURIComponent(JSON.stringify(data))));
+  const timestamp = new Date().toISOString().slice(0, 10);
+  const fileName = `巡視紀錄_${timestamp}.xls`;
 
-  const EXCEL_GAS_URL = "https://script.google.com/macros/s/AKfycbxpfHWmh10IYVzRxfSrTr7VbOCY_Nyeyy_bNVGKf4a_ZSCtgG2lOrEhj1nXNS8qAX2H/exec";
+  // 1. 建立 Excel 專用的 XML 結構與 CSS
+  const template = `
+    <html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40">
+    <head>
+      <meta charset="UTF-8">
+      <style>
+        td { mso-number-format:"\\@"; border:0.5pt solid #000; font-family: "微軟正黑體"; }
+        th { background-color: #eee; border:0.5pt solid #000; font-family: "微軟正黑體"; }
+      </style>
+    </head>
+    <body>
+      <table>${table.innerHTML}</table>
+    </body>
+    </html>`;
 
-  const url =
-    EXCEL_GAS_URL +
-    "?action=exportExcel&data=" +
-    encodeURIComponent(encoded);
+  // 2. 將字串轉為 Base64
+  const base64 = (s) => window.btoa(unescape(encodeURIComponent(s)));
+  const uri = 'data:application/vnd.ms-excel;base64,' + base64(template);
 
-  window.open(url, "_blank"); // ★ 關鍵
+  // 3. 下載
+  const link = document.createElement("a");
+  link.href = uri;
+  link.download = fileName;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
 }
   
 function showMessage(text, onConfirm) {
