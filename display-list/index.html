@@ -778,37 +778,59 @@ body {
   letter-spacing: 1px;
 }
 
-/* --- 搜尋區域：最外層 (負責搬到畫面中間) --- */
+/* --- 搜尋區域：最外層 (負責置中) --- */
 #adminFilterArea {
   display: none; /* 初始隱藏 */
-  text-align: center;    /* ★ 讓內部的 inline-block 面板水平置中 */
   width: 100%;
-  margin: 30px 0;
-  white-space: normal;   /* ★ 確保內部可以換行 */
+  margin: 20px auto;
+  padding: 0;
+  /* 使用 Flexbox 讓內層置中 */
+  flex-direction: column;
+  align-items: center; 
+  text-align: center;
 }
 
-/* 當 JS 顯示它時 */
-#adminFilterArea[style*="display: block"] {
-  display: block !important;
+/* 當 JS 顯示它時，確保它是 Flex */
+#adminFilterArea[style*="display: block"],
+#adminFilterArea[style*="display: flex"] {
+  display: flex !important;
 }
 
-/* --- 內部面板：包裹所有條件 --- */
+/* --- 內部面板：確保內部 div 是一個疊一個 --- */
 .admin-inner-wrapper {
-  display: inline-block; /* ★ 面板寬度隨內容撐開，但在外層置中 */
-  text-align: left;      /* ★ 面板內部的文字恢復靠左 */
-  background: #ffffff;
-  padding: 24px 35px;
-  border-radius: 12px;
-  width: auto;           /* 不要設定為 100% */
+  display: inline-block; /* 寬度隨內容撐開 */
+  text-align: left;      /* 文字恢復靠左 */
+  width: auto;
+  min-width: 320px;      /* 保持一定寬度不顯窄 */
 }
 
-/* --- 每一行搜尋條件的容器 (重要！) --- */
+/* --- 關鍵：強制每一列搜尋條件「換行」 --- */
 #adminFilterArea .admin-inner-wrapper > div {
-  display: flex !important;      /* ★ 這一層用 Flex 讓「標題與框框」並排 */
+  display: flex !important;      /* 讓標題與按鈕並排 */
   flex-direction: row !important;
   align-items: center !important;
-  margin-bottom: 18px;           /* ★ 每一行之間的垂直距離 */
-  clear: both;                   /* ★ 強制換行 */
+  
+  width: 100% !important;        /* 佔滿 wrapper 寬度 */
+  clear: both !important;        /* 強制清除浮動 */
+  margin-bottom: 16px !important; /* 每一行的間距 */
+}
+
+/* 標籤鎖定寬度 */
+#adminFilterArea label {
+  font-family: "Microsoft JhengHei", "微軟正黑體", sans-serif !important;
+  font-size: 20px;
+  font-weight: bold;
+  min-width: 70px;               /* 標籤寬度 */
+  margin-right: 10px;            /* 標籤與框框的距離 */
+  flex-shrink: 0;
+}
+
+/* 底部按鈕列：搜尋與報表並排 */
+#adminFilterArea .admin-inner-wrapper > div:last-child {
+  display: flex !important;
+  justify-content: center !important; 
+  margin-top: 25px;
+  gap: 15px;
 }
 
 /* 標籤寬度鎖定，確保後方框框垂直對齊 */
