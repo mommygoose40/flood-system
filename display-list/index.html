@@ -778,66 +778,55 @@ body {
   letter-spacing: 1px;
 }
 
-/* --- 搜尋區域：整體容器 (負責全寬置中) --- */
+/* --- 搜尋區域：外層容器 (負責置中) --- */
 #adminFilterArea {
   display: none; /* 初始由 JS 控制 */
+  text-align: center;    /* ★ 核心：讓內部的 inline-block 容器水平置中 */
   width: 100%;
-  margin: 30px 0;
-  padding: 0;
-  /* 使用 Flexbox 讓內部的 wrapper 置中 */
-  flex-direction: column;
-  align-items: center; 
-}
-
-/* 當顯示時，確保是 Flex */
-#adminFilterArea[style*="display: block"],
-#adminFilterArea[style*="display: flex"] {
-  display: flex !important;
-}
-
-/* --- 內部面板：固定大寬度，確保不被壓縮 --- */
-.admin-inner-wrapper {
-  display: block !important;
-  text-align: left;         /* ★ 內容物全部靠左 */
-  width: 100%;
-  max-width: 500px;         /* ★ 這裡設定一個夠寬的值，避免被壓縮 */
-  background: #ffffff;      /* 可選：白色背景 */
-  padding: 20px;
-  border-radius: 12px;      /* 圓角 */
+  margin: 25px 0;
+  padding: 0 16px;
   box-sizing: border-box;
 }
 
-/* 確保每一個選項列都有寬度，且不換行 */
+/* 當 JS 顯示它時，確保恢復顯示 */
+#adminFilterArea[style*="display: block"] {
+  display: block !important;
+}
+
+/* --- 內部面板：包裹所有條件項 --- */
+.admin-inner-wrapper {
+  display: inline-block; /* ★ 核心：讓容器寬度隨內容撐開，並接受外層的 center 對齊 */
+  text-align: left;      /* ★ 內容物內部文字恢復靠左 */
+  background: #ffffff;
+  padding: 20px 30px;    /* 給一點內距，讓畫面更寬鬆 */
+  border-radius: 12px;
+  /* 如果您想要一點立體感，可以取消下面註解 */
+  /* box-shadow: 0 4px 12px rgba(0,0,0,0.08); */
+}
+
+/* --- 每一行搜尋條件 (大隊、範圍、時間、類型) --- */
 #adminFilterArea .admin-inner-wrapper > div {
-  width: 100%;
-  margin-bottom: 16px;
-  display: flex;
-  flex-direction: column;   /* 標籤在上，按鈕在下 */
-  align-items: flex-start;  /* 全部靠左 */
-}
-
-/* 時間列專用：讓兩顆按鈕在同一行 */
-#adminFilterArea .timeRow {
-  flex-direction: row !important;
+  display: flex !important;
+  flex-direction: row !important; /* ★ 確保標籤與框框在同一列 */
   align-items: center !important;
-  gap: 8px;
-  width: 100%;
+  margin-bottom: 15px;
+  gap: 10px;                      /* 標籤與框框的間距 */
 }
 
-/* 底部按鈕列：搜尋與產出報表並排且在面板內置中 */
+/* 固定標籤寬度，讓後方的框框整齊對齊 */
+#adminFilterArea label {
+  font-family: "Microsoft JhengHei", "微軟正黑體", sans-serif !important;
+  font-size: 18px;
+  font-weight: bold;
+  min-width: 60px; /* 根據您的文字長度調整，確保後方框框垂直對齊 */
+  flex-shrink: 0;
+}
+
+/* 底部按鈕列：並排且在面板內置中 */
 #adminFilterArea .admin-inner-wrapper > div:last-child {
-  flex-direction: row !important;
   justify-content: center !important; 
-  gap: 15px;
   margin-top: 25px;
   margin-bottom: 0;
-}
-
-/* 強化按鈕外觀 */
-.searchBtn {
-  min-width: 120px;
-  padding: 10px 20px;
-  font-weight: bold;
 }
 
 /* 確保搜尋按鈕寬度不跑掉 */
