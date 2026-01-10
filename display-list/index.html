@@ -778,55 +778,62 @@ body {
   letter-spacing: 1px;
 }
 
-/* --- 搜尋區域：外層容器 (負責置中) --- */
+/* --- 搜尋區域：外層容器 (負責整體置中) --- */
 #adminFilterArea {
-  display: none; /* 初始由 JS 控制 */
-  text-align: center;    /* ★ 核心：讓內部的 inline-block 容器水平置中 */
+  display: none; /* 初始隱藏 */
+  text-align: center;    /* ★ 讓內部的 inline-block 面板水平置中 */
   width: 100%;
-  margin: 25px 0;
-  padding: 0 16px;
-  box-sizing: border-box;
+  margin: 30px 0;
 }
 
-/* 當 JS 顯示它時，確保恢復顯示 */
-#adminFilterArea[style*="display: block"] {
+/* 當 JS 顯示它時 */
+#adminFilterArea[style*="display: block"],
+#adminFilterArea[style*="display: flex"] {
   display: block !important;
 }
 
-/* --- 內部面板：包裹所有條件項 --- */
+/* --- 內部面板：包裹所有條件 --- */
 .admin-inner-wrapper {
-  display: inline-block; /* ★ 核心：讓容器寬度隨內容撐開，並接受外層的 center 對齊 */
-  text-align: left;      /* ★ 內容物內部文字恢復靠左 */
+  display: inline-block; /* ★ 讓面板寬度隨內容撐開，並在頁面置中 */
+  text-align: left;      /* ★ 內部內容恢復靠左對齊 */
   background: #ffffff;
-  padding: 20px 30px;    /* 給一點內距，讓畫面更寬鬆 */
+  padding: 24px 35px;    /* 面板內距 */
   border-radius: 12px;
-  /* 如果您想要一點立體感，可以取消下面註解 */
-  /* box-shadow: 0 4px 12px rgba(0,0,0,0.08); */
+  /* box-shadow: 0 4px 15px rgba(0,0,0,0.05); 可選：增加輕微陰影 */
 }
 
 /* --- 每一行搜尋條件 (大隊、範圍、時間、類型) --- */
 #adminFilterArea .admin-inner-wrapper > div {
   display: flex !important;
-  flex-direction: row !important; /* ★ 確保標籤與框框在同一列 */
+  flex-direction: row !important; /* ★ 確保標題與框框在「同一列」 */
   align-items: center !important;
-  margin-bottom: 15px;
-  gap: 10px;                      /* 標籤與框框的間距 */
+  margin-bottom: 18px;            /* ★ 不同項之間的「換行間距」 */
+  width: 100%;
 }
 
-/* 固定標籤寬度，讓後方的框框整齊對齊 */
+/* 確保標籤（標題）有固定寬度，後面的框框才會垂直對齊 */
 #adminFilterArea label {
   font-family: "Microsoft JhengHei", "微軟正黑體", sans-serif !important;
-  font-size: 18px;
+  font-size: 20px;
   font-weight: bold;
-  min-width: 60px; /* 根據您的文字長度調整，確保後方框框垂直對齊 */
+  min-width: 70px; /* ★ 固定標題寬度 */
   flex-shrink: 0;
+  margin-bottom: 0 !important; /* 移除之前的間距 */
 }
 
-/* 底部按鈕列：並排且在面板內置中 */
+/* 底部按鈕列：讓搜尋與報表按鈕在面板內水平置中 */
 #adminFilterArea .admin-inner-wrapper > div:last-child {
   justify-content: center !important; 
-  margin-top: 25px;
+  margin-top: 30px;
   margin-bottom: 0;
+  gap: 15px;
+}
+
+/* 確保時間區塊內部的 ～ 符號與按鈕對齊 */
+.timeRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
 /* 確保搜尋按鈕寬度不跑掉 */
