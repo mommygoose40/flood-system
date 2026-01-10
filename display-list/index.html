@@ -1929,40 +1929,34 @@ function exportReport() {
 }
 
   function downloadExcelWithMsg() {
-    downloadReport();
+    exportReport();
     showMessage("報表匯出成功！<br><small>已採用 CSV 格式 (無安全警告)</small>");
 }
 
-function downloadReport() {
-  const table = document.getElementById("targetTable");
-  if (!table) return;
+function exportReport() {
+  const data = filterAdminRecords();
 
-  const rows = Array.from(table.querySelectorAll("tr"));
-  
-  // 1. 處理內容：使用 Tab (\t) 分隔
-  let content = rows.map(row => {
-    const cells = Array.from(row.querySelectorAll("th, td"));
-    return cells.map(cell => cell.innerText.trim()).join("\t");
-  }).join("\r\n");
-
-  // 2. 編碼為 UTF-16LE，並加上 BOM
-  // 這是 Excel 唯一會「完全沈默」直接開啟且不亂碼的純文字格式
-  const charCodeArray = new Uint16Array(content.length + 1);
-  charCodeArray[0] = 0xFEFF; // BOM
-  for (let i = 0; i < content.length; i++) {
-    charCodeArray[i + 1] = content.charCodeAt(i);
+  if (data.length === 0) {
+    showMessage("目前沒有資料可匯出");
+    return;
   }
 
-  const blob = new Blob([charCodeArray], { type: 'text/tab-separated-values;charset=utf-16le' });
-  
-  // 3. 檔名建議用 .xls，但因為我們編碼正確，Excel 會直接開啟
-  // 如果 .xls 還是被您的系統攔截，請改用 .csv，UTF-16 的 .csv 是不跳遺失警告的
-  const fileName = `巡視紀錄_${new Date().toISOString().slice(0, 10)}.xls`;
-
-  const link = document.createElement("a");
-  link.href = URL.createObjectURL(blob);
-  link.download = fileName;
-  link.click();
+  fetch(REPORT_GAS_URL + "?action=exportExcel", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ records: data })
+  })
+  .then(res => res.json())
+  .then(result => {
+    if (result.url) {
+      window.open(result.url, "_blank"); // 直接下載
+    } else {
+      showMessage("報表產生失敗");
+    }
+  })
+  .catch(() => {
+    showMessage("無法連線產生報表");
+  });
 }
   
 function showMessage(text, onConfirm) {
