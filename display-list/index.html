@@ -1522,11 +1522,9 @@ function renderList(records) {
   const spinner = document.getElementById("centerSpinner");
   const mask = document.getElementById("loadingMask");
 
-  // 1. 初始化：隱藏列表，根據狀態顯示 spinner
+  // 1. 初始化隱藏與顯示處理
   container.style.display = "none";
-  if (!isInitialLoad) {
-    if (spinner) spinner.style.display = "flex";
-  }
+  if (!isInitialLoad && spinner) spinner.style.display = "flex";
 
   // 管理員模式：確保篩選區域顯示
   if (globalRole === "管理員" && viewMode === "admin") {
@@ -1535,12 +1533,11 @@ function renderList(records) {
     document.getElementById("adminFilterArea").style.display = "none";
   }
 
-  // 管理員前端快篩邏輯 (保留原樣)
+  // 管理員前端快篩 (保留您的過濾邏輯)
   if (globalRole === "管理員" && viewMode === "admin") {
     if (globalAdminRecords.length > 0) {
       let targetTeam = document.getElementById("adminTeamSelect")?.value || "全部";
       if (!targetTeam) targetTeam = document.getElementById("teamText")?.innerText || "全部";
-      
       if (targetTeam !== "全部") {
         records = records.filter(r => (r.所屬大隊 + "") === targetTeam);
       }
@@ -1550,13 +1547,12 @@ function renderList(records) {
     }
   }
 
-  let finalRecords = records;
   globalRecords = records;
   container.innerHTML = "";
 
-  // 2. 跨年份分組邏輯
+  // 2. 跨年份分組
   const grouped = {};
-  finalRecords.forEach(r => {
+  records.forEach(r => {
     const normalized = normalizeDate(r.日期);
     const dateParts = normalized.split("/");
     const yyyy = parseInt(dateParts[0], 10);
@@ -1570,38 +1566,41 @@ function renderList(records) {
     grouped[twYear][m][d].push(r);
   });
 
-  // 設定「最近 3 天」的門檻 (包含今天、昨天、前天)
-  const today = new Date();
-  const threeDaysAgoThreshold = new Date(today.getFullYear(), today.getMonth(), today.getDate() - 2);
-
-  // 3. 開始渲染
+  // 3. 渲染與強制展開
   const years = Object.keys(grouped).sort((a, b) => b - a);
   years.forEach(twYear => {
     const yearBlock = createBlock(`${twYear} 年`, "year");
     const yearContent = yearBlock.querySelector(".content");
-    let yearNeedsOpen = false;
+    
+    // ★ 強制展開「年」
+    yearContent.style.display = "block";
+    const yearIcon = yearBlock.querySelector(".toggle-icon");
+    if(yearIcon) yearIcon.innerHTML = `<svg width="40" height="40" viewBox="0 0 24 24"><path fill="#666" d="M5 16l7-8 7 8z"/></svg>`;
 
     const months = Object.keys(grouped[twYear]).map(Number).sort((a, b) => b - a);
     months.forEach(month => {
       const monthBlock = createBlock(`${month} 月`, "month");
       const monthContent = monthBlock.querySelector(".content");
-      let monthNeedsOpen = false;
+
+      // ★ 強制展開「月」
+      monthContent.style.display = "block";
+      const monthIcon = monthBlock.querySelector(".toggle-icon");
+      if(monthIcon) monthIcon.innerHTML = `<svg width="40" height="40" viewBox="0 0 24 24"><path fill="#666" d="M5 16l7-8 7 8z"/></svg>`;
 
       const days = Object.keys(grouped[twYear][month]).map(Number).sort((a, b) => b - a);
       days.forEach(day => {
         const dayBlock = createBlock(`${day} 日`, "day");
         const dayContent = dayBlock.querySelector(".content");
-        
-        // 判斷此日期是否在最近 3 天內
-        const currentDate = new Date(parseInt(twYear) + 1911, month - 1, day);
-        const isRecent = currentDate >= threeDaysAgoThreshold;
+
+        // ★ 「日」不展開，保持收合 (預設 createBlock 就是收合的)
 
         grouped[twYear][month][day].forEach(record => {
           const div = document.createElement("div");
           div.className = "record";
+          
           let hh = "--", mm = "--";
           try {
-            const match = record.詳細紀錄.match(/report_(\d+)/);
+            const match = (record.詳細紀錄 || "").match(/report_(\d+)/);
             if (match) {
               const dObj = new Date(parseInt(match[1], 10));
               hh = String(dObj.getHours()).padStart(2, "0");
@@ -1611,6 +1610,7 @@ function renderList(records) {
 
           const status = (record.狀態 || "").trim();
           const isAbnormal = status === "異常";
+          
           const timeText = document.createElement("span");
           timeText.textContent = status ? `${hh}:${mm}｜${status}` : `${hh}:${mm}`;
           div.appendChild(timeText);
@@ -1630,52 +1630,28 @@ function renderList(records) {
           div.onclick = () => openDetail(record.詳細紀錄);
           dayContent.appendChild(div);
         });
-
-        // 如果是最近 3 天，標記父層需要展開
-        if (isRecent) {
-          dayContent.style.display = "block";
-          const dayIcon = dayBlock.querySelector(".toggle-icon");
-          if(dayIcon) dayIcon.innerHTML = '<svg width="40" height="40" viewBox="0 0 24 24"><path fill="#666" d="M5 16l7-8 7 8z"/></svg>';
-          monthNeedsOpen = true;
-          yearNeedsOpen = true;
-        }
         monthContent.appendChild(dayBlock);
       });
-
-      if (monthNeedsOpen) {
-        monthContent.style.display = "block";
-        const monthIcon = monthBlock.querySelector(".toggle-icon");
-        if(monthIcon) monthIcon.innerHTML = '<svg width="40" height="40" viewBox="0 0 24 24"><path fill="#666" d="M5 16l7-8 7 8z"/></svg>';
-      }
       yearContent.appendChild(monthBlock);
     });
-
-    if (yearNeedsOpen) {
-      yearContent.style.display = "block";
-      const yearIcon = yearBlock.querySelector(".toggle-icon");
-      if(yearIcon) yearIcon.innerHTML = '<svg width="40" height="40" viewBox="0 0 24 24"><path fill="#666" d="M5 16l7-8 7 8z"/></svg>';
-    }
     container.appendChild(yearBlock);
   });
 
-  // 4. 渲染結束處理
-  document.getElementById("loadingMask").style.display = "none";
-  container.style.display = "block";
+  // 4. 顯示結果並收尾
+  if (mask) mask.style.display = "none";
   if (spinner) spinner.style.display = "none";
-  if (globalRole === "大隊長" || globalRole === "管理員") {
-    document.getElementById("switchArea").style.display = "block";
-  }
+  container.style.display = "block";
 
   updateSwitchUI();
   document.getElementById("pageTitle").style.display = "block";
 
-  // 第一次進入恢復捲動位置
-  setTimeout(() => {
-    if (!restoredOnce) {
+  // 第一次進入時才恢復捲動位置
+  if (!restoredOnce) {
+    setTimeout(() => {
       restoreListState();
       restoredOnce = true;
-    }
-  }, 50);
+    }, 50);
+  }
 
   isInitialLoad = false;
   document.body.classList.remove("loading");
