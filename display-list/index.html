@@ -1937,51 +1937,32 @@ function downloadReport() {
   const table = document.getElementById("targetTable");
   if (!table) return;
 
-  const timestamp = new Date().toISOString().slice(0, 10);
-  const fileName = `巡視紀錄_${timestamp}.xls`;
-
-  // 1. 準備 Excel XML 內容 (XML Spreadsheet 2003 規格)
-  // 這格式雖然是 .xls，但因為我們正確聲明了命名空間，Excel 2021/365 會直接信任它
-  const worksheetName = "巡視紀錄";
   const rows = Array.from(table.querySelectorAll("tr"));
   
-  let xmlRows = "";
-  rows.forEach(row => {
-    xmlRows += '<Row>';
+  // 1. 處理內容：使用 Tab (\t) 分隔
+  let content = rows.map(row => {
     const cells = Array.from(row.querySelectorAll("th, td"));
-    cells.forEach(cell => {
-      let val = cell.innerText.trim();
-      // 強制將所有內容存為 String，避免日期或數字被自動轉換導致錯誤
-      xmlRows += `<Cell><Data ss:Type="String">${val}</Data></Cell>`;
-    });
-    xmlRows += '</Row>';
-  });
+    return cells.map(cell => cell.innerText.trim()).join("\t");
+  }).join("\r\n");
 
-  const template = `<?xml version="1.0" encoding="UTF-8"?>
-<?mso-application progid="Excel.Sheet"?>
-<Workbook xmlns="urn:schemas-microsoft-com:office:spreadsheet"
- xmlns:o="urn:schemas-microsoft-com:office:office"
- xmlns:x="urn:schemas-microsoft-com:office:excel"
- xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet"
- xmlns:html="http://www.w3.org/TR/REC-html40">
- <Worksheet ss:Name="${worksheetName}">
-  <Table>
-   ${xmlRows}
-  </Table>
- </Worksheet>
-</Workbook>`;
+  // 2. 編碼為 UTF-16LE，並加上 BOM
+  // 這是 Excel 唯一會「完全沈默」直接開啟且不亂碼的純文字格式
+  const charCodeArray = new Uint16Array(content.length + 1);
+  charCodeArray[0] = 0xFEFF; // BOM
+  for (let i = 0; i < content.length; i++) {
+    charCodeArray[i + 1] = content.charCodeAt(i);
+  }
 
-  // 2. 轉換為 Blob 並下載
-  const blob = new Blob([template], { type: "application/vnd.ms-excel" });
-  const url = URL.createObjectURL(blob);
+  const blob = new Blob([charCodeArray], { type: 'text/tab-separated-values;charset=utf-16le' });
   
+  // 3. 檔名建議用 .xls，但因為我們編碼正確，Excel 會直接開啟
+  // 如果 .xls 還是被您的系統攔截，請改用 .csv，UTF-16 的 .csv 是不跳遺失警告的
+  const fileName = `巡視紀錄_${new Date().toISOString().slice(0, 10)}.xls`;
+
   const link = document.createElement("a");
-  link.href = url;
+  link.href = URL.createObjectURL(blob);
   link.download = fileName;
-  document.body.appendChild(link);
   link.click();
-  document.body.removeChild(link);
-  URL.revokeObjectURL(url);
 }
   
 function showMessage(text, onConfirm) {
