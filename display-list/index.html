@@ -1617,29 +1617,48 @@ function renderList(records) {
         const dayBlock = createBlock(`${day} 日`, "day");
         const dayContent = dayBlock.querySelector(".content");
 
-        grouped[twYear][month][day].forEach(record => {
-          // ... 這裡保留原本建立 record div 的邏輯 (hh:mm, status 等) ...
+        grouped[month][day].forEach(record => {
           const div = document.createElement("div");
           div.className = "record";
-          
-          // (此處請沿用你原本代碼中處理 hh, mm, status, status-dot 的部分)
-          // 為了簡潔，以下略過重複的 HTML 組合邏輯，請確保保留原本的 div.onclick 等設定
-          
-          // 範例關鍵：
+
           let hh = "--", mm = "--";
-          const match = (record.詳細紀錄 || "").match(/report_(\d+)/);
-          if (match) {
-            const dateObj = new Date(parseInt(match[1], 10));
-            hh = String(dateObj.getHours()).padStart(2, "0");
-            mm = String(dateObj.getMinutes()).padStart(2, "0");
+
+          try {
+            const match = record.詳細紀錄.match(/report_(\d+)/);
+            if (match) {
+              const t = parseInt(match[1], 10);
+              const dateObj = new Date(t);
+
+              hh = String(dateObj.getHours()).padStart(2, "0");
+              mm = String(dateObj.getMinutes()).padStart(2, "0");
+            }
+          } catch (e) {
+            console.warn("無法解析時間：", record.詳細紀錄);
           }
+
           const status = (record.狀態 || "").trim();
-          div.innerHTML = `<span>${hh}:${mm}｜${status}</span>`;
-          if ((viewMode === "team" || viewMode === "admin") && record.回報者) {
-            div.innerHTML += `<span>｜${record.回報者}</span>`;
+          const isAbnormal = status === "異常";
+
+          const timeText = document.createElement("span");
+          timeText.textContent = status ? `${hh}:${mm}｜${status}` : `${hh}:${mm}`;
+          div.appendChild(timeText);
+
+          if ((viewMode === "team" || viewMode === "admin") && record.回報者 && record.回報者.trim()) {
+            const nameSpan = document.createElement("span");
+            nameSpan.textContent = `｜${record.回報者}`;
+            div.appendChild(nameSpan);
           }
-          div.onclick = () => openDetail(record.詳細紀錄);
-          
+
+          if (isAbnormal) {
+            const dot = document.createElement("span");
+            dot.className = "status-dot";
+            div.appendChild(dot);
+          }
+
+          div.onclick = () => {
+            openDetail(record.詳細紀錄);
+          };
+
           dayContent.appendChild(div);
         });
 
