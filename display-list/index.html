@@ -778,44 +778,46 @@ body {
   letter-spacing: 1px;
 }
 
-/* --- 搜尋區域：整體外層（負責置中） --- */
+/* --- 1. 最外層容器：負責「整體搬到頁面中間」 --- */
 #adminFilterArea {
-  /* display 會被 JS 切換，這裡確保顯現時是用 Flex */
-  display: none; 
-  flex-direction: column;
-  align-items: center;    /* ★ 讓內部容器水平置中 */
+  display: none; /* 初始隱藏 */
   width: 100%;
   margin: 20px 0;
-  padding: 0;             /* 清除可能干擾的內距 */
+  padding: 0;
+  /* 使用 Flex 是為了讓內部的 wrapper 置中 */
+  flex-direction: column;
+  align-items: center;
 }
 
-/* 當 JS 顯示它時 */
+/* 當顯示時，確保是 Flex 排列 */
 #adminFilterArea[style*="display: block"],
 #adminFilterArea[style*="display: flex"] {
   display: flex !important;
 }
 
-/* --- 內部封裝容器（維持您原本的所有框框大小） --- */
+/* --- 2. 內部封裝容器：負責「內容靠左」並「恢復垂直換行」 --- */
 .admin-inner-wrapper {
-  display: block;         /* 恢復原始塊級排版 */
-  text-align: left;       /* ★ 確保內部文字標籤全部靠左 */
-  width: fit-content;     /* ★ 寬度隨您原本設定的內容撐開 */
-  min-width: 320px;       /* 避免太窄 */
+  display: block !important; /* ★ 強制恢復垂直排列，就不會變一長條 */
+  text-align: left;         /* 文字靠左 */
+  width: fit-content;       /* 寬度隨您原本設定的內容撐開 */
   padding: 12px;
+  margin: 0 auto;           /* 二重保證置中 */
 }
 
-/* 修正您原本的 div 間距，確保在置中狀態下依然整齊 */
-#adminFilterArea > div {
-  text-align: left;
-  margin-bottom: 12px;
+/* --- 3. 確保每個設定項 div 都是一整行 --- */
+#adminFilterArea .admin-inner-wrapper > div {
+  display: block;           /* ★ 確保每個 div (大隊、範圍等) 佔據一行 */
+  margin-bottom: 15px;      /* 增加一點垂直間距 */
+  width: auto;
 }
 
-/* 針對最後一個包含按鈕的 div */
-#adminFilterArea > div:last-child {
-  display: flex !important;
-  justify-content: center !important; /* 讓兩顆按鈕在框框內水平置中 */
+/* --- 4. 底部按鈕列：維持橫向並置中 --- */
+#adminFilterArea .admin-inner-wrapper > div:last-child {
+  display: flex !important; 
+  flex-direction: row !important;
+  justify-content: center !important; 
   gap: 12px;
-  margin-top: 20px;
+  margin-top: 25px;
 }
 
 /* 確保搜尋按鈕寬度不跑掉 */
