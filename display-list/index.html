@@ -1929,43 +1929,32 @@ function exportReport() {
 }
 
   function downloadExcelWithMsg() {
-    downloadReport();
+    downloadExcelFinal();
     showMessage("報表匯出成功！<br><small>已採用 CSV 格式 (無安全警告)</small>");
 }
 
-function downloadReport() {
-  const table = document.getElementById("targetTable");
-  if (!table) return;
+function downloadExcelFinal() {
+  // 1. 自動載入 SheetJS 函式庫
+  if (typeof XLSX === 'undefined') {
+    const script = document.createElement('script');
+    script.src = "https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js";
+    script.onload = () => executeDownload();
+    document.head.appendChild(script);
+  } else {
+    executeDownload();
+  }
 
-  const timestamp = new Date().toISOString().slice(0, 10);
-  const fileName = `巡視紀錄_${timestamp}.xls`;
+  function executeDownload() {
+    const table = document.getElementById("targetTable");
+    if (!table) return;
 
-  // 1. 建立 Excel 專用的 XML 結構與 CSS
-  const template = `
-    <html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40">
-    <head>
-      <meta charset="UTF-8">
-      <style>
-        td { mso-number-format:"\\@"; border:0.5pt solid #000; font-family: "微軟正黑體"; }
-        th { background-color: #eee; border:0.5pt solid #000; font-family: "微軟正黑體"; }
-      </style>
-    </head>
-    <body>
-      <table>${table.innerHTML}</table>
-    </body>
-    </html>`;
+    // 2. 將 HTML 表格直接轉換為真正的 Excel 工作表
+    const workbook = XLSX.utils.table_to_book(table, { sheet: "巡視紀錄" });
 
-  // 2. 將字串轉為 Base64
-  const base64 = (s) => window.btoa(unescape(encodeURIComponent(s)));
-  const uri = 'data:application/vnd.ms-excel;base64,' + base64(template);
-
-  // 3. 下載
-  const link = document.createElement("a");
-  link.href = uri;
-  link.download = fileName;
-  document.body.appendChild(link);
-  link.click();
-  document.body.removeChild(link);
+    // 3. 產出二進位檔案並下載 (副檔名必須是 .xlsx)
+    const timestamp = new Date().toISOString().slice(0, 10);
+    XLSX.writeFile(workbook, `巡視紀錄_${timestamp}.xlsx`);
+  }
 }
   
 function showMessage(text, onConfirm) {
