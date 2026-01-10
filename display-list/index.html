@@ -1582,11 +1582,6 @@ function renderList(records) {
       const monthBlock = createBlock(`${month} 月`, "month");
       const monthContent = monthBlock.querySelector(".content");
 
-      // ★ 強制展開「月」
-      monthContent.style.display = "block";
-      const monthIcon = monthBlock.querySelector(".toggle-icon");
-      if(monthIcon) monthIcon.innerHTML = `<svg width="40" height="40" viewBox="0 0 24 24"><path fill="#666" d="M5 16l7-8 7 8z"/></svg>`;
-
       const days = Object.keys(grouped[twYear][month]).map(Number).sort((a, b) => b - a);
       days.forEach(day => {
         const dayBlock = createBlock(`${day} 日`, "day");
