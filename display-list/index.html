@@ -1634,21 +1634,21 @@ function renderList(records) {
     const status = (record.狀態 || "").trim();
     const isAbnormal = status === "異常";
 
-    if (isAbnormal) {
-      const dot = document.createElement("span");
-      dot.className = "status-dot";
-      div.appendChild(dot);
-    }
-
     const timeText = document.createElement("span");
-    timeText.textContent = `${hh}:${mm}｜${status}`;
-    div.appendChild(timeText);
+timeText.textContent = status ? `${hh}:${mm}｜${status}` : `${hh}:${mm}`;
+div.appendChild(timeText);
 
-    if ((viewMode === "team" || viewMode === "admin") && record.回報者) {
-      const nameSpan = document.createElement("span");
-      nameSpan.textContent = `｜${record.回報者}`;
-      div.appendChild(nameSpan);
-    }
+if ((viewMode === "team" || viewMode === "admin") && record.回報者 && record.回報者.trim()) {
+  const nameSpan = document.createElement("span");
+  nameSpan.textContent = `｜${record.回報者}`;
+  div.appendChild(nameSpan);
+}
+
+if (isAbnormal) {
+  const dot = document.createElement("span");
+  dot.className = "status-dot";
+  div.appendChild(dot);
+}
 
     div.onclick = () => openDetail(record.詳細紀錄);
     dayContent.appendChild(div);
