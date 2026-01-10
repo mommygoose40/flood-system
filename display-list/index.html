@@ -1184,6 +1184,12 @@ function debug(msg) {
   document.getElementById("text-error-notfound").style.display = "none";
 }
 
+  function hideLoading() {
+  document.body.classList.remove("loading");     // ★ 重要：解除 desktop 強制遮罩
+  const mask = document.getElementById("loadingMask");
+  if (mask) mask.style.display = "none";
+}
+
 async function main() {
   showLoading();  // ★ 這裡顯示載入中...
 
@@ -1364,11 +1370,11 @@ async function loadAdminRecords() {
     const text = await res.text();
     json = JSON.parse(text);
   } catch (e) {
-    document.getElementById("listContainer").innerHTML = "管理員資料載入失敗";
-    shouldKeepMask = false;
-    document.getElementById("loadingMask").style.display = "none";
-    return;
-  }
+  document.getElementById("listContainer").innerHTML = "管理員資料載入失敗";
+  document.getElementById("text-error").style.display = "block";
+  hideLoading();           // ★ 改這個
+  return;
+}
 
   globalAdminRecords = json.records || [];
 
@@ -1393,40 +1399,50 @@ async function loadAdminRecords() {
   async function loadRecordList(mode = "self") {
   if (!globalVid) {
     debug("錯誤：沒有 vid 無法查詢");
-    document.getElementById("loadingMask").style.display = "none";
+    hideLoading();
     return;
   }
 
   let url = "";
-
   if (mode === "self") {
     url = `${REPORT_GAS_URL}?action=listMyReports&vid=${encodeURIComponent(globalVid)}`;
   } else if (mode === "team") {
     url = `${REPORT_GAS_URL}?action=listTeamReports&team=${encodeURIComponent(globalTeam)}`;
   }
 
-  debug("發送 API 請求，URL: " + url); // 打印 API 請求的 URL
+  debug("發送 API 請求，URL: " + url);
 
-  const res = await fetch(url);
-  const text = await res.text();
-  const json = JSON.parse(text);
+  try {
+    const res = await fetch(url);
+    const text = await res.text();
 
-  debug("返回的資料: " + JSON.stringify(json)); // 打印 API 返回的資料
+    let json;
+    try {
+      json = JSON.parse(text);
+    } catch (e) {
+      console.error("JSON 解析失敗:", text);
+      document.getElementById("text-error-format").style.display = "block";
+      hideLoading();
+      return;
+    }
 
-  globalRecords = json.records || [];
+    debug("返回的資料: " + JSON.stringify(json));
+    globalRecords = json.records || [];
 
-  // ★★★ [新增] 將志工/大隊列表數據存入 Session Storage ★★★
     saveLocalReportsCache(globalRecords);
+    renderList(globalRecords);
 
-  renderList(globalRecords);
-}
+    // 初次載入結束
+    isInitialLoad = false;
 
-  if (shouldKeepMask) {
-    shouldKeepMask = false;
-    document.getElementById("loadingMask").style.display = "none";
+  } catch (e) {
+    console.error("API 請求失敗:", e);
+    document.getElementById("text-error").style.display = "block";
+    hideLoading();
   }
 
   updateSwitchUI();
+}
 
   /* ------------------------------------------
       4. 渲染「年度 → 月份 → 日期 → 紀錄」
@@ -1627,9 +1643,9 @@ function renderList(records) {
   });
 
   // --- [3] 渲染完成，關閉所有載入動畫 ---
-  if (mask) mask.style.display = "none";
-  if (spinner) spinner.style.display = "none";
-  container.style.display = "block";
+  hideLoading();                       // ★ 用統一出口
+if (spinner) spinner.style.display = "none";
+container.style.display = "block";
 
   // 渲染完後，如果是第一次，則設為 false。搜尋按鈕觸發時就不會再走展開邏輯
   // 注意：不要在這裡立即設 isInitialLoad = false，建議放在 loadRecordList 的最後
