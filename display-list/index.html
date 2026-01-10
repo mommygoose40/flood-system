@@ -1614,56 +1614,48 @@ function renderList(records) {
       const days = Object.keys(grouped[twYear][month]).sort((a, b) => b - a);
 
       days.forEach(day => {
-        const dayBlock = createBlock(`${day} 日`, "day");
-        const dayContent = dayBlock.querySelector(".content");
+  const dayBlock = createBlock(`${day} 日`, "day");
+  const dayContent = dayBlock.querySelector(".content");
 
-        grouped[month][day].forEach(record => {
-          const div = document.createElement("div");
-          div.className = "record";
+  grouped[twYear][month][day].forEach(record => {
+    const div = document.createElement("div");
+    div.className = "record";
 
-          let hh = "--", mm = "--";
+    let hh = "--", mm = "--";
+    try {
+      const match = record.詳細紀錄.match(/report_(\d+)/);
+      if (match) {
+        const dateObj = new Date(parseInt(match[1], 10));
+        hh = String(dateObj.getHours()).padStart(2, "0");
+        mm = String(dateObj.getMinutes()).padStart(2, "0");
+      }
+    } catch (e) {}
 
-          try {
-            const match = record.詳細紀錄.match(/report_(\d+)/);
-            if (match) {
-              const t = parseInt(match[1], 10);
-              const dateObj = new Date(t);
+    const status = (record.狀態 || "").trim();
+    const isAbnormal = status === "異常";
 
-              hh = String(dateObj.getHours()).padStart(2, "0");
-              mm = String(dateObj.getMinutes()).padStart(2, "0");
-            }
-          } catch (e) {
-            console.warn("無法解析時間：", record.詳細紀錄);
-          }
+    if (isAbnormal) {
+      const dot = document.createElement("span");
+      dot.className = "status-dot";
+      div.appendChild(dot);
+    }
 
-          const status = (record.狀態 || "").trim();
-          const isAbnormal = status === "異常";
+    const timeText = document.createElement("span");
+    timeText.textContent = `${hh}:${mm}｜${status}`;
+    div.appendChild(timeText);
 
-          const timeText = document.createElement("span");
-          timeText.textContent = status ? `${hh}:${mm}｜${status}` : `${hh}:${mm}`;
-          div.appendChild(timeText);
+    if ((viewMode === "team" || viewMode === "admin") && record.回報者) {
+      const nameSpan = document.createElement("span");
+      nameSpan.textContent = `｜${record.回報者}`;
+      div.appendChild(nameSpan);
+    }
 
-          if ((viewMode === "team" || viewMode === "admin") && record.回報者 && record.回報者.trim()) {
-            const nameSpan = document.createElement("span");
-            nameSpan.textContent = `｜${record.回報者}`;
-            div.appendChild(nameSpan);
-          }
+    div.onclick = () => openDetail(record.詳細紀錄);
+    dayContent.appendChild(div);
+  });
 
-          if (isAbnormal) {
-            const dot = document.createElement("span");
-            dot.className = "status-dot";
-            div.appendChild(dot);
-          }
-
-          div.onclick = () => {
-            openDetail(record.詳細紀錄);
-          };
-
-          dayContent.appendChild(div);
-        });
-
-        monthContent.appendChild(dayBlock);
-      });
+  monthContent.appendChild(dayBlock);
+});
       yearContent.appendChild(monthBlock);
     });
     container.appendChild(yearBlock); // 將年度區塊加入主容器
