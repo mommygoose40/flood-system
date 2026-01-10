@@ -1940,57 +1940,26 @@ function downloadExcelFinal() {
   const timestamp = new Date().toISOString().slice(0, 10);
   const fileName = `巡視紀錄_${timestamp}.xls`;
 
-  // 取得資料行與列
-  const rows = Array.from(table.querySelectorAll("tr"));
-  let worksheetRows = "";
+  const ctx = {
+    worksheet: "巡視紀錄",
+    table: table.innerHTML
+  };
 
-  rows.forEach(row => {
-    worksheetRows += '<Row ss:AutoFitHeight="0">';
-    const cells = Array.from(row.querySelectorAll("th, td"));
-    cells.forEach(cell => {
-      let data = cell.innerText.trim();
-      // 強制所有儲存格為文字格式，避免日期被 Excel 亂改格式
-      worksheetRows += `<Cell ss:StyleID="sText"><Data ss:Type="String">${data}</Data></Cell>`;
-    });
-    worksheetRows += "</Row>";
-  });
+  // 使用 Base64 編碼來「欺騙」Excel 的檔案檢查機制
+  const template = '<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40"><head><meta charset="UTF-8"><style>td{mso-number-format:"\\@";border:0.5pt solid #000;}</style></head><body><table>{table}</table></body></html>';
+  
+  const format = function(s, c) {
+    return s.replace(/{(\w+)}/g, function(m, p) { return c[p]; });
+  };
 
-  // 封裝成微軟官方 XML Spreadsheet 格式
-  const xmlTemplate = `<?xml version="1.0"?>
-<?mso-application progid="Excel.Sheet"?>
-<Workbook xmlns="urn:schemas-microsoft-com:office:spreadsheet"
- xmlns:o="urn:schemas-microsoft-com:office:office"
- xmlns:x="urn:schemas-microsoft-com:office:excel"
- xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet"
- xmlns:html="http://www.w3.org/TR/REC-html40">
- <Styles>
-  <Style ss:ID="sText">
-   <Alignment ss:Vertical="Center"/>
-   <Borders>
-    <Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="1"/>
-    <Border ss:Position="Left" ss:LineStyle="Continuous" ss:Weight="1"/>
-    <Border ss:Position="Right" ss:LineStyle="Continuous" ss:Weight="1"/>
-    <Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="1"/>
-   </Borders>
-   <Font ss:FontName="微軟正黑體"/>
-  </Style>
- </Styles>
- <Worksheet ss:Name="巡視紀錄">
-  <Table ss:DefaultColumnWidth="100">
-   ${worksheetRows}
-  </Table>
- </Worksheet>
-</Workbook>`;
+  const base64 = function(s) {
+    return window.btoa(unescape(encodeURIComponent(s)));
+  };
 
-  const blob = new Blob([xmlTemplate], { type: "application/vnd.ms-excel" });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = fileName;
-  document.body.appendChild(a);
-  a.click();
-  document.body.removeChild(a);
-  URL.revokeObjectURL(url);
+  const link = document.createElement("a");
+  link.href = 'data:application/vnd.ms-excel;base64,' + base64(format(template, ctx));
+  link.download = fileName;
+  link.click();
 }
   
 function showMessage(text, onConfirm) {
