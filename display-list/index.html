@@ -778,74 +778,51 @@ body {
   letter-spacing: 1px;
 }
 
-/* --- 搜尋區域整體：確保置中 --- */
+/* --- 搜尋區域：整體外層（負責置中） --- */
 #adminFilterArea {
-  /* display 會被 JS 切換為 block 或 flex，這裡確保它是 Flex 佈局 */
-  display: flex !important;
+  /* display 會被 JS 切換，這裡確保顯現時是用 Flex */
+  display: none; 
   flex-direction: column;
-  align-items: center;    /* ★ 讓裡面的所有 div 在螢幕水平置中 */
+  align-items: center;    /* ★ 讓內部容器水平置中 */
   width: 100%;
-  margin: 20px auto;
-  padding: 12px;
-  box-sizing: border-box;
+  margin: 20px 0;
+  padding: 0;             /* 清除可能干擾的內距 */
 }
 
-/* --- 搜尋條件的每一列 (大隊、範圍、時間、類型) --- */
-#adminFilterArea > div:not(:last-child) {
-  display: flex;
-  flex-direction: column; /* 標籤在上，按鈕在下 */
-  align-items: flex-start;/* ★ 確保標籤與按鈕「靠左對齊」 */
-  width: 100%;
-  max-width: 400px;       /* ★ 設定一個面板的最大寬度，讓整體看起來更整齊 */
-  margin-bottom: 12px !important;
-}
-
-/* 標籤文字美化 */
-#adminFilterArea label {
-  font-family: "Microsoft JhengHei", "微軟正黑體", sans-serif !important;
-  font-size: 18px;
-  font-weight: bold;
-  margin-bottom: 4px;
-}
-
-/* 偽下拉按鈕：在電腦版稍微加寬，並確保字體靠左 */
-.fakeSelectBtn {
-  font-family: "Microsoft JhengHei", "微軟正黑體", sans-serif !important;
-  font-size: 18px !important;
-  width: 100%;            /* 填滿 400px 的限制 */
-  max-width: 320px;       /* 但不要太長 */
-  text-align: left;       /* 文字靠左 */
-  padding: 8px 12px !important;
-  justify-content: space-between;
-}
-
-/* 時間選單並排處理 */
-.timeRow {
+/* 當 JS 顯示它時 */
+#adminFilterArea[style*="display: block"],
+#adminFilterArea[style*="display: flex"] {
   display: flex !important;
-  flex-direction: row !important;
-  align-items: center !important;
-  gap: 8px;
-  width: 100%;
 }
 
-/* --- 按鈕列 (搜尋、產出報表) --- */
+/* --- 內部封裝容器（維持您原本的所有框框大小） --- */
+.admin-inner-wrapper {
+  display: block;         /* 恢復原始塊級排版 */
+  text-align: left;       /* ★ 確保內部文字標籤全部靠左 */
+  width: fit-content;     /* ★ 寬度隨您原本設定的內容撐開 */
+  min-width: 320px;       /* 避免太窄 */
+  padding: 12px;
+}
+
+/* 修正您原本的 div 間距，確保在置中狀態下依然整齊 */
+#adminFilterArea > div {
+  text-align: left;
+  margin-bottom: 12px;
+}
+
+/* 針對最後一個包含按鈕的 div */
 #adminFilterArea > div:last-child {
   display: flex !important;
-  flex-direction: row !important;
-  justify-content: center !important; /* ★ 按鈕群組在面板內水平置中 */
+  justify-content: center !important; /* 讓兩顆按鈕在框框內水平置中 */
   gap: 12px;
-  width: 100%;
-  max-width: 400px;
-  margin-top: 10px;
+  margin-top: 20px;
 }
 
-/* 按鈕樣式維持，僅強化字體 */
+/* 確保搜尋按鈕寬度不跑掉 */
 #adminSearchBtn, #adminExportBtn {
-  font-family: "Microsoft JhengHei", "微軟正黑體", sans-serif !important;
-  font-size: 18px !important;
-  padding: 10px 20px !important;
-  border-radius: 8px !important;
-  min-width: 120px;
+  flex: none !important;
+  width: auto !important;
+  min-width: 110px;
 }
 
 #adminSearchBtn {
@@ -938,7 +915,8 @@ body {
 </div>
 
 <div id="adminFilterArea" style="display:none; padding:12px;">
-
+  <div class="admin-inner-wrapper">
+  
   <!-- 大隊 -->
   <div style="margin-bottom:12px;">
     <label>大隊：</label>
@@ -1077,7 +1055,7 @@ body {
     <button id="adminSearchBtn" class="searchBtn">搜尋</button>
     <button id="adminExportBtn" class="searchBtn" style="background-color: #198754; border-color: #198754;">產出報表</button>
 </div>
-
+</div>
 </div>
 
 <!-- 全螢幕偽下拉選單（這段貼這裡） -->
