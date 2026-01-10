@@ -778,54 +778,60 @@ body {
   letter-spacing: 1px;
 }
 
-/* --- 搜尋區域：外層容器 (負責整體置中) --- */
+/* --- 搜尋區域：最外層 (負責搬到畫面中間) --- */
 #adminFilterArea {
   display: none; /* 初始隱藏 */
   text-align: center;    /* ★ 讓內部的 inline-block 面板水平置中 */
   width: 100%;
   margin: 30px 0;
+  white-space: normal;   /* ★ 確保內部可以換行 */
 }
 
 /* 當 JS 顯示它時 */
-#adminFilterArea[style*="display: block"],
-#adminFilterArea[style*="display: flex"] {
+#adminFilterArea[style*="display: block"] {
   display: block !important;
 }
 
 /* --- 內部面板：包裹所有條件 --- */
 .admin-inner-wrapper {
-  display: inline-block; /* ★ 讓面板寬度隨內容撐開，並在頁面置中 */
-  text-align: left;      /* ★ 內部內容恢復靠左對齊 */
+  display: inline-block; /* ★ 面板寬度隨內容撐開，但在外層置中 */
+  text-align: left;      /* ★ 面板內部的文字恢復靠左 */
   background: #ffffff;
-  padding: 24px 35px;    /* 面板內距 */
+  padding: 24px 35px;
   border-radius: 12px;
-  /* box-shadow: 0 4px 15px rgba(0,0,0,0.05); 可選：增加輕微陰影 */
+  width: auto;           /* 不要設定為 100% */
 }
 
-/* --- 每一行搜尋條件 (大隊、範圍、時間、類型) --- */
+/* --- 每一行搜尋條件的容器 (重要！) --- */
 #adminFilterArea .admin-inner-wrapper > div {
-  display: flex !important;
-  flex-direction: row !important; /* ★ 確保標題與框框在「同一列」 */
+  display: flex !important;      /* ★ 這一層用 Flex 讓「標題與框框」並排 */
+  flex-direction: row !important;
   align-items: center !important;
-  margin-bottom: 18px;            /* ★ 不同項之間的「換行間距」 */
-  width: 100%;
+  margin-bottom: 18px;           /* ★ 每一行之間的垂直距離 */
+  clear: both;                   /* ★ 強制換行 */
 }
 
-/* 確保標籤（標題）有固定寬度，後面的框框才會垂直對齊 */
+/* 標籤寬度鎖定，確保後方框框垂直對齊 */
 #adminFilterArea label {
   font-family: "Microsoft JhengHei", "微軟正黑體", sans-serif !important;
   font-size: 20px;
   font-weight: bold;
-  min-width: 70px; /* ★ 固定標題寬度 */
+  min-width: 80px;               /* ★ 固定標題寬度 */
+  display: inline-block;
   flex-shrink: 0;
-  margin-bottom: 0 !important; /* 移除之前的間距 */
 }
 
-/* 底部按鈕列：讓搜尋與報表按鈕在面板內水平置中 */
+/* 下拉按鈕維持原本調好的樣式 */
+.fakeSelectBtn {
+  min-width: 150px;              /* 您原本調好的大小 */
+  display: inline-flex;
+}
+
+/* 底部按鈕列：搜尋與報表並排 */
 #adminFilterArea .admin-inner-wrapper > div:last-child {
+  display: flex !important;
   justify-content: center !important; 
   margin-top: 30px;
-  margin-bottom: 0;
   gap: 15px;
 }
 
