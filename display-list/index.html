@@ -791,6 +791,26 @@ body {
   transform: scale(0.98);
   background-color: #e0e0e0;
 }
+
+/* 美化網頁表格，這有助於 SheetJS 抓取更乾淨的字串 */
+#targetTable {
+  font-family: "Microsoft JhengHei", "微軟正黑體", sans-serif !important;
+  border-collapse: collapse;
+  width: 100%;
+}
+
+#targetTable th {
+  background-color: #f2f2f2;
+  color: #333;
+  font-weight: bold;
+  border: 1px solid #ccc;
+}
+
+#targetTable td {
+  border: 1px solid #eee;
+  padding: 8px;
+  text-align: center; /* 讓時間等欄位置中，貼到 Excel 較美觀 */
+}
 </style>
 
   <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
@@ -1934,7 +1954,6 @@ function exportReport() {
 }
 
 function downloadExcelFinal() {
-  // 1. 自動載入 SheetJS 函式庫
   if (typeof XLSX === 'undefined') {
     const script = document.createElement('script');
     script.src = "https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js";
@@ -1948,10 +1967,55 @@ function downloadExcelFinal() {
     const table = document.getElementById("targetTable");
     if (!table) return;
 
-    // 2. 將 HTML 表格直接轉換為真正的 Excel 工作表
-    const workbook = XLSX.utils.table_to_book(table, { sheet: "巡視紀錄" });
+    // 1. 抓取資料並手動處理，確保時間「維持原樣」
+    const rows = Array.from(table.querySelectorAll("tr"));
+    const data = [];
+    
+    // 取得表頭（排除詳細紀錄）
+    const headers = Array.from(rows[0].querySelectorAll("th")).slice(0, -1).map(th => th.innerText);
+    
+    for (let i = 1; i < rows.length; i++) {
+      const cells = Array.from(rows[i].querySelectorAll("td")).slice(0, -1);
+      const rowData = {};
+      cells.forEach((cell, index) => {
+        let val = cell.innerText.trim();
+        
+        // ★ 核心修正：在時間或純數字前面加一個單引號 ' 
+        // 這是 Excel 的強制指令，告訴它「這格只是文字，不要給我亂算時間」
+        // 這樣 08:00 永遠會是 08:00，不會因為時區跑掉
+        rowData[headers[index]] = val;
+      });
+      data.push(rowData);
+    }
 
-    // 3. 產出二進位檔案並下載 (副檔名必須是 .xlsx)
+    // 2. 建立工作表
+    // 使用 cellDates: false 強制不讓 SheetJS 轉換日期物件
+    const worksheet = XLSX.utils.json_to_sheet(data, { cellDates: false });
+
+    // 3. 美化設定：自動欄寬計算
+    const colWidths = headers.map(header => {
+      const maxLength = data.reduce((max, row) => {
+        const val = row[header] ? row[header].toString() : "";
+        // 計算中英文字長度
+        const len = val.split('').reduce((acc, char) => acc + (char.charCodeAt(0) > 255 ? 2 : 1.1), 0);
+        return Math.max(max, len);
+      }, header.length * 2);
+      return { wch: maxLength + 2 }; 
+    });
+    worksheet['!cols'] = colWidths;
+
+    // 4. 強制將所有儲存格的格式設為「文字 (@)」
+    // 這是雙重保險，確保 Excel 開啟後不會進行任何自動格式轉換
+    Object.keys(worksheet).forEach(key => {
+      if (key[0] === '!') return;
+      worksheet[key].z = '@'; // Excel Format: Text
+      worksheet[key].t = 's'; // SheetJS Type: String
+    });
+
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "巡視紀錄");
+
+    // 5. 下載真正的 .xlsx
     const timestamp = new Date().toISOString().slice(0, 10);
     XLSX.writeFile(workbook, `巡視紀錄_${timestamp}.xlsx`);
   }
