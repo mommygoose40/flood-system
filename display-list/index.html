@@ -778,68 +778,18 @@ body {
   letter-spacing: 1px;
 }
 
-/* --- 1. 最外層容器：負責「整體搬到頁面中間」 --- */
-#adminFilterArea {
-  display: none; /* 初始隱藏 */
-  width: 100%;
-  margin: 20px 0;
-  padding: 0;
-  /* 使用 Flex 是為了讓內部的 wrapper 置中 */
-  flex-direction: column;
-  align-items: center;
+/* 確保所有按鈕都有點擊手型 */
+#adminExportBtn, 
+#adminSearchBtn, 
+.header, 
+.record {
+  cursor: pointer !important;
 }
 
-/* 當顯示時，確保是 Flex 排列 */
-#adminFilterArea[style*="display: block"],
-#adminFilterArea[style*="display: flex"] {
-  display: flex !important;
-}
-
-/* --- 2. 內部封裝容器：負責「內容靠左」並「恢復垂直換行」 --- */
-.admin-inner-wrapper {
-  display: block !important; /* ★ 強制恢復垂直排列，就不會變一長條 */
-  text-align: left;         /* 文字靠左 */
-  width: fit-content;       /* 寬度隨您原本設定的內容撐開 */
-  padding: 12px;
-  margin: 0 auto;           /* 二重保證置中 */
-}
-
-/* --- 3. 確保每個設定項 div 都是一整行 --- */
-#adminFilterArea .admin-inner-wrapper > div {
-  display: block;           /* ★ 確保每個 div (大隊、範圍等) 佔據一行 */
-  margin-bottom: 15px;      /* 增加一點垂直間距 */
-  width: auto;
-}
-
-/* --- 4. 底部按鈕列：維持橫向並置中 --- */
-#adminFilterArea .admin-inner-wrapper > div:last-child {
-  display: flex !important; 
-  flex-direction: row !important;
-  justify-content: center !important; 
-  gap: 12px;
-  margin-top: 25px;
-}
-
-/* 確保搜尋按鈕寬度不跑掉 */
-#adminSearchBtn, #adminExportBtn {
-  flex: none !important;
-  width: auto !important;
-  min-width: 110px;
-}
-
-#adminSearchBtn {
-  background-color: #007bff;
-  color: white;
-}
-
-#adminExportBtn {
-  background-color: #28a745;
-  color: white;
-}
-
-#adminSearchBtn:hover, #adminExportBtn:hover {
-  filter: brightness(0.9);
-  transform: translateY(-1px);
+/* 如果是管理員篩選區的按鈕，增加點擊回饋感 */
+#adminExportBtn:active {
+  transform: scale(0.98);
+  background-color: #e0e0e0;
 }
 </style>
 
@@ -917,8 +867,7 @@ body {
 </div>
 
 <div id="adminFilterArea" style="display:none; padding:12px;">
-  <div class="admin-inner-wrapper">
-  
+
   <!-- 大隊 -->
   <div style="margin-bottom:12px;">
     <label>大隊：</label>
@@ -1057,7 +1006,7 @@ body {
     <button id="adminSearchBtn" class="searchBtn">搜尋</button>
     <button id="adminExportBtn" class="searchBtn" style="background-color: #198754; border-color: #198754;">產出報表</button>
 </div>
-</div>
+
 </div>
 
 <!-- 全螢幕偽下拉選單（這段貼這裡） -->
@@ -1981,6 +1930,7 @@ function exportReport() {
 
   function downloadExcelWithMsg() {
     downloadExcelFinal();
+    showMessage("報表匯出成功！<br><small>已採用 CSV 格式 (無安全警告)</small>");
 }
 
 function downloadExcelFinal() {
