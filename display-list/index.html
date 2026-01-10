@@ -1937,39 +1937,51 @@ function downloadReport() {
   const table = document.getElementById("targetTable");
   if (!table) return;
 
+  const timestamp = new Date().toISOString().slice(0, 10);
+  const fileName = `巡視紀錄_${timestamp}.xls`;
+
+  // 1. 準備 Excel XML 內容 (XML Spreadsheet 2003 規格)
+  // 這格式雖然是 .xls，但因為我們正確聲明了命名空間，Excel 2021/365 會直接信任它
+  const worksheetName = "巡視紀錄";
   const rows = Array.from(table.querySelectorAll("tr"));
   
-  // 將表格轉為 CSV 字串
-  let csvContent = rows.map(row => {
+  let xmlRows = "";
+  rows.forEach(row => {
+    xmlRows += '<Row>';
     const cells = Array.from(row.querySelectorAll("th, td"));
-    return cells.map(cell => {
-      let text = cell.innerText.trim();
-      
-      // 關鍵技巧 1：如果是日期格式 (例如 2024/01/01)，在後面加一個製表符或空格
-      // 這能防止 Excel 把欄位縮太小變成 ####，也能防止它自動改格式
-      if (text.includes('/') && text.length >= 8) {
-          text = text + "\t"; 
-      }
-      
-      // 處理引號
-      text = text.replace(/"/g, '""');
-      return `"${text}"`;
-    }).join(",");
-  }).join("\r\n");
+    cells.forEach(cell => {
+      let val = cell.innerText.trim();
+      // 強制將所有內容存為 String，避免日期或數字被自動轉換導致錯誤
+      xmlRows += `<Cell><Data ss:Type="String">${val}</Data></Cell>`;
+    });
+    xmlRows += '</Row>';
+  });
 
-  // 關鍵技巧 2：加入 UTF-8 BOM (\ufeff) 徹底解決中文亂碼
-  const blob = new Blob(["\ufeff" + csvContent], { type: "text/csv;charset=utf-8;" });
+  const template = `<?xml version="1.0" encoding="UTF-8"?>
+<?mso-application progid="Excel.Sheet"?>
+<Workbook xmlns="urn:schemas-microsoft-com:office:spreadsheet"
+ xmlns:o="urn:schemas-microsoft-com:office:office"
+ xmlns:x="urn:schemas-microsoft-com:office:excel"
+ xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet"
+ xmlns:html="http://www.w3.org/TR/REC-html40">
+ <Worksheet ss:Name="${worksheetName}">
+  <Table>
+   ${xmlRows}
+  </Table>
+ </Worksheet>
+</Workbook>`;
+
+  // 2. 轉換為 Blob 並下載
+  const blob = new Blob([template], { type: "application/vnd.ms-excel" });
+  const url = URL.createObjectURL(blob);
   
-  // 關鍵技巧 3：副檔名用 .csv，Excel 絕對不會報「格式不符」
-  const timestamp = new Date().toISOString().slice(0, 10);
-  const fileName = `巡視紀錄_${timestamp}.csv`;
-
   const link = document.createElement("a");
-  link.href = URL.createObjectURL(blob);
+  link.href = url;
   link.download = fileName;
   document.body.appendChild(link);
   link.click();
   document.body.removeChild(link);
+  URL.revokeObjectURL(url);
 }
   
 function showMessage(text, onConfirm) {
