@@ -815,82 +815,107 @@ body {
   letter-spacing: 1px;
 }
 
-/* --- 1. 統一所有按鈕寬度與間距 (搜尋、報表、大隊、我的) --- */
-#adminSearchBtn, #adminExportBtn, #btnTeam, #btnSelf {
+/* --- 1. 按鈕基礎與定位 (全域) --- */
+/* 統一所有按鈕的尺寸、字體 */
+#adminSearchBtn, #adminExportBtn, #btnTeam, #btnSelf, #btnHistory {
   width: 130px !important; 
-  height: 44px !important;
+  height: 46px !important;
   font-size: 20px !important;
   border-radius: 8px !important;
   display: inline-flex !important;
   align-items: center;
   justify-content: center;
-  border: none;
   cursor: pointer !important;
+  transition: all 0.2s ease;
   flex: none !important;
+  font-weight: bold !important;
 }
 
-#adminSearchBtn, #btnTeam { background: #0b5ed7 !important; color: white !important; }
-#adminExportBtn { background: #198754 !important; color: white !important; }
-#btnSelf { background: white !important; color: #0b5ed7 !important; border: 2px solid #0b5ed7 !important; }
-
-/* 強制顯示切換區域並修正間距 */
-#switchArea {
-  display: flex !important; 
+/* 容器間距與置中 (確保上下兩組對齊) */
+#switchArea, .admin-action-row {
+  display: flex !important;
   justify-content: center !important;
-  gap: 12px !important;
-  margin: 10px 0 20px 0 !important;
+  gap: 12px !important; /* 🔥 統一間距 */
+  margin: 15px 0 25px 0 !important;
+  width: 100% !important;
 }
 
-/* 彈出下拉選單的標題加粗 */
-.panel-title, #panelTitle {
-  font-weight: 900 !important;
-  font-size: 22px !important;
+/* --- 2. 按鈕顏色細節 --- */
+
+/* 藍色按鈕 (大隊紀錄 & 搜尋) */
+#btnTeam, #adminSearchBtn {
+  background-color: #0b5ed7 !important;
+  color: white !important;
+  border: none !important;
 }
 
-/* --- 2. 手機版樣式 (< 769px)：框框全部等寬，禁止換行 --- */
+/* 綠色按鈕 (產出報表) */
+#adminExportBtn {
+  background-color: #198754 !important;
+  color: white !important;
+  border: none !important;
+}
+
+/* 白色底綠框按鈕 (我的紀錄 & 歷史報表) */
+#btnSelf, #btnHistory {
+  background-color: white !important;
+  color: #198754 !important;
+  border: 2px solid #198754 !important;
+}
+
+/* 🔥 互動效果：我的紀錄 & 歷史報表 (游標停在上面及按下時變全綠) */
+#btnSelf:hover, #btnSelf:active,
+#btnHistory:hover, #btnHistory:active {
+  background-color: #198754 !important;
+  color: white !important;
+  border: 2px solid #198754 !important;
+}
+
+/* --- 3. 手機版排版修正 (< 769px) --- */
 @media (max-width: 768px) {
-  /* 每一列的容器：禁止換行，改用橫向溢出或擠壓標籤 */
-  #adminFilterArea div {
+  /* 每一行內標籤與框框水平並排，且每一組功能換行 */
+  #adminFilterArea > div:not(.admin-action-row) {
     display: flex !important;
     flex-direction: row !important;
     align-items: center !important;
-    flex-wrap: nowrap !important; /* ⭐ 絕對禁止換行 */
-    margin-bottom: 12px !important;
+    flex-wrap: nowrap !important;
+    margin-bottom: 15px !important;
+    width: 100% !important;
   }
 
-  /* 標籤：加粗，並縮到最小寬度，把空間留給框框 */
+  /* 標籤加粗 */
   #adminFilterArea label {
     font-weight: bold !important;
     font-size: 20px;
-    min-width: 55px; /* 縮小標籤佔位 */
+    min-width: 65px;
     flex-shrink: 0;
   }
 
-  /* ⭐ 核心修正：所有框框寬度強制統一 (大隊、範圍、時間起、時間迄、類型) */
+  /* ⭐ 所有框框寬度鎖定一模一樣 (120px) */
   .fakeSelectBtn {
-    width: 120px !important; /* 你可以根據需求調整這個數值，例如 110px 或 130px */
-    flex: none !important;   /* 禁止彈性伸縮，保證每個都一樣大 */
+    width: 120px !important;
     height: 42px !important;
-    padding: 0 8px !important;
-    font-size: 18px !important;
+    flex: none !important;
+    font-size: 19px !important;
+    border: 1px solid #888;
+    border-radius: 4px;
+    display: inline-flex;
+    align-items: center;
+    padding: 0 10px;
   }
 
-  /* 時間列的特殊處理：確保兩個框中間的波浪號不佔空間 */
+  /* 時間列內部樣式 */
   .timeRow {
-    gap: 4px !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 6px !important;
   }
-  
-  .tilde {
-    flex-shrink: 0;
-    margin: 0 2px;
-  }
+}
 
-  /* 搜尋按鈕列置中 */
-  #adminFilterArea div:last-child {
-    justify-content: center !important;
-    gap: 10px !important;
-    margin-top: 20px !important;
-  }
+/* --- 4. 彈窗與標籤強化 --- */
+#panelTitle, .panel-title {
+  font-weight: bold !important;
+  font-size: 22px !important;
 }
 </style>
 
