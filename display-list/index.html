@@ -815,9 +815,9 @@ body {
   letter-spacing: 1px;
 }
 
-/* --- 1. 全域按鈕與基礎樣式 (電腦手機共用) --- */
+/* --- 1. 全域按鈕基礎樣式 --- */
 .searchBtn {
-  min-width: 120px;
+  width: 130px !important;  /* 🔥 強制固定寬度，保證兩顆按鈕一樣大 */
   height: 46px;
   font-size: 20px;
   border: none;
@@ -828,63 +828,53 @@ body {
   justify-content: center;
   transition: all 0.2s ease;
   color: white !important;
+  flex: none !important;    /* 防止被彈性佈局拉伸 */
 }
+
 #adminSearchBtn { background-color: #0b5ed7 !important; }
 #adminExportBtn { background-color: #198754 !important; }
 
-/* 標題列文字 */
+/* 下拉選單內的標題列加粗 */
 .panel-title {
   font-weight: bold !important;
   font-size: 20px;
 }
 
-/* --- 2. 手機版樣式修正 (螢幕寬度 < 769px) --- */
+/* --- 2. 手機版樣式修正 (< 769px) --- */
 @media (max-width: 768px) {
-  /* 讓最外層容器取消置中效果 */
-  #adminFilterArea {
-    text-align: left !important;
-    padding: 10px !important;
-  }
-
-  /* 核心修正：強制每一組條件「標籤+框」垂直堆疊並換行 */
+  /* 讓每一行維持並排，但寬度不足時允許調整 */
   .admin-inner-wrapper > div {
-    display: block !important;    /* 強制換行，不准 flex 同行 */
-    margin-bottom: 20px !important;
-    width: 100% !important;
-  }
-
-  /* 手機標籤單獨佔一行 */
-  #adminFilterArea label {
-    display: block !important;
-    font-weight: bold !important;
-    font-size: 20px;
-    margin-bottom: 8px !important;
-  }
-
-  /* 只有時間內部的框框要並排，不要換行 */
-  .timeRow {
     display: flex !important;
     flex-direction: row !important;
     align-items: center !important;
-    gap: 8px !important;
+    flex-wrap: nowrap !important; /* 🔥 標籤與框框強合同行 */
+    margin-bottom: 12px !important;
+    width: 100%;
   }
 
-  /* 下拉按鈕稍微加寬一點點 */
-  .fakeSelectBtn {
-    min-width: 130px;
+  /* 手機版標籤：稍微縮小寬度，給框框留空間 */
+  #adminFilterArea label {
+    min-width: 65px !important; 
+    font-weight: bold !important;
+    font-size: 19px;
+    margin-right: 8px !important;
+    flex-shrink: 0;
   }
 
-  /* 底部按鈕列：搜尋與產出報表要置中且並排 */
+  /* 針對時間這一行特別縮小框框寬度，防止爆行 */
+  .timeRow .fakeSelectBtn {
+    min-width: 95px !important; 
+    padding: 0 8px !important;
+    font-size: 18px !important;
+  }
+
+  /* 搜尋與報表按鈕列：置中並排 */
   .admin-inner-wrapper > div:last-child {
-    display: flex !important;      /* 只有最後一行恢復並排 */
+    display: flex !important;
     justify-content: center !important;
-    gap: 15px !important;
-    margin-top: 30px !important;
-  }
-
-  .searchBtn {
-    flex: 1;
-    max-width: 160px;
+    gap: 10px !important;
+    margin-top: 20px !important;
+    border-bottom: none;
   }
 }
 </style>
