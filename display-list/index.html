@@ -1081,6 +1081,54 @@ body {
   justify-content: center;
   flex: none !important;
 }
+
+  /* =====================================================
+   🎯 上下操作按鈕：統一置中基準（最終解）
+   ===================================================== */
+
+/* 共用置中容器：以卡片寬度為基準 */
+.action-center {
+  display: flex;
+  flex-direction: column;
+  align-items: center;   /* ★ 關鍵：上下共用同一個中心 */
+  width: 100%;
+}
+
+/* 上面那排 */
+#switchArea {
+  display: flex !important;
+  justify-content: center !important;
+  gap: 12px !important;
+  width: 100%;
+}
+
+/* 搜尋整塊：不要再用 inline-block 撐寬 */
+.filter-panel {
+  display: block !important;
+  width: 100% !important;   /* ★ 跟 switchArea 同寬 */
+  max-width: 820px;         /* ★ 與桌機卡片一致 */
+}
+
+/* 搜尋 / 產出報表 那一排 */
+.admin-action-row {
+  display: flex !important;
+  justify-content: center !important;
+  gap: 12px !important;
+  width: 100%;
+}
+
+/* 統一所有主要按鈕寬度（手機＋電腦） */
+#btnTeam,
+#btnSelf,
+#adminSearchBtn,
+#adminExportBtn {
+  width: 140px !important;
+  height: 46px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: none !important;
+}
 </style>
 
   <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
@@ -1130,6 +1178,8 @@ body {
 
 <h2 id="pageTitle" style="display:block;">回報紀錄</h2>
 
+  <div class="action-center">
+
 <div id="switchArea" style="
   display:none;
   text-align:center;
@@ -1157,7 +1207,7 @@ body {
 </div>
 
 <div id="adminFilterArea" style="display:none; padding:12px;">
-  <div class="admin-inner-wrapper">
+  <div class="admin-inner-wrapper filter-panel">
   
   <!-- 大隊 -->
   <div style="margin-bottom:12px;">
@@ -1359,7 +1409,7 @@ body {
 </div>
 
 </div>   <!-- pageWrapper 結束 -->
-
+</div>
 
   <!-- 電腦版小圓鈕 -->
 <!--
