@@ -1044,16 +1044,16 @@ body {
 }
 
 /* =====================================================
-   🎯 核心對齊系統：強制統一上下兩排按鈕
+   🎯 核心對齊與骨架系統 (顏色交給 JS)
    ===================================================== */
 
-/* 統一容器：確保置中且間距一致 */
+/* 統一容器：確保上下兩排都置中，且間距完全一致 */
 #switchArea, 
 .admin-action-row {
   display: flex !important;
-  justify-content: center !important;
-  gap: 12px !important;              /* ★ 統一間距 */
-  margin: 15px auto 25px !important;
+  justify-content: center !important; 
+  gap: 12px !important;              /* ★ 這邊設 12px，確保上下對齊 */
+  margin: 15px auto !important;
   width: 100% !important;
 }
 
@@ -1062,7 +1062,7 @@ body {
 #btnSelf, 
 #adminSearchBtn, 
 #adminExportBtn {
-  width: 140px !important;    /* ★ 固定寬度 */
+  width: 140px !important;    /* ★ 固定寬度確保邊緣對齊 */
   height: 46px !important;
   font-size: 20px !important;
   border-radius: 8px;
@@ -1077,48 +1077,14 @@ body {
   text-decoration: none;
 }
 
-/* --- 🔵 藍色系按鈕：大隊紀錄 / 搜尋 --- */
-#btnTeam, 
-#adminSearchBtn {
-  background-color: #0b5ed7 !important;
-  color: white !important;
-  border: none !important;
-}
+/* 搜尋與產出報表的顏色仍可留在 CSS (因為它們不參與切換) */
+#adminSearchBtn { background: #0b5ed7 !important; color: white !important; border: none !important; }
+#adminExportBtn { background: #198754 !important; color: white !important; border: none !important; }
 
-/* --- 🔵 藍框按鈕：我的紀錄 (點擊/懸停反藍) --- */
-#btnSelf {
-  background-color: white !important;
-  color: #0b5ed7 !important;
-  border: 2px solid #0b5ed7 !important;
-}
-#btnSelf:hover, #btnSelf:active {
-  background-color: #0b5ed7 !important;
-  color: white !important;
-}
-
-/* --- 🟢 綠色系按鈕：產出報表 --- */
-#adminExportBtn {
-  background-color: #198754 !important;
-  color: white !important;
-  border: none !important;
-}
-
-/* --- 🟢 綠框按鈕：歷史報表 (如有此按鈕，點擊/懸停反綠) --- */
-/* 假設您的「歷史報表」按鈕 ID 是 btnHistory，若不是請自行調整 ID */
-.history-btn-style {
-  background-color: white !important;
-  color: #198754 !important;
-  border: 2px solid #198754 !important;
-}
-.history-btn-style:hover, .history-btn-style:active {
-  background-color: #198754 !important;
-  color: white !important;
-}
-
-/* 手機版微調 */
+/* 針對產出報表在手機版的微調 (如果還是有一點點對不準) */
 @media (max-width: 768px) {
   #adminExportBtn {
-    margin-left: 0px !important; /* 確保徹底歸零 */
+    margin-left: 0px !important; 
   }
 }
 </style>
@@ -1172,16 +1138,8 @@ body {
   
 <div class="action-center">
 <div id="switchArea">
-  <button id="btnTeam" style="padding:6px 16px; font-size:22px; border:2px solid #0b5ed7; background:#0b5ed7; color:white; border-radius:6px;">大隊紀錄</button>
-
-<button id="btnSelf" style="
-  padding:6px 16px;
-  font-size:22px;
-  border:2px solid #0b5ed7;
-  background:white;
-  color:#0b5ed7;
-  border-radius:6px;
-">我的紀錄</button>
+  <button id="btnTeam">大隊紀錄</button>
+  <button id="btnSelf">我的紀錄</button>
 </div>
 
 <div id="adminFilterArea" style="display:none; padding:12px;">
@@ -2430,11 +2388,11 @@ function updateSwitchUI() {
   // ===== 管理員模式 =====
   if (globalRole === "管理員" && viewMode === "admin") {
     btnSelf.textContent = "歷史報表";
-    btnSelf.style.border = "2px solid #28a745";
+    btnSelf.style.border = "2px solid #198754";
     btnSelf.style.color = "#28a745";
 
     if (adminSubView === "history") {
-      btnSelf.style.background = "#28a745";
+      btnSelf.style.background = "#198754";
       btnSelf.style.color = "white";
     } else {
       btnTeam.style.background = "#0b5ed7";
