@@ -846,11 +846,21 @@ body {
   gap: 8px;
 }
 
-/* 確保搜尋按鈕寬度不跑掉 */
-#adminSearchBtn, #adminExportBtn {
-  flex: none !important;
-  width: auto !important;
-  min-width: 110px;
+/* 確保搜尋與報表按鈕在電腦上有手型游標 */
+.searchBtn {
+  cursor: pointer !important;
+  padding: 10px 18px;
+  font-size: 20px;
+  border: none;
+  border-radius: 8px;
+  display: inline-block;
+  transition: all 0.2s ease;
+}
+
+#adminExportBtn {
+  background-color: #198754;
+  color: white;
+  cursor: pointer !important; /* 強制啟動手型游標 */
 }
 
 #adminSearchBtn {
