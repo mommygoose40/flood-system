@@ -1011,14 +1011,6 @@ body {
    📐 上下兩排按鈕：統一對齊方式
    ===================================================== */
 
-/* 上方：大隊紀錄 / 我的紀錄 / 歷史報表 */
-#switchArea {
-  display: flex !important;
-  justify-content: center !important;
-  gap: 12px !important;
-  margin: 15px 0 20px 0 !important;
-}
-
 /* 下方：搜尋 / 產出報表 */
 #adminFilterArea .admin-inner-wrapper > div:last-child {
   display: flex !important;
@@ -1039,15 +1031,6 @@ body {
   align-items: center;
 }
 
-/* 上方：大隊紀錄 / 我的紀錄 */
-#switchArea {
-  display: flex;
-  justify-content: center;
-  gap: 12px;
-  width: 100%;
-  margin: 15px 0 20px;
-}
-
 /* 搜尋區整塊 */
 #adminFilterArea {
   width: 100%;
@@ -1060,41 +1043,67 @@ body {
   margin: 0 auto;
 }
 
-/* 搜尋 / 產出報表 那一排 */
+/* =====================================================
+   🎯 核心對齊系統：統一兩排按鈕的容器與間距
+   ===================================================== */
+
+/* 1. 統一容器：確保上下兩排都置中，且間距完全一致 */
+#switchArea, 
 .admin-action-row {
-  display: flex;
+  display: flex !important;
+  justify-content: center !important; /* 絕對置中 */
+  gap: 12px !important;              /* 統一按鈕間的縫隙 */
+  margin: 15px auto 25px !important;  /* 統一外距 */
+  width: 100% !important;
+  padding: 0 !important;
+}
+
+/* 2. 統一按鈕：固定寬度是「對齊」的關鍵 */
+#btnTeam, 
+#btnSelf, 
+#adminSearchBtn, 
+#adminExportBtn {
+  width: 140px !important;    /* 強制所有主按鈕寬度一致 */
+  height: 46px !important;
+  font-size: 20px !important;
+  padding: 0 !important;      /* 移除 padding 避免撐開寬度 */
+  flex: none !important;      /* 禁止 flex 擠壓導致位移 */
+  display: inline-flex !important;
+  align-items: center;
   justify-content: center;
-  gap: 6px;
-  margin-top: 24px;
-  width: 100%;
+  border-radius: 8px;
+  box-sizing: border-box !important;
+  margin: 0 !important;       /* 移除所有 margin 避免推開對齊線 */
+}
+
+/* 3. 顏色微調 (如果您需要綠色外框的歷史報表感) */
+#btnSelf {
+  background-color: white !important;
+  color: #0b5ed7 !important;
+  border: 2px solid #0b5ed7 !important;
+}
+
+#adminExportBtn {
+  background-color: #198754 !important;
+  color: white !important;
 }
 
 /* =====================================================
-   🔘 主操作按鈕（唯一寬度來源）
-   ===================================================== */
-#btnTeam,
-#btnSelf,
-#adminSearchBtn,
-#adminExportBtn {
-  width: 140px;
-  height: 46px;
-  font-size: 20px;
-  border-radius: 8px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  flex: none;
-}
-
-  /* =====================================================
-   📱 手機版：微調「產出報表」往左
+   📱 手機版微調：確保沒有隱藏的寬度影響對齊
    ===================================================== */
 @media (max-width: 768px) {
-
-  #adminExportBtn {
-    margin-left: -8px;   /* ← 你要的就是這行 */
+  /* 確保搜尋面板不會限制按鈕的置中發揮 */
+  .admin-inner-wrapper {
+    width: 100% !important;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
   }
-
+  
+  /* 如果產出報表仍然有些微偏差，是因為手機螢幕渲染問題，可用這行做極微調 */
+  #adminExportBtn {
+    margin-left: 0px !important; 
+  }
 }
 </style>
 
@@ -1147,15 +1156,7 @@ body {
   
 <div class="action-center">
 <div id="switchArea">
-  <button id="btnTeam" style="
-  padding:6px 16px;
-  font-size:22px;
-  border:2px solid #0b5ed7;
-  background:#0b5ed7;
-  color:white;
-  border-radius:6px;
-  margin-right:6px;
-">大隊紀錄</button>
+  <button id="btnTeam" style="padding:6px 16px; font-size:22px; border:2px solid #0b5ed7; background:#0b5ed7; color:white; border-radius:6px;">大隊紀錄</button>
 
 <button id="btnSelf" style="
   padding:6px 16px;
