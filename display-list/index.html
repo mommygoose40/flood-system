@@ -839,38 +839,37 @@ body {
   gap: 15px;
 }
 
-/* 確保時間區塊內部的 ～ 符號與按鈕對齊 */
+/* --- [全域設定] 修正按鈕游標與時間基礎樣式 --- */
+#adminExportBtn, .searchBtn, .fakeSelectBtn {
+  cursor: pointer !important; /* 確保電腦上有手指游標 */
+}
+
+/* 時間行基礎結構 */
 .timeRow {
   display: flex;
   align-items: center;
-  gap: 8px;
+  flex-wrap: nowrap; /* 預設不折行 */
+  gap: 4px;
 }
 
-/* 確保搜尋與報表按鈕在電腦上有手型游標 */
-.searchBtn {
-  cursor: pointer !important;
-  padding: 10px 18px;
-  font-size: 20px;
-  border: none;
-  border-radius: 8px;
-  display: inline-block;
-  transition: all 0.2s ease;
-}
+/* --- [手機版特殊處理] 防止時間爆行 --- */
+@media (max-width: 768px) {
+  /* 讓時間這一行在手機上稍微縮小間距，避免擠到下一行 */
+  #adminFilterArea .timeRow .fakeSelectBtn {
+    min-width: 95px !important; /* 稍微縮小手機版的框框寬度 */
+    padding: 4px 8px;
+    font-size: 18px; /* 稍微縮小字體 */
+  }
+  
+  .tilde {
+    margin: 0 2px;
+  }
 
-#adminExportBtn {
-  background-color: #198754;
-  color: white;
-  cursor: pointer !important; /* 強制啟動手型游標 */
-}
-
-#adminSearchBtn {
-  background-color: #007bff;
-  color: white;
-}
-
-#adminExportBtn {
-  background-color: #28a745;
-  color: white;
+  /* 如果手機螢幕真的很窄，可以讓標籤與框框在手機上垂直排 */
+  #adminFilterArea .admin-inner-wrapper > div {
+    flex-direction: column; /* 手機版：標籤在上，框框在下 */
+    align-items: flex-start;
+  }
 }
 
 #adminSearchBtn:hover, #adminExportBtn:hover {
