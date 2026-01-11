@@ -815,18 +815,46 @@ body {
   letter-spacing: 1px;
 }
 
-/* 確保所有按鈕都有點擊手型 */
+/* --- 1. 全域基礎修正：按鈕游標與時間基礎 --- */
+
+/* 確保所有按鈕與可點擊項在電腦上都有手指游標 */
 #adminExportBtn, 
 #adminSearchBtn, 
+.fakeSelectBtn,
 .header, 
 .record {
   cursor: pointer !important;
 }
 
-/* 如果是管理員篩選區的按鈕，增加點擊回饋感 */
-#adminExportBtn:active {
-  transform: scale(0.98);
-  background-color: #e0e0e0;
+/* 報表按鈕專屬顏色與效果 */
+#adminExportBtn {
+  background-color: #198754 !important;
+  color: white !important;
+}
+
+#adminExportBtn:hover {
+  filter: brightness(0.9);
+  transform: translateY(-1px);
+}
+
+/* --- 2. 手機版樣式補強 (螢幕小於 768px) --- */
+@media (max-width: 768px) {
+  #adminFilterArea div {
+    display: flex;
+    flex-wrap: wrap; /* 手機版允許換行，防止時間框爆出去 */
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 12px;
+  }
+  
+  .timeRow {
+    flex-wrap: nowrap !important; /* 只有時間內部的兩個框框不換行 */
+    gap: 4px !important;
+  }
+
+  .fakeSelectBtn {
+    min-width: 90px; /* 手機版框框稍微縮小一點點，避免擠壓 */
+  }
 }
 </style>
 
