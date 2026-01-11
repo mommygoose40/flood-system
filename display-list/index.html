@@ -1476,6 +1476,7 @@ if (!globalVid) {
 
   if (globalRole === "管理員") {
     viewMode = "admin";
+    adminSubView = "list";
     await loadAdminRecords();
     return;
   }
@@ -2030,51 +2031,6 @@ function restoreListState() {
   return block;
 }
 
-document.getElementById("btnSelf").onclick = function () {
-  viewMode = "self";
-  
-  // 立即更新按鈕樣式
-  updateSwitchUI();
-  
-  // 隱藏管理員篩選區域
-  document.getElementById("adminFilterArea").style.display = "none";
-
-  // 顯示載入中
-  renderLoadingInList();
-  
-  // 載入個人紀錄
-  loadRecordList("self");
-};
-
-document.getElementById("btnTeam").onclick = async function () {
-  // 大隊長 → 讀自己的大隊
-  if (globalRole === "大隊長") {
-    viewMode = "team";
-    updateSwitchUI(); // 立即更新按鈕樣式
-    document.getElementById("adminFilterArea").style.display = "none";
-    renderLoadingInList();
-    loadRecordList("team");
-    return;
-  }
-
-  // 管理員 → Admin 模式
-  if (globalRole === "管理員") {
-    viewMode = "admin";
-    updateSwitchUI(); // 立即更新按鈕樣式
-    renderLoadingInList();
-
-    // 如果還沒有管理員資料，先載入
-    if (globalAdminRecords.length === 0) {
-      await loadAdminRecords();
-    } else {
-      // 如果已經有資料，直接顯示篩選和渲染
-      document.getElementById("adminFilterArea").style.display = "block";
-      const filtered = filterAdminRecords();
-      renderList(filtered);
-    }
-  }
-};
-
 document.getElementById("adminSearchBtn").onclick = () => {
   if (viewMode !== "admin") return;
 
@@ -2434,6 +2390,7 @@ document.getElementById("btnTeam").onclick = async function () {
 
   if (globalRole === "管理員") {
     viewMode = "admin";
+    adminSubView = "list";
     updateSwitchUI();
     renderLoadingInList();
 
