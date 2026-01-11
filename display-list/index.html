@@ -930,6 +930,72 @@ body {
   font-weight: bold !important;
   font-size: 22px !important;
 }
+
+  /* =====================================================
+   📱 手機版：只修正「搜尋欄位條件區」
+   ===================================================== */
+@media (max-width: 768px) {
+
+  /* 整個搜尋區塊：直向排列 */
+  #adminFilterArea {
+    display: block !important;
+    width: 100% !important;
+    padding: 12px !important;
+  }
+
+  /* 內層 wrapper：不要 inline-block，不要桌機邏輯 */
+  #adminFilterArea .admin-inner-wrapper {
+    display: block !important;
+    width: 100% !important;
+    min-width: 0 !important;
+  }
+
+  /* 每一列條件：一列一組（回到你原本的手機感覺） */
+  #adminFilterArea .admin-inner-wrapper > div {
+    display: flex !important;
+    align-items: center !important;
+    flex-wrap: nowrap !important;   /* 不換行 */
+    margin-bottom: 12px !important;
+    width: 100% !important;
+  }
+
+  /* 左邊標籤 */
+  #adminFilterArea label {
+    min-width: 70px !important;
+    font-size: 20px !important;
+    font-weight: bold;
+    flex-shrink: 0;
+  }
+
+  /* 右邊下拉按鈕 */
+  #adminFilterArea .fakeSelectBtn {
+    min-width: 110px !important;
+    height: 42px !important;
+    font-size: 20px !important;
+  }
+
+  /* 時間那一列：不要被手機版 wrap 拆開 */
+  #timeWrapper.timeRow {
+    flex-wrap: nowrap !important;
+    gap: 10px !important;
+  }
+
+  /* ～ 符號回到正常 inline */
+  .tilde {
+    width: auto !important;
+    margin: 0 4px !important;
+    text-align: center;
+  }
+
+  /* 搜尋 / 產出報表按鈕那一列 */
+  #adminFilterArea .admin-inner-wrapper > div:last-child {
+    display: flex !important;
+    justify-content: center !important;
+    gap: 12px !important;
+    margin-top: 20px !important;
+  }
+
+}
 </style>
 
   <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
