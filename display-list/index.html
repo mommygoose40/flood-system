@@ -814,8 +814,6 @@ body {
 /* 顏色設定 */
 #adminSearchBtn { background-color: #0b5ed7 !important; color: white !important; }
 #adminExportBtn { background-color: #198754 !important; color: white !important; }
-#btnTeam { background-color: #0b5ed7 !important; color: white !important; margin: 0 !important; }
-#btnSelf { background-color: white !important; color: #0b5ed7 !important; border: 2px solid #0b5ed7 !important; }
 
 /* 容器間距與置中 (確保上下兩組對齊) */
 #switchArea, .admin-action-row {
@@ -826,7 +824,7 @@ body {
 /* --- 2. 按鈕顏色細節 --- */
 
 /* 藍色按鈕 (大隊紀錄 & 搜尋) */
-#btnTeam, #adminSearchBtn {
+#adminSearchBtn {
   background-color: #0b5ed7 !important;
   color: white !important;
   border: none !important;
@@ -837,21 +835,6 @@ body {
   background-color: #198754 !important;
   color: white !important;
   border: none !important;
-}
-
-/* 白色底綠框按鈕 (我的紀錄 & 歷史報表) */
-#btnSelf, #btnHistory {
-  background-color: white !important;
-  color: #198754 !important;
-  border: 2px solid #198754 !important;
-}
-
-/* 🔥 互動效果：我的紀錄 & 歷史報表 (游標停在上面及按下時變全綠) */
-#btnSelf:hover, #btnSelf:active,
-#btnHistory:hover, #btnHistory:active {
-  background-color: #198754 !important;
-  color: white !important;
-  border: 2px solid #198754 !important;
 }
 
 /* --- 3. 手機版排版修正 (< 769px) --- */
@@ -1074,13 +1057,6 @@ body {
   border-radius: 8px;
   box-sizing: border-box !important;
   margin: 0 !important;       /* 移除所有 margin 避免推開對齊線 */
-}
-
-/* 3. 顏色微調 (如果您需要綠色外框的歷史報表感) */
-#btnSelf {
-  background-color: white !important;
-  color: #0b5ed7 !important;
-  border: 2px solid #0b5ed7 !important;
 }
 
 #adminExportBtn {
