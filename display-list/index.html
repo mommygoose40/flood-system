@@ -175,7 +175,7 @@
 
 #adminSearchBtn {
   background: #0b5ed7;
-  width: 110px !important; /* ★ 小一點 */
+  /* width: 110px !important; /* ★ 小一點 */
   margin: 0 auto !important;
   display: block !important;
 }
@@ -1065,6 +1065,22 @@ body {
   gap: 12px !important;     /* ★ 跟上方一致 */
   margin-top: 20px !important;
 }
+
+  /* =====================================================
+   🔘 主操作按鈕：統一寬度（手機＋電腦）
+   ===================================================== */
+#btnTeam,
+#btnSelf,
+#adminSearchBtn,
+#adminExportBtn {
+  width: 140px !important;
+  height: 46px;
+  font-size: 20px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: none !important;
+}
 </style>
 
   <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
@@ -1277,7 +1293,7 @@ body {
 
 
   <!-- 搜尋 -->
-  <div style="text-align:center; margin-top:20px; display: flex; justify-content: center; gap: 10px;">
+  <div class="admin-action-row">
     <button id="adminSearchBtn" class="searchBtn">搜尋</button>
     <button id="adminExportBtn" class="searchBtn" style="background-color: #198754; border-color: #198754;">產出報表</button>
 </div>
