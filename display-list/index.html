@@ -815,45 +815,60 @@ body {
   letter-spacing: 1px;
 }
 
-/* --- 1. 全域基礎修正：按鈕游標與時間基礎 --- */
+/* --- 1. 全域按鈕與下拉選單樣式修正 --- */
 
-/* 確保所有按鈕與可點擊項在電腦上都有手指游標 */
-#adminExportBtn, 
-#adminSearchBtn, 
-.fakeSelectBtn,
-.header, 
-.record {
+/* 讓搜尋與報表按鈕大小一致 */
+.searchBtn {
+  min-width: 120px;       /* 統一最小寬度 */
+  height: 46px;           /* 統一高度 */
+  font-size: 20px;
+  border: none;
+  border-radius: 8px;
   cursor: pointer !important;
-}
-
-/* 報表按鈕專屬顏色與效果 */
-#adminExportBtn {
-  background-color: #198754 !important;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
   color: white !important;
 }
 
-#adminExportBtn:hover {
-  filter: brightness(0.9);
-  transform: translateY(-1px);
+#adminSearchBtn { background-color: #0b5ed7 !important; }
+#adminExportBtn { background-color: #198754 !important; }
+
+/* 下拉選單內的標題列加粗 */
+.panel-title {
+  font-weight: bold !important;
+  font-size: 20px;
+  color: #333;
 }
 
-/* --- 2. 手機版樣式補強 (螢幕小於 768px) --- */
+/* --- 2. 手機版專屬修正 (螢幕寬度 < 769px) --- */
 @media (max-width: 768px) {
-  #adminFilterArea div {
-    display: flex;
-    flex-wrap: wrap; /* 手機版允許換行，防止時間框爆出去 */
-    align-items: center;
-    gap: 8px;
-    margin-bottom: 12px;
-  }
-  
-  .timeRow {
-    flex-wrap: nowrap !important; /* 只有時間內部的兩個框框不換行 */
-    gap: 4px !important;
+  #adminFilterArea {
+    padding: 10px !important;
   }
 
-  .fakeSelectBtn {
-    min-width: 90px; /* 手機版框框稍微縮小一點點，避免擠壓 */
+  /* 讓手機版的標籤維持基本樣式 */
+  #adminFilterArea label {
+    font-weight: bold;
+    font-size: 20px;
+    margin-bottom: 5px;
+    display: block; /* 標籤佔一行，避免跟框框擠在一起 */
+  }
+
+  /* 搜尋與報表按鈕：左右平分、置中 */
+  #adminFilterArea div:last-child {
+    display: flex !important;
+    justify-content: center !important; /* 水平置中 */
+    gap: 15px !important;
+    margin-top: 20px !important;
+    width: 100% !important;
+  }
+
+  /* 讓按鈕在手機上稍微加寬，更好點擊 */
+  .searchBtn {
+    flex: 1;               /* 讓兩個按鈕平分剩餘空間 */
+    max-width: 160px;      /* 但不要太寬到爆掉 */
   }
 }
 </style>
