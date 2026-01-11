@@ -971,8 +971,7 @@ body {
     flex: none !important;
   }
 
-  /* 2️⃣ 大隊、類型 → 跟時間一樣寬 */
-  #adminFilterArea button[onclick*="openDropdown('team')"],
+  /* 2️⃣ 類型 → 跟時間一樣寬 */
   #adminFilterArea button[onclick*="openDropdown('type')"] {
     width: auto !important;
     min-width: 110px !important;   /* ★ 同時間 */
@@ -980,7 +979,8 @@ body {
     flex: none !important;
   }
 
-  /* 3️⃣ 範圍 → 完全自動，不限制 */
+  /* 3️⃣ 大隊、範圍 → 完全自動，不限制 */
+  #adminFilterArea button[onclick*="openDropdown('team')"],
   #adminFilterArea button[onclick*="openDropdown('range')"] {
     width: auto !important;
     min-width: auto !important;
@@ -2407,7 +2407,7 @@ function applyAdminButtonFix() {
     // ----- 未選中狀態（白底綠框） -----
     btnSelf.style.background = "white";
     btnSelf.style.color = "#28a745";
-    btnSelf.style.border = "2px solid #28a745";
+    btnSelf.style.border = "2px solid #198754";
 
     // hover（還是白底，只是顏色微變）
     btnSelf.onmouseover = () => {
@@ -2417,14 +2417,14 @@ function applyAdminButtonFix() {
       // 若目前仍未選中 → 回到白底綠字
       if (viewMode === "admin") {
         btnSelf.style.background = "white";
-        btnSelf.style.color = "#28a745";
+        btnSelf.style.color = "#198754";
       }
     };
 
     // ----- 點擊後變成選中狀態（綠底白字） -----
     btnSelf.onclick = () => {
       // 綠底白字
-      btnSelf.style.background = "#28a745";
+      btnSelf.style.background = "#198754";
       btnSelf.style.color = "white";
 
       // 立即開啟歷史報表
