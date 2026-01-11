@@ -1044,65 +1044,81 @@ body {
 }
 
 /* =====================================================
-   🎯 核心對齊系統：統一兩排按鈕的容器與間距
+   🎯 核心對齊系統：強制統一上下兩排按鈕
    ===================================================== */
 
-/* 1. 統一容器：確保上下兩排都置中，且間距完全一致 */
+/* 統一容器：確保置中且間距一致 */
 #switchArea, 
 .admin-action-row {
   display: flex !important;
-  justify-content: center !important; /* 絕對置中 */
-  gap: 12px !important;              /* 統一按鈕間的縫隙 */
-  margin: 15px auto 25px !important;  /* 統一外距 */
+  justify-content: center !important;
+  gap: 12px !important;              /* ★ 統一間距 */
+  margin: 15px auto 25px !important;
   width: 100% !important;
-  padding: 0 !important;
 }
 
-/* 2. 統一按鈕：固定寬度是「對齊」的關鍵 */
+/* 統一按鈕基礎：固定寬度是「對齊」的靈魂 */
 #btnTeam, 
 #btnSelf, 
 #adminSearchBtn, 
 #adminExportBtn {
-  width: 140px !important;    /* 強制所有主按鈕寬度一致 */
+  width: 140px !important;    /* ★ 固定寬度 */
   height: 46px !important;
   font-size: 20px !important;
-  padding: 0 !important;      /* 移除 padding 避免撐開寬度 */
-  flex: none !important;      /* 禁止 flex 擠壓導致位移 */
+  border-radius: 8px;
   display: inline-flex !important;
   align-items: center;
   justify-content: center;
-  border-radius: 8px;
+  flex: none !important;
   box-sizing: border-box !important;
-  margin: 0 !important;       /* 移除所有 margin 避免推開對齊線 */
+  margin: 0 !important;       /* ★ 移除所有 margin */
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-decoration: none;
 }
 
-/* 3. 顏色微調 (如果您需要綠色外框的歷史報表感) */
+/* --- 🔵 藍色系按鈕：大隊紀錄 / 搜尋 --- */
+#btnTeam, 
+#adminSearchBtn {
+  background-color: #0b5ed7 !important;
+  color: white !important;
+  border: none !important;
+}
+
+/* --- 🔵 藍框按鈕：我的紀錄 (點擊/懸停反藍) --- */
 #btnSelf {
   background-color: white !important;
   color: #0b5ed7 !important;
   border: 2px solid #0b5ed7 !important;
 }
+#btnSelf:hover, #btnSelf:active {
+  background-color: #0b5ed7 !important;
+  color: white !important;
+}
 
+/* --- 🟢 綠色系按鈕：產出報表 --- */
 #adminExportBtn {
+  background-color: #198754 !important;
+  color: white !important;
+  border: none !important;
+}
+
+/* --- 🟢 綠框按鈕：歷史報表 (如有此按鈕，點擊/懸停反綠) --- */
+/* 假設您的「歷史報表」按鈕 ID 是 btnHistory，若不是請自行調整 ID */
+.history-btn-style {
+  background-color: white !important;
+  color: #198754 !important;
+  border: 2px solid #198754 !important;
+}
+.history-btn-style:hover, .history-btn-style:active {
   background-color: #198754 !important;
   color: white !important;
 }
 
-/* =====================================================
-   📱 手機版微調：確保沒有隱藏的寬度影響對齊
-   ===================================================== */
+/* 手機版微調 */
 @media (max-width: 768px) {
-  /* 確保搜尋面板不會限制按鈕的置中發揮 */
-  .admin-inner-wrapper {
-    width: 100% !important;
-    display: flex !important;
-    flex-direction: column !important;
-    align-items: center !important;
-  }
-  
-  /* 如果產出報表仍然有些微偏差，是因為手機螢幕渲染問題，可用這行做極微調 */
   #adminExportBtn {
-    margin-left: 0px !important; 
+    margin-left: 0px !important; /* 確保徹底歸零 */
   }
 }
 </style>
