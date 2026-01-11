@@ -817,10 +817,10 @@ body {
 
 /* --- 1. 全域按鈕與下拉選單樣式修正 --- */
 
-/* 讓搜尋與報表按鈕大小一致 */
+/* 讓搜尋與報表按鈕大小、游標一致 */
 .searchBtn {
-  min-width: 120px;       /* 統一最小寬度 */
-  height: 46px;           /* 統一高度 */
+  min-width: 120px;
+  height: 46px;
   font-size: 20px;
   border: none;
   border-radius: 8px;
@@ -830,6 +830,7 @@ body {
   justify-content: center;
   transition: all 0.2s ease;
   color: white !important;
+  flex: none; /* 防止按鈕被壓扁 */
 }
 
 #adminSearchBtn { background-color: #0b5ed7 !important; }
@@ -842,33 +843,43 @@ body {
   color: #333;
 }
 
-/* --- 2. 手機版專屬修正 (螢幕寬度 < 769px) --- */
+/* --- 2. 手機版修正 (螢幕寬度 < 769px) --- */
 @media (max-width: 768px) {
-  #adminFilterArea {
-    padding: 10px !important;
+  /* 強制每一組(大隊、範圍、時間)都自己佔一行 */
+  #adminFilterArea div {
+    display: block !important; /* 改為 block 確保換行 */
+    margin-bottom: 15px;
+    width: 100%;
   }
 
-  /* 讓手機版的標籤維持基本樣式 */
+  /* 只有時間列內部需要並排 */
+  .timeRow {
+    display: flex !important;
+    align-items: center;
+    gap: 6px;
+    margin-top: 5px;
+  }
+
+  /* 手機版標籤加粗 */
   #adminFilterArea label {
+    display: block;
     font-weight: bold;
     font-size: 20px;
     margin-bottom: 5px;
-    display: block; /* 標籤佔一行，避免跟框框擠在一起 */
   }
 
-  /* 搜尋與報表按鈕：左右平分、置中 */
+  /* 搜尋與報表按鈕列：左右平分、置中 */
   #adminFilterArea div:last-child {
-    display: flex !important;
-    justify-content: center !important; /* 水平置中 */
-    gap: 15px !important;
-    margin-top: 20px !important;
-    width: 100% !important;
+    display: flex !important; /* 按鈕這一列恢復 flex */
+    flex-direction: row !important;
+    justify-content: center !important;
+    gap: 12px;
+    margin-top: 25px;
   }
 
-  /* 讓按鈕在手機上稍微加寬，更好點擊 */
   .searchBtn {
-    flex: 1;               /* 讓兩個按鈕平分剩餘空間 */
-    max-width: 160px;      /* 但不要太寬到爆掉 */
+    flex: 1; /* 兩個按鈕平分寬度 */
+    max-width: 150px;
   }
 }
 </style>
