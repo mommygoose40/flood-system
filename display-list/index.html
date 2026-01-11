@@ -1419,6 +1419,7 @@ let shouldKeepMask = false;
 let restoredOnce = false;
 let isInitialLoad = true;
 let globalRecords = [];
+let adminSubView = "list"; 
 
 // ------------------------------------------
 // ★★★ Session Storage 預快取輔助函式 ★★★
@@ -2416,65 +2417,91 @@ function updateSwitchUI() {
   const btnSelf = document.getElementById("btnSelf");
   const btnTeam = document.getElementById("btnTeam");
 
-  // 重置所有按鈕樣式
-  btnSelf.style.background = "white";
-  btnSelf.style.color = "#0b5ed7";
+  // ===== 重置 =====
   btnTeam.style.background = "white";
   btnTeam.style.color = "#0b5ed7";
+  btnTeam.style.border = "2px solid #0b5ed7";
 
-  // 根據當前模式設定激活狀態
+  btnSelf.style.background = "white";
+  btnSelf.style.border = "2px solid #0b5ed7";
+  btnSelf.style.color = "#0b5ed7";
+  btnSelf.textContent = "我的紀錄";
+
+  // ===== 管理員模式 =====
+  if (globalRole === "管理員" && viewMode === "admin") {
+    btnSelf.textContent = "歷史報表";
+    btnSelf.style.border = "2px solid #28a745";
+    btnSelf.style.color = "#28a745";
+
+    if (adminSubView === "history") {
+      btnSelf.style.background = "#28a745";
+      btnSelf.style.color = "white";
+    } else {
+      btnTeam.style.background = "#0b5ed7";
+      btnTeam.style.color = "white";
+    }
+    return;
+  }
+
+  // ===== 一般模式 =====
   if (viewMode === "self") {
     btnSelf.style.background = "#0b5ed7";
     btnSelf.style.color = "white";
-  } else if (viewMode === "team" || viewMode === "admin") {
+  } else {
     btnTeam.style.background = "#0b5ed7";
     btnTeam.style.color = "white";
   }
-
-  // ★★★ 在這裡加入即可 ★★★
-  applyAdminButtonFix();
 }
 
-function applyAdminButtonFix() {
-  const btnSelf = document.getElementById("btnSelf");
+document.getElementById("btnSelf").onclick = function () {
 
-  // 只在「管理員 + admin 模式」下啟動
+  // 管理員：歷史報表
   if (globalRole === "管理員" && viewMode === "admin") {
+    adminSubView = "history";
+    updateSwitchUI();
 
-    // 按鈕文字
-    btnSelf.textContent = "歷史報表";
-
-    // ----- 未選中狀態（白底綠框） -----
-    btnSelf.style.background = "white";
-    btnSelf.style.color = "#28a745";
-    btnSelf.style.border = "2px solid #28a745";
-
-    // hover（還是白底，只是顏色微變）
-    btnSelf.onmouseover = () => {
-      btnSelf.style.background = "#f1fdf1";
-    };
-    btnSelf.onmouseout = () => {
-      // 若目前仍未選中 → 回到白底綠字
-      if (viewMode === "admin") {
-        btnSelf.style.background = "white";
-        btnSelf.style.color = "#28a745";
-      }
-    };
-
-    // ----- 點擊後變成選中狀態（綠底白字） -----
-    btnSelf.onclick = () => {
-      // 綠底白字
-      btnSelf.style.background = "#28a745";
-      btnSelf.style.color = "white";
-
-      // 立即開啟歷史報表
-      window.open(
-        "https://docs.google.com/spreadsheets/d/1GEjlfTy73kgZnMYrM0AHjnYIs1EPLIOQLCqsEE8BMAw/edit?gid=0#gid=0",
-        "_blank"
-      );
-    };
+    window.open(
+      "https://docs.google.com/spreadsheets/d/1GEjlfTy73kgZnMYrM0AHjnYIs1EPLIOQLCqsEE8BMAw/edit?gid=0#gid=0",
+      "_blank"
+    );
+    return;
   }
-}
+
+  // 一般志工：我的紀錄
+  viewMode = "self";
+  adminSubView = "list";
+  updateSwitchUI();
+
+  document.getElementById("adminFilterArea").style.display = "none";
+  renderLoadingInList();
+  loadRecordList("self");
+};
+
+document.getElementById("btnTeam").onclick = async function () {
+  adminSubView = "list";
+
+  if (globalRole === "大隊長") {
+    viewMode = "team";
+    updateSwitchUI();
+    document.getElementById("adminFilterArea").style.display = "none";
+    renderLoadingInList();
+    loadRecordList("team");
+    return;
+  }
+
+  if (globalRole === "管理員") {
+    viewMode = "admin";
+    updateSwitchUI();
+    renderLoadingInList();
+
+    if (globalAdminRecords.length === 0) {
+      await loadAdminRecords();
+    } else {
+      document.getElementById("adminFilterArea").style.display = "block";
+      renderList(filterAdminRecords());
+    }
+  }
+};
 
 function showLoadingMask() {
   document.getElementById("loadingMask").style.display = "flex";
