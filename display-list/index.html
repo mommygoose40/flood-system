@@ -1005,8 +1005,8 @@ body {
   /* 1️⃣ 先定義「時間框」寬度（基準） */
   #adminFilterArea .timeBtn {
     width: auto !important;
-    min-width: 120px !important;   /* ★ 基準寬度 */
-    max-width: 120px !important;
+    min-width: 110px !important;   /* ★ 基準寬度 */
+    max-width: 110px !important;
     flex: none !important;
   }
 
@@ -1014,8 +1014,8 @@ body {
   #adminFilterArea button[onclick*="openDropdown('team')"],
   #adminFilterArea button[onclick*="openDropdown('type')"] {
     width: auto !important;
-    min-width: 120px !important;   /* ★ 同時間 */
-    max-width: 120px !important;
+    min-width: 110px !important;   /* ★ 同時間 */
+    max-width: 110px !important;
     flex: none !important;
   }
 
@@ -1027,6 +1027,43 @@ body {
     flex: none !important;
   }
 
+}
+
+  /* =====================================================
+   🔘 主操作按鈕：統一寬度（手機＋電腦）
+   ===================================================== */
+#btnTeam,
+#btnSelf,
+#btnHistory,
+#adminSearchBtn,
+#adminExportBtn {
+  width: 140px !important;     /* ★ 統一寬度 */
+  height: 46px;
+  font-size: 20px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: none !important;
+}
+
+/* =====================================================
+   📐 上下兩排按鈕：統一對齊方式
+   ===================================================== */
+
+/* 上方：大隊紀錄 / 我的紀錄 / 歷史報表 */
+#switchArea {
+  display: flex !important;
+  justify-content: center !important;
+  gap: 12px !important;
+  margin: 15px 0 20px 0 !important;
+}
+
+/* 下方：搜尋 / 產出報表 */
+#adminFilterArea .admin-inner-wrapper > div:last-child {
+  display: flex !important;
+  justify-content: center !important;
+  gap: 12px !important;     /* ★ 跟上方一致 */
+  margin-top: 20px !important;
 }
 </style>
 
