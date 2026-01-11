@@ -815,25 +815,17 @@ body {
   letter-spacing: 1px;
 }
 
-/* --- 1. 全域基礎樣式 --- */
-html, body {
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
-  background: #f5f8ff;
-  margin: 0; padding: 0;
-}
-
-/* 統一所有按鈕的寬度、高度與間距 */
+/* --- 1. 統一所有按鈕寬度與間距 (搜尋、報表、大隊、我的) --- */
 #adminSearchBtn, #adminExportBtn, #btnTeam, #btnSelf {
-  width: 130px !important;   /* 🔥 統一所有按鈕寬度一致 */
-  height: 44px;
-  font-size: 19px;
-  border-radius: 8px;
-  cursor: pointer !important;
-  display: inline-flex;
+  width: 130px !important; 
+  height: 44px !important;
+  font-size: 20px !important;
+  border-radius: 8px !important;
+  display: inline-flex !important;
   align-items: center;
   justify-content: center;
   border: none;
-  transition: all 0.2s;
+  cursor: pointer !important;
   flex: none !important;
 }
 
@@ -841,77 +833,63 @@ html, body {
 #adminExportBtn { background: #198754 !important; color: white !important; }
 #btnSelf { background: white !important; color: #0b5ed7 !important; border: 2px solid #0b5ed7 !important; }
 
-/* 預設隱藏 switchArea (大隊紀錄/我的紀錄) */
+/* 強制顯示切換區域並修正間距 */
 #switchArea {
-  display: none; 
-  justify-content: center;
-  gap: 12px;
-  margin: 15px 0 25px 0;
+  display: flex !important; 
+  justify-content: center !important;
+  gap: 12px !important;
+  margin: 10px 0 20px 0 !important;
 }
 
-/* 偽下拉框基礎樣式 */
-.fakeSelectBtn {
-  font-size: 20px;
-  height: 42px;
-  border: 1px solid #888;
-  border-radius: 4px;
-  background: #fff;
-  display: inline-flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 0 12px;
-  width: 140px !important;  /* 🔥 預設一個固定寬度 */
+/* 彈出下拉選單的標題加粗 */
+.panel-title, #panelTitle {
+  font-weight: 900 !important;
+  font-size: 22px !important;
 }
 
-/* --- 2. 手機版樣式 (< 769px) --- */
+/* --- 2. 手機版樣式 (< 769px)：框框全部等寬，禁止換行 --- */
 @media (max-width: 768px) {
-  #adminFilterArea {
-    padding: 16px !important;
-  }
-
-  /* 每一行容器 */
-  #adminFilterArea > div {
-    display: flex !important;
-    align-items: center !important;
-    margin-bottom: 16px !important;
-    flex-wrap: wrap !important; /* 🔥 允許時間列換行 */
-  }
-
-  /* 標籤加粗且固定寬度 */
-  #adminFilterArea label {
-    font-size: 20px;
-    font-weight: bold !important; /* 🔥 標題加粗 */
-    min-width: 70px;
-    display: inline-block;
-  }
-
-  /* 🔥 核心要求：時間列的處理 */
-  #timeWrapper.timeRow {
-    display: flex !important;
-    flex-direction: column !important; /* 🔥 時間的兩個框上下排 */
-    align-items: flex-start !important;
-    gap: 8px !important;
-    width: auto;
-  }
-
-  /* 讓時間的每一個框都跟大隊的一樣寬 (140px) */
-  .timeRow .fakeSelectBtn {
-    width: 140px !important; 
-  }
-
-  /* 隱藏時間中間的波浪號，或讓它靠左 */
-  .tilde {
-    display: none; /* 手機版上下排，不需要波浪號 */
-  }
-
-  /* 搜尋與產出報表按鈕列：置中並排 */
-  #adminFilterArea div:last-child {
+  /* 每一列的容器：禁止換行，改用橫向溢出或擠壓標籤 */
+  #adminFilterArea div {
     display: flex !important;
     flex-direction: row !important;
+    align-items: center !important;
+    flex-wrap: nowrap !important; /* ⭐ 絕對禁止換行 */
+    margin-bottom: 12px !important;
+  }
+
+  /* 標籤：加粗，並縮到最小寬度，把空間留給框框 */
+  #adminFilterArea label {
+    font-weight: bold !important;
+    font-size: 20px;
+    min-width: 55px; /* 縮小標籤佔位 */
+    flex-shrink: 0;
+  }
+
+  /* ⭐ 核心修正：所有框框寬度強制統一 (大隊、範圍、時間起、時間迄、類型) */
+  .fakeSelectBtn {
+    width: 120px !important; /* 你可以根據需求調整這個數值，例如 110px 或 130px */
+    flex: none !important;   /* 禁止彈性伸縮，保證每個都一樣大 */
+    height: 42px !important;
+    padding: 0 8px !important;
+    font-size: 18px !important;
+  }
+
+  /* 時間列的特殊處理：確保兩個框中間的波浪號不佔空間 */
+  .timeRow {
+    gap: 4px !important;
+  }
+  
+  .tilde {
+    flex-shrink: 0;
+    margin: 0 2px;
+  }
+
+  /* 搜尋按鈕列置中 */
+  #adminFilterArea div:last-child {
     justify-content: center !important;
-    gap: 12px !important;
-    margin-top: 30px !important;
-    width: 100% !important;
+    gap: 10px !important;
+    margin-top: 20px !important;
   }
 }
 </style>
