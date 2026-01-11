@@ -938,7 +938,7 @@ body {
 
   /* 整個搜尋區塊：直向排列 */
   #adminFilterArea {
-    display: block !important;
+    display: none;
     width: 100% !important;
     padding: 12px !important;
   }
@@ -997,24 +997,33 @@ body {
 
 }
 
-  /* =====================================================
-   📱 手機版：搜尋條件框框回復「固定寬度」
+/* =====================================================
+   📱 手機版：以「時間框」為基準寬度
    ===================================================== */
 @media (max-width: 768px) {
 
-  /* 🔒 所有搜尋條件用的假下拉，不要撐滿 */
-  #adminFilterArea .fakeSelectBtn {
-    width: auto !important;        /* 關鍵 */
-    min-width: 120px !important;   /* 接近你舊版視覺 */
-    max-width: 160px !important;   /* 防止被拉太長 */
-    flex: none !important;         /* 禁止被 flex 撐大 */
-  }
-
-  /* 🔒 時間選擇兩個框框也一樣 */
+  /* 1️⃣ 先定義「時間框」寬度（基準） */
   #adminFilterArea .timeBtn {
     width: auto !important;
-    min-width: 110px !important;
-    max-width: 140px !important;
+    min-width: 120px !important;   /* ★ 基準寬度 */
+    max-width: 120px !important;
+    flex: none !important;
+  }
+
+  /* 2️⃣ 大隊、類型 → 跟時間一樣寬 */
+  #adminFilterArea button[onclick*="openDropdown('team')"],
+  #adminFilterArea button[onclick*="openDropdown('type')"] {
+    width: auto !important;
+    min-width: 120px !important;   /* ★ 同時間 */
+    max-width: 120px !important;
+    flex: none !important;
+  }
+
+  /* 3️⃣ 範圍 → 完全自動，不限制 */
+  #adminFilterArea button[onclick*="openDropdown('range')"] {
+    width: auto !important;
+    min-width: auto !important;
+    max-width: none !important;
     flex: none !important;
   }
 
