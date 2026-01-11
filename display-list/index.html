@@ -996,6 +996,29 @@ body {
   }
 
 }
+
+  /* =====================================================
+   📱 手機版：搜尋條件框框回復「固定寬度」
+   ===================================================== */
+@media (max-width: 768px) {
+
+  /* 🔒 所有搜尋條件用的假下拉，不要撐滿 */
+  #adminFilterArea .fakeSelectBtn {
+    width: auto !important;        /* 關鍵 */
+    min-width: 120px !important;   /* 接近你舊版視覺 */
+    max-width: 160px !important;   /* 防止被拉太長 */
+    flex: none !important;         /* 禁止被 flex 撐大 */
+  }
+
+  /* 🔒 時間選擇兩個框框也一樣 */
+  #adminFilterArea .timeBtn {
+    width: auto !important;
+    min-width: 110px !important;
+    max-width: 140px !important;
+    flex: none !important;
+  }
+
+}
 </style>
 
   <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
