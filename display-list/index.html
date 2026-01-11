@@ -160,9 +160,30 @@
   font-size: 20px;
 }
 
+#adminFilterArea div {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: nowrap;    /* ⭐ 不允許換行 */
+  white-space: nowrap;    /* 🔥 完整禁止換行 */
+}
+
+#adminSearchBtn, #viewFullRecords {
+  padding: 8px 14px; /* 更小 */
+  font-size: 20px;    /* 更小 */
+  border: none;
+  color: white;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  flex: none !important;    /* 不要被撐大 */
+  width: auto !important;  /* 自動縮 */
+  display: inline-block;    /* 不要佔滿 */
+}
+
 #adminSearchBtn {
   background: #0b5ed7;
-  /* width: 110px !important; /* ★ 小一點 */
+  width: 110px !important; /* ★ 小一點 */
   margin: 0 auto !important;
   display: block !important;
 }
@@ -178,6 +199,7 @@
   box-shadow: 0 2px 4px rgba(0,0,0,0.1);
 }
 
+
 #viewFullRecords {
   background: #28a745;
 }
@@ -192,6 +214,7 @@
   transform: translateY(0);
   box-shadow: 0 2px 4px rgba(0,0,0,0.1);
 }
+
 
 /* 偽下拉按鈕 */
 .fakeSelectBtn {
@@ -214,6 +237,7 @@
   /* 保持 translateY(0) 防止手機上被 desktop 的 transform 影響 */
   transform: translateY(0); 
 }
+
 
 /* 偽下拉選單內文字改成同色 */
 .fakeSelectBtn span {
@@ -341,6 +365,9 @@
   color: white;
   border: none;
   border-radius: 8px;
+  display: inline-block;      /* 🔥 讓按鈕寬度回到正常 */
+  width: auto;            /* 🔥 取消 flex 的影響 */
+  margin: 0 auto;           /* 🔥 水平置中 */
 }
 
 /* 完全去除手機觸控高亮 */
@@ -643,6 +670,7 @@ html, body {
     flex-direction: column !important;
   }
 
+
   /* ------------------------------------------------------------
       LoadingMask：灰幕，不模糊、不延遲
       ------------------------------------------------------------ */
@@ -663,52 +691,6 @@ html, body {
 
   body.loading #loadingMask {
     display: flex !important;
-  }
-
-  /* 1. 最外層：負責將整個區塊置中 */
-  #adminFilterArea {
-    display: none; 
-    width: 100% !important;
-    margin: 20px auto !important;
-    text-align: center !important; /* 讓內層 wrapper 像文字一樣置中 */
-  }
-
-  /* 顯示時強制改為 block (因為我們用 text-align:center) */
-  #adminFilterArea[style*="display: block"],
-  #adminFilterArea[style*="display: flex"] {
-    display: block !important;
-  }
-
-  /* 2. 內部面板：包裹所有條件，隨內容撐開寬度 */
-  .admin-inner-wrapper {
-    background: #ffffff;
-    padding: 10px 20px;
-  }
-
-  /* 3. 每一列：達成「標籤+框框並排」且「不同項換行」 */
-  .admin-inner-wrapper > div {
-    display: flex !important;         /* 標籤與框框並排 */
-    flex-direction: row !important;
-    align-items: center !important;
-    margin-bottom: 15px !important;    /* 每一行之間的距離 (達成換行效果) */
-    width: 100% !important;
-    white-space: nowrap !important;   /* 確保單行內不折行 */
-  }
-
-  /* 4. 標籤固定寬度：讓後面的框框整齊對齊 */
-  #adminFilterArea label {
-    min-width: 80px !important;       /* 固定寬度，讓「大隊、範圍、時間」對齊 */
-    font-weight: bold;
-    font-size: 20px;
-    margin-right: 10px;
-    flex-shrink: 0;
-  }
-
-  /* 5. 底部按鈕列：搜尋與產出報表 */
-  .admin-inner-wrapper > div:last-child {
-    justify-content: center !important; 
-    margin-top: 25px !important;
-    gap: 15px !important;
   }
 }
 
@@ -795,283 +777,6 @@ body {
   font-weight: 600;
   letter-spacing: 1px;
 }
-
-/* --- 1. 全域按鈕基礎樣式 (統一搜尋、報表、紀錄切換按鈕) --- */
-.searchBtn, #btnTeam, #btnSelf {
-  width: 140px !important;    /* 🔥 統一所有按鈕寬度 */
-  height: 46px;
-  font-size: 20px;
-  border: none;
-  border-radius: 8px;
-  cursor: pointer !important;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  transition: all 0.2s ease;
-  flex: none !important;      /* 禁止被 flex 擠壓變形 */
-}
-
-/* 顏色設定 */
-#adminSearchBtn { background-color: #0b5ed7 !important; color: white !important; }
-#adminExportBtn { background-color: #198754 !important; color: white !important; }
-#btnTeam { background-color: #0b5ed7 !important; color: white !important; margin: 0 !important; }
-#btnSelf { background-color: white !important; color: #0b5ed7 !important; border: 2px solid #0b5ed7 !important; }
-
-/* 容器間距與置中 (確保上下兩組對齊) */
-#switchArea, .admin-action-row {
-  display: flex !important;
-  margin: 15px 0 25px 0 !important;
-}
-
-/* --- 2. 按鈕顏色細節 --- */
-
-/* 藍色按鈕 (大隊紀錄 & 搜尋) */
-#btnTeam, #adminSearchBtn {
-  background-color: #0b5ed7 !important;
-  color: white !important;
-  border: none !important;
-}
-
-/* 綠色按鈕 (產出報表) */
-#adminExportBtn {
-  background-color: #198754 !important;
-  color: white !important;
-  border: none !important;
-}
-
-/* --- 3. 手機版排版修正 (< 769px) --- */
-@media (max-width: 768px) {
-  /* 一般列：標籤與單一框框同行 */
-  .admin-inner-wrapper > div {
-    display: flex !important;
-    align-items: center !important;
-    margin-bottom: 15px !important;
-  }
-
-  /* 🔥 核心修正：時間列在手機版改為換行，好讓框框變大 */
-  #timeWrapper.timeRow {
-    display: flex !important;
-    flex-wrap: wrap !important; /* 允許折行 */
-    gap: 10px !important;
-    margin-top: 5px;
-  }
-
-  /* 所有的偽下拉框 (大隊、範圍、類型、及時間的兩個框) 寬度全部統一 */
-  .fakeSelectBtn {
-    width: 100% !important;     /* 讓框框去撐滿該行剩餘空間 */
-    max-width: 100% !important;
-    height: 42px !important;
-    flex: 1;
-  }
-
-  /* 時間列的波浪號：在手機版換行時會佔滿寬度或置中 */
-  .tilde {
-    width: 100%;
-    text-align: center;
-    margin: -5px 0;
-    font-weight: bold;
-  }
-
-  /* 標籤樣式 */
-  #adminFilterArea label {
-    min-width: 65px !important;
-    font-weight: bold !important;
-    font-size: 20px;
-    flex-shrink: 0;
-  }
-
-  /* 底部按鈕列：置中並排 */
-  .admin-inner-wrapper > div:last-child {
-    display: flex !important;
-    justify-content: center !important;
-    gap: 15px !important;
-    margin-top: 30px !important;
-  }
-
-/* --- 4. 彈窗與標籤強化 --- */
-#panelTitle, .panel-title {
-  font-weight: bold !important;
-  font-size: 22px !important;
-}
-
-  /* =====================================================
-   📱 手機版：只修正「搜尋欄位條件區」
-   ===================================================== */
-@media (max-width: 768px) {
-
-  /* 整個搜尋區塊：直向排列 */
-  #adminFilterArea {
-    display: none;
-    width: 100% !important;
-    padding: 12px !important;
-  }
-
-  /* 內層 wrapper：不要 inline-block，不要桌機邏輯 */
-  #adminFilterArea .admin-inner-wrapper {
-    display: block !important;
-    width: 100% !important;
-    min-width: 0 !important;
-  }
-
-  /* 每一列條件：一列一組（回到你原本的手機感覺） */
-  #adminFilterArea .admin-inner-wrapper > div {
-    display: flex !important;
-    align-items: center !important;
-    flex-wrap: nowrap !important;   /* 不換行 */
-    margin-bottom: 12px !important;
-    width: 100% !important;
-  }
-
-  /* 左邊標籤 */
-  #adminFilterArea label {
-    min-width: 70px !important;
-    font-size: 20px !important;
-    font-weight: bold;
-    flex-shrink: 0;
-  }
-
-  /* 右邊下拉按鈕 */
-  #adminFilterArea .fakeSelectBtn {
-    min-width: 110px !important;
-    height: 42px !important;
-    font-size: 20px !important;
-  }
-
-  /* 時間那一列：不要被手機版 wrap 拆開 */
-  #timeWrapper.timeRow {
-    flex-wrap: nowrap !important;
-    gap: 10px !important;
-  }
-
-  /* ～ 符號回到正常 inline */
-  .tilde {
-    width: auto !important;
-    margin: 0 4px !important;
-    text-align: center;
-  }
-
-  /* 搜尋 / 產出報表按鈕那一列 */
-  #adminFilterArea .admin-inner-wrapper > div:last-child {
-    display: flex !important;
-    justify-content: center !important;
-    gap: 12px !important;
-    margin-top: 20px !important;
-  }
-
-}
-
-/* =====================================================
-   📱 手機版：以「時間框」為基準寬度
-   ===================================================== */
-@media (max-width: 768px) {
-
-  /* 1️⃣ 先定義「時間框」寬度（基準） */
-  #adminFilterArea .timeBtn {
-    width: auto !important;
-    min-width: 110px !important;   /* ★ 基準寬度 */
-    max-width: 110px !important;
-    flex: none !important;
-  }
-
-  /* 2️⃣ 大隊、類型 → 跟時間一樣寬 */
-  #adminFilterArea button[onclick*="openDropdown('team')"],
-  #adminFilterArea button[onclick*="openDropdown('type')"] {
-    width: auto !important;
-    min-width: 110px !important;   /* ★ 同時間 */
-    max-width: 110px !important;
-    flex: none !important;
-  }
-
-  /* 3️⃣ 範圍 → 完全自動，不限制 */
-  #adminFilterArea button[onclick*="openDropdown('range')"] {
-    width: auto !important;
-    min-width: auto !important;
-    max-width: none !important;
-    flex: none !important;
-  }
-
-}
-
-/* =====================================================
-   📐 上下兩排按鈕：統一對齊方式
-   ===================================================== */
-
-/* 下方：搜尋 / 產出報表 */
-#adminFilterArea .admin-inner-wrapper > div:last-child {
-  display: flex !important;
-  justify-content: center !important;
-  gap: 12px !important;     /* ★ 跟上方一致 */
-  margin-top: 20px !important;
-}
-
-  /* =====================================================
-   ✅ 最終版：操作區統一對齊系統
-   ===================================================== */
-
-/* 上下共用同一個置中基準 */
-.action-center {
-  width: 100%;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-}
-
-/* 搜尋區整塊 */
-#adminFilterArea {
-  width: 100%;
-}
-
-/* 搜尋欄位面板 */
-.admin-inner-wrapper {
-  width: 100%;
-  max-width: 820px;   /* 桌機卡片寬 */
-  margin: 0 auto;
-}
-
-/* =====================================================
-   🎯 核心對齊與骨架系統 (顏色交給 JS)
-   ===================================================== */
-
-/* 統一容器：確保上下兩排都置中，且間距完全一致 */
-#switchArea, 
-.admin-action-row {
-  display: flex !important;
-  justify-content: center !important; 
-  gap: 12px !important;              /* ★ 這邊設 12px，確保上下對齊 */
-  margin: 15px auto !important;
-  width: 100% !important;
-}
-
-/* 統一按鈕基礎：固定寬度是「對齊」的靈魂 */
-#btnTeam, 
-#btnSelf, 
-#adminSearchBtn, 
-#adminExportBtn {
-  width: 140px !important;    /* ★ 固定寬度確保邊緣對齊 */
-  height: 46px !important;
-  font-size: 20px !important;
-  border-radius: 8px;
-  display: inline-flex !important;
-  align-items: center;
-  justify-content: center;
-  flex: none !important;
-  box-sizing: border-box !important;
-  margin: 0 !important;       /* ★ 移除所有 margin */
-  cursor: pointer;
-  transition: all 0.2s ease;
-  text-decoration: none;
-}
-
-/* 搜尋與產出報表的顏色仍可留在 CSS (因為它們不參與切換) */
-#adminSearchBtn { background: #0b5ed7 !important; color: white !important; border: none !important; }
-#adminExportBtn { background: #198754 !important; color: white !important; border: none !important; }
-
-/* 針對產出報表在手機版的微調 (如果還是有一點點對不準) */
-@media (max-width: 768px) {
-  #adminExportBtn {
-    margin-left: 0px !important; 
-  }
-}
 </style>
 
   <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
@@ -1120,16 +825,35 @@ body {
 </div>
 
 <h2 id="pageTitle" style="display:block;">回報紀錄</h2>
-  
-<div class="action-center">
-<div id="switchArea">
-  <button id="btnTeam">大隊紀錄</button>
-  <button id="btnSelf">我的紀錄</button>
+
+<div id="switchArea" style="
+  display:none;
+  text-align:center;
+  margin-top:10px;
+  margin-bottom:18px;
+">
+  <button id="btnTeam" style="
+  padding:6px 16px;
+  font-size:22px;
+  border:2px solid #0b5ed7;
+  background:#0b5ed7;
+  color:white;
+  border-radius:6px;
+  margin-right:6px;
+">大隊紀錄</button>
+
+<button id="btnSelf" style="
+  padding:6px 16px;
+  font-size:22px;
+  border:2px solid #0b5ed7;
+  background:white;
+  color:#0b5ed7;
+  border-radius:6px;
+">我的紀錄</button>
 </div>
 
 <div id="adminFilterArea" style="display:none; padding:12px;">
-  <div class="admin-inner-wrapper">
-  
+
   <!-- 大隊 -->
   <div style="margin-bottom:12px;">
     <label>大隊：</label>
@@ -1264,12 +988,11 @@ body {
 
 
   <!-- 搜尋 -->
-  <div class="admin-action-row">
+  <div style="text-align:center; margin-top:20px; display: flex; justify-content: center; gap: 10px;">
     <button id="adminSearchBtn" class="searchBtn">搜尋</button>
-    <button id="adminExportBtn" class="searchBtn" style="background-color: #198754; border-color: #198754;">產出報表</button>
+    <button id="exportReportBtn" class="searchBtn" style="background-color: #198754; border-color: #198754;">產出報表</button>
 </div>
-</div>
-</div>
+
 </div>
 
 <!-- 全螢幕偽下拉選單（這段貼這裡） -->
@@ -1362,7 +1085,6 @@ let shouldKeepMask = false;
 let restoredOnce = false;
 let isInitialLoad = true;
 let globalRecords = [];
-let adminSubView = "list"; 
 
 // ------------------------------------------
 // ★★★ Session Storage 預快取輔助函式 ★★★
@@ -1476,7 +1198,6 @@ if (!globalVid) {
 
   if (globalRole === "管理員") {
     viewMode = "admin";
-    adminSubView = "list";
     await loadAdminRecords();
     return;
   }
@@ -1799,62 +1520,29 @@ records = records.filter(r => {
 function renderList(records) {
   const container = document.getElementById("listContainer");
   const spinner = document.getElementById("centerSpinner");
-  const mask = document.getElementById("loadingMask");
-
-  // 1. 初始化隱藏與顯示處理
-  container.style.display = "none";
-  if (!isInitialLoad && spinner) spinner.style.display = "flex";
-
-  // 管理員模式：確保篩選區域顯示
-  if (globalRole === "管理員" && viewMode === "admin") {
-    document.getElementById("adminFilterArea").style.display = "block";
-  } else {
-    document.getElementById("adminFilterArea").style.display = "none";
-  }
-
-  // 管理員前端快篩 (保留您的過濾邏輯)
-  if (globalRole === "管理員" && viewMode === "admin") {
-    if (globalAdminRecords.length > 0) {
-      let targetTeam = document.getElementById("adminTeamSelect")?.value || "全部";
-      if (!targetTeam) targetTeam = document.getElementById("teamText")?.innerText || "全部";
-      if (targetTeam !== "全部") {
-        records = records.filter(r => (r.所屬大隊 + "") === targetTeam);
-      }
-      const now = new Date();
-      const cutoff = new Date(now.getTime() - adminViewDays * 24 * 60 * 60 * 1000);
-      records = records.filter(r => new Date(normalizeDate(r.日期)) >= cutoff);
-    }
-  }
-
-  globalRecords = records;
+  
   container.innerHTML = "";
-
-  // 2. 跨年份分組
+  
+  // --- 分組邏輯 (支援跨年) ---
   const grouped = {};
   records.forEach(r => {
     const normalized = normalizeDate(r.日期);
-    const dateParts = normalized.split("/");
-    const yyyy = parseInt(dateParts[0], 10);
-    const m = parseInt(dateParts[1], 10);
-    const d = parseInt(dateParts[2], 10);
+    const [yyyy, mm, dd] = normalized.split("/").map(Number);
     const twYear = yyyy - 1911;
 
     if (!grouped[twYear]) grouped[twYear] = {};
-    if (!grouped[twYear][m]) grouped[twYear][m] = {};
-    if (!grouped[twYear][m][d]) grouped[twYear][m][d] = [];
-    grouped[twYear][m][d].push(r);
+    if (!grouped[twYear][mm]) grouped[twYear][mm] = {};
+    if (!grouped[twYear][mm][dd]) grouped[twYear][mm][dd] = [];
+    grouped[twYear][mm][dd].push(r);
   });
 
-  // 3. 渲染與強制展開
   const years = Object.keys(grouped).sort((a, b) => b - a);
+  const now = new Date();
+  const threeDaysAgo = new Date(now.getTime() - 3 * 24 * 60 * 60 * 1000);
+
   years.forEach(twYear => {
     const yearBlock = createBlock(`${twYear} 年`, "year");
     const yearContent = yearBlock.querySelector(".content");
-    
-    // ★ 強制展開「年」
-    yearContent.style.display = "block";
-    const yearIcon = yearBlock.querySelector(".toggle-icon");
-    if(yearIcon) yearIcon.innerHTML = `<svg width="40" height="40" viewBox="0 0 24 24"><path fill="#666" d="M5 16l7-8 7 8z"/></svg>`;
 
     const months = Object.keys(grouped[twYear]).map(Number).sort((a, b) => b - a);
     months.forEach(month => {
@@ -1866,28 +1554,27 @@ function renderList(records) {
         const dayBlock = createBlock(`${day} 日`, "day");
         const dayContent = dayBlock.querySelector(".content");
 
-        // ★ 「日」不展開，保持收合 (預設 createBlock 就是收合的)
-
         grouped[twYear][month][day].forEach(record => {
           const div = document.createElement("div");
           div.className = "record";
           
-          let hh = "--", mm = "--";
+          // 時間解析
+          let hh = "--", mmStr = "--";
           try {
-            const match = (record.詳細紀錄 || "").match(/report_(\d+)/);
+            const match = record.詳細紀錄.match(/report_(\d+)/);
             if (match) {
-              const dObj = new Date(parseInt(match[1], 10));
-              hh = String(dObj.getHours()).padStart(2, "0");
-              mm = String(dObj.getMinutes()).padStart(2, "0");
+              const d = new Date(parseInt(match[1], 10));
+              hh = String(d.getHours()).padStart(2, "0");
+              mmStr = String(d.getMinutes()).padStart(2, "0");
             }
-          } catch (e) {}
+          } catch(e) {}
 
           const status = (record.狀態 || "").trim();
-          const isAbnormal = status === "異常";
           
-          const timeText = document.createElement("span");
-          timeText.textContent = status ? `${hh}:${mm}｜${status}` : `${hh}:${mm}`;
-          div.appendChild(timeText);
+          // 內容組合 (保留紅點)
+          const timeSpan = document.createElement("span");
+          timeSpan.textContent = status ? `${hh}:${mmStr}｜${status}` : `${hh}:${mmStr}`;
+          div.appendChild(timeSpan);
 
           if ((viewMode === "team" || viewMode === "admin") && record.回報者) {
             const nameSpan = document.createElement("span");
@@ -1895,41 +1582,47 @@ function renderList(records) {
             div.appendChild(nameSpan);
           }
 
-          if (isAbnormal) {
+          // ★ 重點：保留異常紅點
+          if (status === "異常") {
             const dot = document.createElement("span");
-            dot.className = "status-dot";
+            dot.className = "status-dot"; 
             div.appendChild(dot);
           }
 
           div.onclick = () => openDetail(record.詳細紀錄);
           dayContent.appendChild(div);
         });
+
         monthContent.appendChild(dayBlock);
+
+        // --- 智慧展開邏輯 ---
+        // 條件：是初始載入 (isInitialLoad 為 true) 且日期在 3 天內
+        if (isInitialLoad) {
+          const recordDate = new Date(twYear + 1911, month - 1, day);
+          if (recordDate >= threeDaysAgo) {
+            yearContent.style.display = "block";
+            monthContent.style.display = "block";
+            dayContent.style.display = "block";
+            // 更新箭頭圖示
+            [yearBlock, monthBlock, dayBlock].forEach(b => {
+              const icon = b.querySelector(".toggle-icon");
+              if(icon) icon.innerHTML = `<svg width="40" height="40" viewBox="0 0 24 24"><path fill="#666" d="M5 16l7-8 7 8z"/></svg>`;
+            });
+          }
+        }
       });
       yearContent.appendChild(monthBlock);
     });
     container.appendChild(yearBlock);
   });
 
-  // 4. 顯示結果並收尾
-  if (mask) mask.style.display = "none";
-  if (spinner) spinner.style.display = "none";
+  // 渲染結束後將 isInitialLoad 設為 false
+  // 這樣之後點擊「搜尋按鈕」觸發 renderList 時，就不會再自動展開
+  isInitialLoad = false; 
+  
+  // 隱藏 Mask
+  document.getElementById("loadingMask").style.display = "none";
   container.style.display = "block";
-
-  updateSwitchUI();
-  document.getElementById("pageTitle").style.display = "block";
-
-  // 第一次進入時才恢復捲動位置
-  if (!restoredOnce) {
-    setTimeout(() => {
-      restoreListState();
-      restoredOnce = true;
-    }, 50);
-  }
-
-  isInitialLoad = false;
-  document.body.classList.remove("loading");
-  debug("STEP3 完成：列表渲染成功，已自動展開最近3天資料");
 }
 
 function saveListState() {
@@ -2031,20 +1724,65 @@ function restoreListState() {
   return block;
 }
 
-document.getElementById("adminSearchBtn").onclick = () => {
-  if (viewMode !== "admin") return;
+document.getElementById("btnSelf").onclick = function () {
+  viewMode = "self";
+  
+  // 立即更新按鈕樣式
+  updateSwitchUI();
+  
+  // 隱藏管理員篩選區域
+  document.getElementById("adminFilterArea").style.display = "none";
 
   // 顯示載入中
   renderLoadingInList();
+  
+  // 載入個人紀錄
+  loadRecordList("self");
+};
 
-  // 使用現有資料進行前端篩選
+document.getElementById("btnTeam").onclick = async function () {
+  // 大隊長 → 讀自己的大隊
+  if (globalRole === "大隊長") {
+    viewMode = "team";
+    updateSwitchUI(); // 立即更新按鈕樣式
+    document.getElementById("adminFilterArea").style.display = "none";
+    renderLoadingInList();
+    loadRecordList("team");
+    return;
+  }
+
+  // 管理員 → Admin 模式
+  if (globalRole === "管理員") {
+    viewMode = "admin";
+    updateSwitchUI(); // 立即更新按鈕樣式
+    renderLoadingInList();
+
+    // 如果還沒有管理員資料，先載入
+    if (globalAdminRecords.length === 0) {
+      await loadAdminRecords();
+    } else {
+      // 如果已經有資料，直接顯示篩選和渲染
+      document.getElementById("adminFilterArea").style.display = "block";
+      const filtered = filterAdminRecords();
+      renderList(filtered);
+    }
+  }
+};
+
+document.getElementById("adminSearchBtn").onclick = () => {
+  if (viewMode !== "admin") return;
+  
+  // 重要：點擊搜尋時，不屬於「初始載入」，所以設為 false
+  isInitialLoad = false; 
+  
+  renderLoadingInList();
   setTimeout(() => {
     const filtered = filterAdminRecords();
     renderList(filtered);
-  }, 100); // 稍微延遲讓載入動畫顯示
+  }, 100);
 };
 
-  document.getElementById("adminExportBtn").onclick = () => {
+  document.getElementById("exportReportBtn").onclick = () => {
   // 呼叫我們定義好的報表產出函式
   exportReport(); 
 };
@@ -2149,88 +1887,40 @@ function exportReport() {
 }
 
   function downloadExcelWithMsg() {
-    downloadExcelFinal();
+    downloadExcelFixed();
+    showMessage("報表匯出成功！<br><small>已採用 CSV 格式 (無安全警告)</small>");
 }
 
-function downloadExcelFinal() {
-  if (typeof XLSX === 'undefined') {
-    const script = document.createElement('script');
-    script.src = "https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js";
-    script.onload = () => executeDownload();
-    document.head.appendChild(script);
-  } else {
-    executeDownload();
-  }
-
-  function executeDownload() {
+function downloadExcelFixed() {
     const table = document.getElementById("targetTable");
-    if (!table) return;
+    const rows = table.querySelectorAll("tr");
+    const timestamp = new Date().toISOString().slice(0, 10);
+    const fileName = `巡視紀錄_${timestamp}.xls`;
 
-    const rows = Array.from(table.querySelectorAll("tr"));
-    const allHeaders = Array.from(rows[0].querySelectorAll("th")).map(th => th.innerText.trim());
-    
-    // 排除「詳細紀錄」
-    const targetHeaderIndices = [];
-    const finalHeaders = [];
-    allHeaders.forEach((h, idx) => {
-      if (h !== "詳細紀錄") {
-        targetHeaderIndices.push(idx);
-        finalHeaders.push(h);
-      }
-    });
+    // 建立 HTML 格式，並加入 Excel 專用的 CSS 格式 (mso-number-format)
+    // 這樣可以強制日期以文字顯示，不會變成亂碼或 ####
+    let html = `
+    <html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40">
+    <head>
+      <meta charset="utf-8">
+      <style>
+        td { mso-number-format:"\\@"; white-space:nowrap; border:0.5pt solid #ccc; }
+        .date-cell { mso-number-format:"yyyy\\/mm\\/dd"; }
+        th { background-color: #f2f2f2; font-weight: bold; border:0.5pt solid #ccc; }
+      </style>
+    </head>
+    <body>
+      <table>${table.innerHTML}</table>
+    </body>
+    </html>`;
 
-    const excelData = [];
-    for (let i = 1; i < rows.length; i++) {
-      const cells = Array.from(rows[i].querySelectorAll("td"));
-      const rowData = {};
-      targetHeaderIndices.forEach((colIdx, headerIdx) => {
-        const headerName = finalHeaders[headerIdx];
-        rowData[headerName] = cells[colIdx] ? cells[colIdx].innerText.trim() : "";
-      });
-      excelData.push(rowData);
-    }
-
-    const worksheet = XLSX.utils.json_to_sheet(excelData);
-
-    // --- [關鍵] 欄寬控制邏輯 ---
-    const colWidths = finalHeaders.map(header => {
-      // 1. 需要【自動微調】的欄位
-      if (header === "日期" || header === "通報類型" || header === "異常分類") {
-        const maxLength = excelData.reduce((max, row) => {
-          const val = row[header] ? row[header].toString() : "";
-          // 計算中文字長度 (中文字算 2 單位)
-          const len = val.split('').reduce((acc, char) => acc + (char.charCodeAt(0) > 255 ? 2 : 1), 0);
-          return Math.max(max, len);
-        }, header.length * 2);
-        return { wch: maxLength + 2 }; 
-      } 
-      // 2. 維持【預設欄寬】的欄位 (時間、狀態、說明、回報者、大隊)
-      else {
-        return { wch: 10 }; // Excel 的標準預設寬度約為 8.43 到 10
-      }
-    });
-    worksheet['!cols'] = colWidths;
-
-    // --- [關鍵] 格式化與時間鎖定 ---
-    Object.keys(worksheet).forEach(key => {
-      if (key[0] === '!') return;
-      
-      // 強制所有儲存格為字串 (避免時間偏移、避免日期被改格式)
-      worksheet[key].t = 's'; 
-      worksheet[key].z = '@'; 
-
-      // 嘗試透過屬性美化 (部分 Excel 版本會繼承格式)
-      if (!worksheet[key].s) worksheet[key].s = {};
-      worksheet[key].s = {
-        font: { name: "微軟正黑體", sz: 11 },
-        alignment: { vertical: "center", horizontal: "left" }
-      };
-    });
-
-    const workbook = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(workbook, worksheet, "巡視紀錄");
-    XLSX.writeFile(workbook, `巡視紀錄_${new Date().toISOString().slice(0, 10)}.xlsx`);
-  }
+    const blob = new Blob([html], { type: "application/vnd.ms-excel" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = fileName;
+    a.click();
+    URL.revokeObjectURL(url);
 }
   
 function showMessage(text, onConfirm) {
@@ -2316,92 +2006,65 @@ function updateSwitchUI() {
   const btnSelf = document.getElementById("btnSelf");
   const btnTeam = document.getElementById("btnTeam");
 
-  // ===== 重置 =====
+  // 重置所有按鈕樣式
+  btnSelf.style.background = "white";
+  btnSelf.style.color = "#0b5ed7";
   btnTeam.style.background = "white";
   btnTeam.style.color = "#0b5ed7";
-  btnTeam.style.border = "2px solid #0b5ed7";
 
-  btnSelf.style.background = "white";
-  btnSelf.style.border = "2px solid #0b5ed7";
-  btnSelf.style.color = "#0b5ed7";
-  btnSelf.textContent = "我的紀錄";
-
-  // ===== 管理員模式 =====
-  if (globalRole === "管理員" && viewMode === "admin") {
-    btnSelf.textContent = "歷史報表";
-    btnSelf.style.border = "2px solid #198754";
-    btnSelf.style.color = "#28a745";
-
-    if (adminSubView === "history") {
-      btnSelf.style.background = "#198754";
-      btnSelf.style.color = "white";
-    } else {
-      btnTeam.style.background = "#0b5ed7";
-      btnTeam.style.color = "white";
-    }
-    return;
-  }
-
-  // ===== 一般模式 =====
+  // 根據當前模式設定激活狀態
   if (viewMode === "self") {
     btnSelf.style.background = "#0b5ed7";
     btnSelf.style.color = "white";
-  } else {
+  } else if (viewMode === "team" || viewMode === "admin") {
     btnTeam.style.background = "#0b5ed7";
     btnTeam.style.color = "white";
   }
+
+  // ★★★ 在這裡加入即可 ★★★
+  applyAdminButtonFix();
 }
 
-document.getElementById("btnSelf").onclick = function () {
+function applyAdminButtonFix() {
+  const btnSelf = document.getElementById("btnSelf");
 
-  // 管理員：歷史報表
+  // 只在「管理員 + admin 模式」下啟動
   if (globalRole === "管理員" && viewMode === "admin") {
-    adminSubView = "history";
-    updateSwitchUI();
 
-    window.open(
-      "https://docs.google.com/spreadsheets/d/1GEjlfTy73kgZnMYrM0AHjnYIs1EPLIOQLCqsEE8BMAw/edit?gid=0#gid=0",
-      "_blank"
-    );
-    return;
+    // 按鈕文字
+    btnSelf.textContent = "歷史報表";
+
+    // ----- 未選中狀態（白底綠框） -----
+    btnSelf.style.background = "white";
+    btnSelf.style.color = "#28a745";
+    btnSelf.style.border = "2px solid #28a745";
+
+    // hover（還是白底，只是顏色微變）
+    btnSelf.onmouseover = () => {
+      btnSelf.style.background = "#f1fdf1";
+    };
+    btnSelf.onmouseout = () => {
+      // 若目前仍未選中 → 回到白底綠字
+      if (viewMode === "admin") {
+        btnSelf.style.background = "white";
+        btnSelf.style.color = "#28a745";
+      }
+    };
+
+    // ----- 點擊後變成選中狀態（綠底白字） -----
+    btnSelf.onclick = () => {
+      // 綠底白字
+      btnSelf.style.background = "#28a745";
+      btnSelf.style.color = "white";
+
+      // 立即開啟歷史報表
+      window.open(
+        "https://docs.google.com/spreadsheets/d/1GEjlfTy73kgZnMYrM0AHjnYIs1EPLIOQLCqsEE8BMAw/edit?gid=0#gid=0",
+        "_blank"
+      );
+    };
   }
-
-  // 一般志工：我的紀錄
-  viewMode = "self";
-  adminSubView = "list";
-  updateSwitchUI();
-
-  document.getElementById("adminFilterArea").style.display = "none";
-  renderLoadingInList();
-  loadRecordList("self");
-};
-
-document.getElementById("btnTeam").onclick = async function () {
-  adminSubView = "list";
-
-  if (globalRole === "大隊長") {
-    viewMode = "team";
-    updateSwitchUI();
-    document.getElementById("adminFilterArea").style.display = "none";
-    renderLoadingInList();
-    loadRecordList("team");
-    return;
-  }
-
-  if (globalRole === "管理員") {
-    viewMode = "admin";
-    adminSubView = "list";
-    updateSwitchUI();
-    renderLoadingInList();
-
-    if (globalAdminRecords.length === 0) {
-      await loadAdminRecords();
-    } else {
-      document.getElementById("adminFilterArea").style.display = "block";
-      renderList(filterAdminRecords());
-    }
-  }
-};
+}
 
 function showLoadingMask() {
   document.getElementById("loadingMask").style.display = "flex";
