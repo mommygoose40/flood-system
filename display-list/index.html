@@ -815,9 +815,7 @@ body {
   letter-spacing: 1px;
 }
 
-/* --- 1. 全域按鈕與下拉選單樣式修正 --- */
-
-/* 讓搜尋與報表按鈕大小、游標一致 */
+/* --- 1. 全域按鈕與基礎樣式 (電腦手機共用) --- */
 .searchBtn {
   min-width: 120px;
   height: 46px;
@@ -830,56 +828,63 @@ body {
   justify-content: center;
   transition: all 0.2s ease;
   color: white !important;
-  flex: none; /* 防止按鈕被壓扁 */
 }
-
 #adminSearchBtn { background-color: #0b5ed7 !important; }
 #adminExportBtn { background-color: #198754 !important; }
 
-/* 下拉選單內的標題列加粗 */
+/* 標題列文字 */
 .panel-title {
   font-weight: bold !important;
   font-size: 20px;
-  color: #333;
 }
 
-/* --- 2. 手機版修正 (螢幕寬度 < 769px) --- */
+/* --- 2. 手機版樣式修正 (螢幕寬度 < 769px) --- */
 @media (max-width: 768px) {
-  /* 強制每一組(大隊、範圍、時間)都自己佔一行 */
-  #adminFilterArea div {
-    display: block !important; /* 改為 block 確保換行 */
-    margin-bottom: 15px;
-    width: 100%;
+  /* 讓最外層容器取消置中效果 */
+  #adminFilterArea {
+    text-align: left !important;
+    padding: 10px !important;
   }
 
-  /* 只有時間列內部需要並排 */
+  /* 核心修正：強制每一組條件「標籤+框」垂直堆疊並換行 */
+  .admin-inner-wrapper > div {
+    display: block !important;    /* 強制換行，不准 flex 同行 */
+    margin-bottom: 20px !important;
+    width: 100% !important;
+  }
+
+  /* 手機標籤單獨佔一行 */
+  #adminFilterArea label {
+    display: block !important;
+    font-weight: bold !important;
+    font-size: 20px;
+    margin-bottom: 8px !important;
+  }
+
+  /* 只有時間內部的框框要並排，不要換行 */
   .timeRow {
     display: flex !important;
-    align-items: center;
-    gap: 6px;
-    margin-top: 5px;
-  }
-
-  /* 手機版標籤加粗 */
-  #adminFilterArea label {
-    display: block;
-    font-weight: bold;
-    font-size: 20px;
-    margin-bottom: 5px;
-  }
-
-  /* 搜尋與報表按鈕列：左右平分、置中 */
-  #adminFilterArea div:last-child {
-    display: flex !important; /* 按鈕這一列恢復 flex */
     flex-direction: row !important;
+    align-items: center !important;
+    gap: 8px !important;
+  }
+
+  /* 下拉按鈕稍微加寬一點點 */
+  .fakeSelectBtn {
+    min-width: 130px;
+  }
+
+  /* 底部按鈕列：搜尋與產出報表要置中且並排 */
+  .admin-inner-wrapper > div:last-child {
+    display: flex !important;      /* 只有最後一行恢復並排 */
     justify-content: center !important;
-    gap: 12px;
-    margin-top: 25px;
+    gap: 15px !important;
+    margin-top: 30px !important;
   }
 
   .searchBtn {
-    flex: 1; /* 兩個按鈕平分寬度 */
-    max-width: 150px;
+    flex: 1;
+    max-width: 160px;
   }
 }
 </style>
