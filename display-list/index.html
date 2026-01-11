@@ -160,14 +160,6 @@
   font-size: 20px;
 }
 
-#adminFilterArea div {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  flex-wrap: nowrap;    /* ⭐ 不允許換行 */
-  white-space: nowrap;    /* 🔥 完整禁止換行 */
-}
-
 #adminSearchBtn, #viewFullRecords {
   padding: 8px 14px; /* 更小 */
   font-size: 20px;    /* 更小 */
@@ -199,7 +191,6 @@
   box-shadow: 0 2px 4px rgba(0,0,0,0.1);
 }
 
-
 #viewFullRecords {
   background: #28a745;
 }
@@ -214,7 +205,6 @@
   transform: translateY(0);
   box-shadow: 0 2px 4px rgba(0,0,0,0.1);
 }
-
 
 /* 偽下拉按鈕 */
 .fakeSelectBtn {
@@ -237,7 +227,6 @@
   /* 保持 translateY(0) 防止手機上被 desktop 的 transform 影響 */
   transform: translateY(0); 
 }
-
 
 /* 偽下拉選單內文字改成同色 */
 .fakeSelectBtn span {
@@ -778,59 +767,69 @@ body {
   letter-spacing: 1px;
 }
 
-/* --- 搜尋區域：最外層 (負責置中) --- */
+/* --- 搜尋區域：最外層 (負責整體平移到畫面中間) --- */
 #adminFilterArea {
   display: none; /* 初始隱藏 */
   width: 100%;
   margin: 20px auto;
   padding: 0;
-  /* 使用 Flexbox 讓內層置中 */
   flex-direction: column;
-  align-items: center; 
+  align-items: center;  /* 讓內層 wrapper 在畫面上水平置中 */
   text-align: center;
 }
 
-/* 當 JS 顯示它時，確保它是 Flex */
+/* 當 JS 顯示它時 */
 #adminFilterArea[style*="display: block"],
 #adminFilterArea[style*="display: flex"] {
   display: flex !important;
 }
 
-/* --- 內部面板：確保內部 div 是一個疊一個 --- */
+/* --- 內部面板：包裹所有條件項 --- */
 .admin-inner-wrapper {
-  display: inline-block; /* 寬度隨內容撐開 */
-  text-align: left;      /* 文字恢復靠左 */
+  display: inline-block; /* 寬度隨內容自適應 */
+  text-align: left;      /* 內部文字恢復靠左 */
   width: auto;
-  min-width: 320px;      /* 保持一定寬度不顯窄 */
+  min-width: 320px;
+  background: #ffffff;
 }
 
-/* --- 關鍵：強制每一列搜尋條件「換行」 --- */
-#adminFilterArea .admin-inner-wrapper > div {
-  display: flex !important;      /* 讓標題與按鈕並排 */
+/* --- 關鍵：修正每一行搜尋條件 --- */
+/* 我們針對 wrapper 下的第一層 div 進行強制換行宣告 */
+.admin-inner-wrapper > div {
+  display: flex !important;        /* 這一層 Flex 是為了讓「標籤與框框」左右並排 */
   flex-direction: row !important;
   align-items: center !important;
+  justify-content: flex-start !important;
   
-  width: 100% !important;        /* 佔滿 wrapper 寬度 */
-  clear: both !important;        /* 強制清除浮動 */
-  margin-bottom: 16px !important; /* 每一行的間距 */
+  width: 100% !important;          /* 佔滿 wrapper 寬度 */
+  margin-bottom: 16px !important;  /* 每一組之間的垂直間距 (換行感) */
+  white-space: normal !important;  /* 🔥 覆蓋掉之前的禁止換行 */
 }
 
-/* 標籤鎖定寬度 */
+/* 標籤（標題）寬度鎖定，確保後方框框垂直對齊 */
 #adminFilterArea label {
   font-family: "Microsoft JhengHei", "微軟正黑體", sans-serif !important;
   font-size: 20px;
   font-weight: bold;
-  min-width: 70px;               /* 標籤寬度 */
-  margin-right: 10px;            /* 標籤與框框的距離 */
-  flex-shrink: 0;
+  min-width: 70px;  /* 固定標題寬度，例如「大隊：」 */
+  margin-right: 10px;
+  flex-shrink: 0;   /* 防止標題被擠壓 */
 }
 
-/* 底部按鈕列：搜尋與報表並排 */
-#adminFilterArea .admin-inner-wrapper > div:last-child {
-  display: flex !important;
+/* 時間區塊專用修正 */
+#timeWrapper.timeRow {
+  display: inline-flex !important;
+  flex-direction: row !important;
+  gap: 8px;
+  white-space: nowrap !important; /* 時間內部的按鈕與～不換行 */
+}
+
+/* 底部按鈕列：搜尋與報表並排且置中 */
+.admin-inner-wrapper > div:last-child {
   justify-content: center !important; 
   margin-top: 25px;
   gap: 15px;
+  display: flex !important;
 }
 
 /* 標籤寬度鎖定，確保後方框框垂直對齊 */
@@ -1097,9 +1096,9 @@ body {
 
 
   <!-- 搜尋 -->
-  <div style="text-align:center; margin-top:20px; display: flex; justify-content: center; gap: 10px;">
+  <div style="margin-top:20px; display: flex; justify-content: center; gap: 15px;">
     <button id="adminSearchBtn" class="searchBtn">搜尋</button>
-    <button id="adminExportBtn" class="searchBtn" style="background-color: #198754; border-color: #198754;">產出報表</button>
+    <button id="adminExportBtn" class="searchBtn" style="background-color: #198754; border-color: #198754;">查看報表</button>
 </div>
 </div>
 </div>
