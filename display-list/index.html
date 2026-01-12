@@ -1105,6 +1105,37 @@ body {
     padding: 0 !important;
   }
 }
+
+    .report-option-btn {
+    width: 100%;
+    padding: 15px 10px;
+    font-size: 18px;
+    background: #fdfdfd;
+    border: 1px solid #e0e0e0;
+    border-radius: 10px;
+    color: #444;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+    -webkit-tap-highlight-color: transparent;
+}
+
+.report-option-btn:active {
+    background: #f0f0f0;
+    transform: scale(0.97);
+}
+
+.combined-monthly {
+    border: 1.5px solid #198754;
+    color: #198754;
+    background: #f0f9f4;
+}
+
+.combined-disaster {
+    border: 1.5px solid #dc3545;
+    color: #dc3545;
+    background: #fff5f5;
+}
 </style>
 
   <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
@@ -1337,6 +1368,42 @@ body {
 
 <!-- 清單真正呈現的地方，一開始先隱藏 -->
 <div id="listContainer" style="display: none;"></div>
+
+<div id="reportSelector" style="display: none; padding: 10px 0;">
+    <div style="background: white; border-radius: 15px; padding: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.05);">
+        
+        <div style="font-weight: bold; font-size: 20px; margin-bottom: 15px; color: #0b5ed7; display: flex; align-items: center;">
+            <span style="width: 4px; height: 20px; background: #0b5ed7; margin-right: 10px; display: inline-block;"></span>
+            各分隊歷史報表 (月報/災中)
+        </div>
+        
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 30px;">
+            <script>
+                for(let i=1; i<=10; i++) {
+                    document.write(`
+                        <button class="report-option-btn" onclick="openHistoryReport('team', ${i})">
+                            第 ${i} 大隊
+                        </button>
+                    `);
+                }
+            </script>
+        </div>
+
+        <div style="font-weight: bold; font-size: 20px; margin-bottom: 15px; color: #198754; display: flex; align-items: center;">
+            <span style="width: 4px; height: 20px; background: #198754; margin-right: 10px; display: inline-block;"></span>
+            全大隊合併報表
+        </div>
+        
+        <div style="display: flex; flex-direction: column; gap: 12px;">
+            <button class="report-option-btn combined-monthly" onclick="openHistoryReport('all', 'monthly')">
+                10 個大隊合併：每月報表
+            </button>
+            <button class="report-option-btn combined-disaster" onclick="openHistoryReport('all', 'disaster')">
+                10 個大隊合併：災中報表
+            </button>
+        </div>
+    </div>
+</div>
 
 </div>
 
@@ -2679,6 +2746,54 @@ document.addEventListener("DOMContentLoaded", () => {
     document.getElementById("floatingButtons").style.display = "flex";
   }
 });
+
+  // 假設你的「歷史報表」按鈕 ID 為歷史報表按鈕 (請根據實際情況修改 ID)
+// 這裡演示點擊後切換畫面的邏輯
+
+function showHistoryReportMenu() {
+    // 1. 隱藏清單區與搜尋區
+    document.getElementById('listContainer').style.display = 'none';
+    document.getElementById('adminFilterArea').style.display = 'none';
+    document.getElementById('switchArea').style.display = 'none';
+    
+    // 2. 顯示報表選單區
+    document.getElementById('reportSelector').style.display = 'block';
+    
+    // 3. 修改標題
+    document.getElementById('pageTitle').innerText = "歷史報表選擇";
+    
+    // 4. 強制滾動到頂部
+    window.scrollTo(0, 0);
+}
+
+// 修改原本「回上一頁」或「回清單」的邏輯，確保能從選單切換回來
+function backToMainList() {
+    document.getElementById('reportSelector').style.display = 'none';
+    document.getElementById('listContainer').style.display = 'block';
+    document.getElementById('adminFilterArea').style.display = 'none'; // 依據你的需求決定是否顯示
+    document.getElementById('switchArea').style.display = 'flex';
+    document.getElementById('pageTitle').innerText = "回報紀錄";
+}
+
+// 點擊具體報表後的動作
+function openHistoryReport(mode, target) {
+    let url = "";
+    
+    // 這裡替換成你實際的 Google Sheets 報表連結
+    if(mode === 'team') {
+        // 例如：根據大隊編號跳轉不同連結
+        url = "https://docs.google.com/spreadsheets/d/YOUR_ID/edit#gid=TEAM_" + target;
+    } else if(target === 'monthly') {
+        url = "https://docs.google.com/spreadsheets/d/YOUR_ID/edit#gid=ALL_MONTHLY";
+    } else if(target === 'disaster') {
+        url = "https://docs.google.com/spreadsheets/d/YOUR_ID/edit#gid=ALL_DISASTER";
+    }
+
+    if(url) {
+        // 使用你原本的 iframe 開啟函式
+        openDetailView(url); 
+    }
+}
   
 </script>
 
