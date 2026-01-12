@@ -1515,7 +1515,7 @@ body {
 <script>
 
   const VOLUNTEER_API_URL = "https://script.google.com/macros/s/AKfycbxiGSG5hSMO6We-C6cyEJZLgf4Rnbjp-6w9Tmb0qfF9VM6JB4YGEMqj3QRfTzg7Czpc/exec"; 
-const REPORT_GAS_URL = "https://script.google.com/macros/s/AKfycbzJHjT_VLScVbrQRED-Y-v5CnIcl14hT62h4aZ_ydwHND0NjE-nMrExSfpt5WT1usDOsw/exec";
+const REPORT_GAS_URL = "https://script.google.com/macros/s/AKfycbxBqAfhpeidqiIZOQnbhQKqO7pe9p4Fya9HjapTdPvbs_bJEvH9iuVmswxRMymOP_g8hw/exec";
 
 let globalAdminRecords = [];   // 管理員一次抓全部後存在這邊
 let adminViewDays = 3;        // 預設抓最近兩週，可改 30
@@ -2658,28 +2658,30 @@ function toggleTeamPanel(id) {
 
 // 核心匯出功能
 function exportToExcel(teamId, month) {
-    const year = new Date().getFullYear(); // 或從選單抓
+    // 取得選定的年份 (從 UI 抓取)
+    const yearSelect = document.getElementById(`year-${teamId}`);
+    const year = yearSelect ? yearSelect.value : new Date().getFullYear();
     
-    // 1. 這裡要先執行你原本的資料篩選邏輯 (取得要導出的 JSON 陣列)
-    // 假設你已經有一個過濾好的陣列叫 filteredRecords
-    const filteredRecords = getFilteredDataLocally(teamId, month, year); 
+    // 取得報表類型 (從 UI 抓取)
+    const typeEl = document.querySelector(`input[name="type-${teamId}"]:checked`);
+    const type = typeEl ? typeEl.value : 'monthly';
 
-    if (filteredRecords.length === 0) {
-        alert("該月份無資料可匯出");
-        return;
-    }
+    // 1. 顯示讀取動畫 (雖然跳轉很快，但給個提示比較好)
+    document.getElementById('loadingMask').style.display = 'flex';
+    document.getElementById('text-update').innerText = "雲端報表產出中...";
 
-    // 2. 將資料轉為 Base64 (解決網址傳遞特殊字元問題)
-    const jsonData = JSON.stringify(filteredRecords);
-    const base64Data = btoa(unescape(encodeURIComponent(jsonData)));
+    // 2. 直接組合成 GAS 的下載指令網址
+    const downloadUrl = `${REPORT_GAS_URL}?action=exportExcelBinary&team=${teamId}&year=${year}&month=${month}&type=${type}`;
 
-    // 3. 建立下載網址
-    const downloadUrl = `${REPORT_GAS_URL}?action=exportExcelBinary&data=${base64Data}`;
-
-    // 4. 直接跳轉網址 (這會觸發 GAS 的二進位下載，且不會離開頁面)
+    // 3. 觸發下載 (這不會換頁，瀏覽器會直接彈出下載存檔視窗)
     window.location.href = downloadUrl;
-}
 
+    // 4. 三秒後關閉遮罩 (因為下載通常會直接彈出)
+    setTimeout(() => {
+        document.getElementById('loadingMask').style.display = 'none';
+    }, 3000);
+}
+  
   /** 輔助函式：正確解碼 UTF-8 的 Base64 */
 function decodeBase64Utf8(base64) {
     const binString = atob(base64);
