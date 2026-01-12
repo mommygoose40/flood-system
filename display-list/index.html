@@ -1031,13 +1031,13 @@ body {
    ===================================================== */
 
 /* 1. 統一容器：確保上下兩排都置中，且間距完全一致 */
-#switchArea, 
+#switchArea,
 .admin-action-row {
   display: flex !important;
-  justify-content: center !important; /* 絕對置中 */
-  gap: 12px !important;              /* 統一按鈕間的縫隙 */
-  margin: 15px auto 25px !important;  /* 統一外距 */
-  width: 100% !important;
+  justify-content: center !important;
+  gap: 12px !important;
+  margin: 15px auto 25px !important;
+  width: fit-content !important;  /* 這行改為 fit-content */
   padding: 0 !important;
 }
 
