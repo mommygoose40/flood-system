@@ -1515,7 +1515,7 @@ body {
 <script>
 
   const VOLUNTEER_API_URL = "https://script.google.com/macros/s/AKfycbxiGSG5hSMO6We-C6cyEJZLgf4Rnbjp-6w9Tmb0qfF9VM6JB4YGEMqj3QRfTzg7Czpc/exec"; 
-const REPORT_GAS_URL = "https://script.google.com/macros/s/AKfycby74mTJs7XBKbjZP0h_8u4e4w6a4bv7vgeEfwU3E0i0XvhMCRgwnPz6DTDKE4twEZ4jkQ/exec";
+const REPORT_GAS_URL = "https://script.google.com/macros/s/AKfycbzJHjT_VLScVbrQRED-Y-v5CnIcl14hT62h4aZ_ydwHND0NjE-nMrExSfpt5WT1usDOsw/exec";
 
 let globalAdminRecords = [];   // 管理員一次抓全部後存在這邊
 let adminViewDays = 3;        // 預設抓最近兩週，可改 30
@@ -2658,86 +2658,26 @@ function toggleTeamPanel(id) {
 
 // 核心匯出功能
 function exportToExcel(teamId, month) {
-    // 取得選定的年份
-    const year = (teamId === 'all') ? new Date().getFullYear() : document.getElementById(`year-${teamId}`).value;
+    const year = new Date().getFullYear(); // 或從選單抓
     
-    // 取得報表類型
-    let type = "";
-    if (teamId === 'all') {
-        type = month; // 'monthly' 或 'disaster'
-    } else {
-        type = document.querySelector(`input[name="type-${teamId}"]:checked`).value;
+    // 1. 這裡要先執行你原本的資料篩選邏輯 (取得要導出的 JSON 陣列)
+    // 假設你已經有一個過濾好的陣列叫 filteredRecords
+    const filteredRecords = getFilteredDataLocally(teamId, month, year); 
+
+    if (filteredRecords.length === 0) {
+        alert("該月份無資料可匯出");
+        return;
     }
 
-    // 顯示載入中
-    document.getElementById('loadingMask').style.display = 'flex';
-    document.getElementById('text-update').innerText = "正在向資料庫請求報表...";
+    // 2. 將資料轉為 Base64 (解決網址傳遞特殊字元問題)
+    const jsonData = JSON.stringify(filteredRecords);
+    const base64Data = btoa(unescape(encodeURIComponent(jsonData)));
 
-    // 呼叫 GAS (使用原本定義的 REPORT_GAS_URL)
-    const params = {
-        action: "exportExcel",
-        team: teamId,
-        year: year,
-        month: month,
-        type: type
-    };
+    // 3. 建立下載網址
+    const downloadUrl = `${REPORT_GAS_URL}?action=exportExcelBinary&data=${base64Data}`;
 
-    fetch(REPORT_GAS_URL, {
-  method: 'POST',
-  mode: 'cors', // 確保開啟 cors 模式
-  // 重要：不要使用 application/json，改用 text/plain 繞過複雜的 CORS 檢查
-  headers: {
-    'Content-Type': 'text/plain;charset=utf-8' 
-  },
-  body: JSON.stringify(params)
-})
-.then(res => {
-  console.log("GAS response status:", res.status);
-
-  if (!res.ok) {
-    throw new Error("HTTP error " + res.status);
-  }
-
-  return res.json();
-})
-.then(data => {
-  console.log("GAS response data:", data);
-  document.getElementById('loadingMask').style.display = 'none';
-
-  // 在 exportToExcel 的 .then(data => { ... }) 區塊內
-if (data.result === 'success') {
-    // 將 Base64 轉換為二進位 ArrayBuffer
-    const byteCharacters = atob(data.data);
-    const byteNumbers = new Array(byteCharacters.length);
-    for (let i = 0; i < byteCharacters.length; i++) {
-        byteNumbers[i] = byteCharacters.charCodeAt(i);
-    }
-    const byteArray = new Uint8Array(byteNumbers);
-
-    // 建立 Blob (設定為 Excel 格式)
-    const blob = new Blob([byteArray], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
-    const url = URL.createObjectURL(blob);
-
-    const link = document.createElement("a");
-    link.href = url;
-    link.download = data.fileName;
-    document.body.appendChild(link);
-    link.click();
-    
-    // 清理資源
-    setTimeout(() => {
-        document.body.removeChild(link);
-        window.URL.revokeObjectURL(url);
-    }, 100);
-} else {
-    alert(data.message || "GAS 回傳失敗");
-  }
-})
-.catch(err => {
-  console.error("匯出報表失敗:", err);
-  document.getElementById('loadingMask').style.display = 'none';
-  alert("匯出失敗，請打開 Console 查看錯誤");
-});
+    // 4. 直接跳轉網址 (這會觸發 GAS 的二進位下載，且不會離開頁面)
+    window.location.href = downloadUrl;
 }
 
   /** 輔助函式：正確解碼 UTF-8 的 Base64 */
