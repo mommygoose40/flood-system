@@ -2657,29 +2657,53 @@ function toggleTeamPanel(id) {
 }
 
 // 核心匯出功能
-function exportToExcel(teamId, month) {
-    // 取得選定的年份 (從 UI 抓取)
-    const yearSelect = document.getElementById(`year-${teamId}`);
-    const year = yearSelect ? yearSelect.value : new Date().getFullYear();
-    
-    // 取得報表類型 (從 UI 抓取)
-    const typeEl = document.querySelector(`input[name="type-${teamId}"]:checked`);
-    const type = typeEl ? typeEl.value : 'monthly';
-
-    // 1. 顯示讀取動畫 (雖然跳轉很快，但給個提示比較好)
+async function exportToExcel(teamId, month) {
+    // 1. 顯示讀取中動畫
     document.getElementById('loadingMask').style.display = 'flex';
-    document.getElementById('text-update').innerText = "雲端報表產出中...";
+    document.getElementById('text-update').innerText = "雲端報表產出中，請稍候...";
 
-    // 2. 直接組合成 GAS 的下載指令網址
-    const downloadUrl = `${REPORT_GAS_URL}?action=exportExcelBinary&team=${teamId}&year=${year}&month=${month}&type=${type}`;
+    try {
+        // 取得年份與類型
+        const yearSelect = document.getElementById(`year-${teamId}`);
+        const year = yearSelect ? yearSelect.value : new Date().getFullYear();
+        const typeEl = document.querySelector(`input[name="type-${teamId}"]:checked`);
+        const type = typeEl ? typeEl.value : 'monthly';
 
-    // 3. 觸發下載 (這不會換頁，瀏覽器會直接彈出下載存檔視窗)
-    window.location.href = downloadUrl;
+        // 2. 呼叫 GAS (使用你剛才測試成功的網址格式)
+        const url = `${REPORT_GAS_URL}?action=exportExcelBinary&team=${teamId}&year=${year}&month=${month}&type=${type}`;
+        
+        const response = await fetch(url);
+        const result = await response.json();
 
-    // 4. 三秒後關閉遮罩 (因為下載通常會直接彈出)
-    setTimeout(() => {
+        if (result.result === "success") {
+            // 3. 將 Base64 轉換為二進位 Blob
+            const byteCharacters = atob(result.data);
+            const byteNumbers = new Array(byteCharacters.length);
+            for (let i = 0; i < byteCharacters.length; i++) {
+                byteNumbers[i] = byteCharacters.charCodeAt(i);
+            }
+            const byteArray = new Uint8Array(byteNumbers);
+            const blob = new Blob([byteArray], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+
+            // 4. 建立虛擬連結並點擊下載
+            const link = document.createElement('a');
+            link.href = window.URL.createObjectURL(blob);
+            link.download = result.fileName || `Report_${year}_${month}.xlsx`;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            
+            console.log("下載成功！");
+        } else {
+            alert("匯出失敗：" + (result.message || "未知錯誤"));
+        }
+    } catch (err) {
+        console.error("下載發生錯誤:", err);
+        alert("無法連線至伺服器或轉換資料失敗");
+    } finally {
+        // 關閉載入遮罩
         document.getElementById('loadingMask').style.display = 'none';
-    }, 3000);
+    }
 }
   
   /** 輔助函式：正確解碼 UTF-8 的 Base64 */
