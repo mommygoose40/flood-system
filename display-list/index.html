@@ -2682,24 +2682,46 @@ function exportToExcel(teamId, month) {
         type: type
     };
 
-    // 修改你前端的 exportToExcel 函式中的 fetch 部份
-fetch(REPORT_GAS_URL, {
+    fetch(REPORT_GAS_URL, {
   method: 'POST',
   body: JSON.stringify(params)
 })
 .then(res => {
   console.log("GAS response status:", res.status);
+
+  if (!res.ok) {
+    throw new Error("HTTP error " + res.status);
+  }
+
   return res.json();
 })
 .then(data => {
   console.log("GAS response data:", data);
   document.getElementById('loadingMask').style.display = 'none';
-  ...
+
+  if (data.result === 'success') {
+
+    const csvDecoded = atob(data.data);
+    const blob = new Blob([csvDecoded], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = data.fileName || "report.csv";
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+
+    URL.revokeObjectURL(url);
+
+  } else {
+    alert(data.message || "GAS 回傳失敗");
+  }
 })
 .catch(err => {
   console.error("匯出報表失敗:", err);
   document.getElementById('loadingMask').style.display = 'none';
-  alert("匯出失敗，請查看 console");
+  alert("匯出失敗，請打開 Console 查看錯誤");
 });
 }
 
