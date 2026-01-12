@@ -2684,6 +2684,11 @@ function exportToExcel(teamId, month) {
 
     fetch(REPORT_GAS_URL, {
   method: 'POST',
+  mode: 'cors', // 確保開啟 cors 模式
+  // 重要：不要使用 application/json，改用 text/plain 繞過複雜的 CORS 檢查
+  headers: {
+    'Content-Type': 'text/plain;charset=utf-8' 
+  },
   body: JSON.stringify(params)
 })
 .then(res => {
