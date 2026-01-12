@@ -145,7 +145,7 @@
 }
 
 #switchArea {
-  display: flex;
+  display: none;
   justify-content: space-between;  /* 左右排列 */
   text-align: center;
   margin-top:10px;
@@ -817,7 +817,7 @@ body {
 
 /* 容器間距與置中 (確保上下兩組對齊) */
 #switchArea, .admin-action-row {
-  display: flex !important;
+  display: none !important;
   margin: 15px 0 25px 0 !important;
 }
 
@@ -960,9 +960,8 @@ body {
 }
 
 /* =====================================================
-   📱 手機版：以「時間框」為基準寬度
+   以「時間框」為基準寬度
    ===================================================== */
-@media (max-width: 768px) {
 
   /* 1️⃣ 先定義「時間框」寬度（基準） */
   #adminFilterArea .timeBtn {
@@ -988,8 +987,6 @@ body {
     max-width: 145px !important;
     flex: none !important;
   }
-
-}
 
 /* =====================================================
    📐 上下兩排按鈕：統一對齊方式
@@ -1034,7 +1031,7 @@ body {
 /* 1. 統一容器：確保上下兩排都置中，且間距完全一致 */
 #switchArea,
 .admin-action-row {
-  display: flex !important;
+  display: none !important;
   justify-content: center !important;
   gap: 12px !important;
   margin: 15px auto 25px !important;
@@ -1119,10 +1116,6 @@ body {
     background: transparent !important;
     padding: 0 !important;
   }
-
-    .desktopActionCard {
-  outline: 3px dashed red;
-}
 }
 </style>
 
