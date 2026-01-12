@@ -2521,6 +2521,8 @@ function applyAdminButtonFix() {
       btnSelf.style.background = "#198754";
       btnSelf.style.color = "white";
 
+      showHistoryReportMenu();
+      
       /*
       // 立即開啟歷史報表
       window.open(
@@ -2530,6 +2532,54 @@ function applyAdminButtonFix() {
       */
     };
   }
+}
+
+    // 假設你的「歷史報表」按鈕 ID 為歷史報表按鈕 (請根據實際情況修改 ID)
+// 這裡演示點擊後切換畫面的邏輯
+
+function showHistoryReportMenu() {
+    // 1. 隱藏清單區與搜尋區
+    document.getElementById('listContainer').style.display = 'none';
+    document.getElementById('adminFilterArea').style.display = 'none';
+    document.getElementById('switchArea').style.display = 'none';
+    
+    // 2. 顯示報表選單區
+    document.getElementById('reportSelector').style.display = 'block';
+    
+    // 3. 修改標題
+    document.getElementById('pageTitle').innerText = "歷史報表選擇";
+    
+    // 4. 強制滾動到頂部
+    window.scrollTo(0, 0);
+}
+
+// 修改原本「回上一頁」或「回清單」的邏輯，確保能從選單切換回來
+function backToMainList() {
+    document.getElementById('reportSelector').style.display = 'none';
+    document.getElementById('listContainer').style.display = 'block';
+    document.getElementById('adminFilterArea').style.display = 'none'; // 依據你的需求決定是否顯示
+    document.getElementById('switchArea').style.display = 'flex';
+    document.getElementById('pageTitle').innerText = "回報紀錄";
+}
+
+// 點擊具體報表後的動作
+function openHistoryReport(mode, target) {
+    let url = "";
+    
+    // 這裡替換成你實際的 Google Sheets 報表連結
+    if(mode === 'team') {
+        // 例如：根據大隊編號跳轉不同連結
+        url = "https://docs.google.com/spreadsheets/d/YOUR_ID/edit#gid=TEAM_" + target;
+    } else if(target === 'monthly') {
+        url = "https://docs.google.com/spreadsheets/d/YOUR_ID/edit#gid=ALL_MONTHLY";
+    } else if(target === 'disaster') {
+        url = "https://docs.google.com/spreadsheets/d/YOUR_ID/edit#gid=ALL_DISASTER";
+    }
+
+    if(url) {
+        // 使用你原本的 iframe 開啟函式
+        openDetailView(url); 
+    }
 }
 
 function showLoadingMask() {
@@ -2748,54 +2798,6 @@ document.addEventListener("DOMContentLoaded", () => {
     document.getElementById("floatingButtons").style.display = "flex";
   }
 });
-
-  // 假設你的「歷史報表」按鈕 ID 為歷史報表按鈕 (請根據實際情況修改 ID)
-// 這裡演示點擊後切換畫面的邏輯
-
-function showHistoryReportMenu() {
-    // 1. 隱藏清單區與搜尋區
-    document.getElementById('listContainer').style.display = 'none';
-    document.getElementById('adminFilterArea').style.display = 'none';
-    document.getElementById('switchArea').style.display = 'none';
-    
-    // 2. 顯示報表選單區
-    document.getElementById('reportSelector').style.display = 'block';
-    
-    // 3. 修改標題
-    document.getElementById('pageTitle').innerText = "歷史報表選擇";
-    
-    // 4. 強制滾動到頂部
-    window.scrollTo(0, 0);
-}
-
-// 修改原本「回上一頁」或「回清單」的邏輯，確保能從選單切換回來
-function backToMainList() {
-    document.getElementById('reportSelector').style.display = 'none';
-    document.getElementById('listContainer').style.display = 'block';
-    document.getElementById('adminFilterArea').style.display = 'none'; // 依據你的需求決定是否顯示
-    document.getElementById('switchArea').style.display = 'flex';
-    document.getElementById('pageTitle').innerText = "回報紀錄";
-}
-
-// 點擊具體報表後的動作
-function openHistoryReport(mode, target) {
-    let url = "";
-    
-    // 這裡替換成你實際的 Google Sheets 報表連結
-    if(mode === 'team') {
-        // 例如：根據大隊編號跳轉不同連結
-        url = "https://docs.google.com/spreadsheets/d/YOUR_ID/edit#gid=TEAM_" + target;
-    } else if(target === 'monthly') {
-        url = "https://docs.google.com/spreadsheets/d/YOUR_ID/edit#gid=ALL_MONTHLY";
-    } else if(target === 'disaster') {
-        url = "https://docs.google.com/spreadsheets/d/YOUR_ID/edit#gid=ALL_DISASTER";
-    }
-
-    if(url) {
-        // 使用你原本的 iframe 開啟函式
-        openDetailView(url); 
-    }
-}
   
 </script>
 
