@@ -2701,8 +2701,9 @@ function exportToExcel(teamId, month) {
 
   if (data.result === 'success') {
 
-    const csvDecoded = atob(data.data);
-    const blob = new Blob([csvDecoded], { type: 'text/csv;charset=utf-8;' });
+    //將 Base64 轉回字串 (使用 UTF-8 手法)
+    const csvString = decodeBase64Utf8(data.data);
+    const blob = new Blob([csvString], { type: 'text/csv;charset=utf-8;' });
     const url = URL.createObjectURL(blob);
 
     const link = document.createElement("a");
@@ -2723,6 +2724,16 @@ function exportToExcel(teamId, month) {
   document.getElementById('loadingMask').style.display = 'none';
   alert("匯出失敗，請打開 Console 查看錯誤");
 });
+}
+
+  /** 輔助函式：正確解碼 UTF-8 的 Base64 */
+function decodeBase64Utf8(base64) {
+    const binString = atob(base64);
+    const bytes = new Uint8Array(binString.length);
+    for (let i = 0; i < binString.length; i++) {
+        bytes[i] = binString.charCodeAt(i);
+    }
+    return new TextDecoder().decode(bytes);
 }
 
 function showLoadingMask() {
