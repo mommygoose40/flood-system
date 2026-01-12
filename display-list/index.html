@@ -2703,7 +2703,7 @@ fetch(VOLUNTEER_API_URL, {
         link.click();
         document.body.removeChild(link);
     } else {
-        showMessage(data.message || "找不到資料");
+        alert(data.message || "找不到資料");
     }
 });
 }
