@@ -815,12 +815,6 @@ body {
 #adminSearchBtn { background-color: #0b5ed7 !important; color: white !important; }
 #adminExportBtn { background-color: #198754 !important; color: white !important; }
 
-/* 容器間距與置中 (確保上下兩組對齊) */
-#switchArea, .admin-action-row {
-  display: none !important;
-  margin: 15px 0 25px 0 !important;
-}
-
 /* --- 2. 按鈕顏色細節 --- */
 
 /* 藍色按鈕 (大隊紀錄 & 搜尋) */
@@ -1031,11 +1025,10 @@ body {
 /* 1. 統一容器：確保上下兩排都置中，且間距完全一致 */
 #switchArea,
 .admin-action-row {
-  display: none !important;
   justify-content: center !important;
   gap: 12px !important;
   margin: 15px auto 25px !important;
-  width: fit-content !important;  /* 這行改為 fit-content */
+  width: fit-content !important;
   padding: 0 !important;
 }
 
