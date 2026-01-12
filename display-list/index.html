@@ -2673,7 +2673,7 @@ function exportToExcel(teamId, month) {
     document.getElementById('loadingMask').style.display = 'flex';
     document.getElementById('text-update').innerText = "正在向資料庫請求報表...";
 
-    // 呼叫 GAS (使用原本定義的 VOLUNTEER_API_URL)
+    // 呼叫 GAS (使用原本定義的 REPORT_GAS_URL)
     const params = {
         action: "exportExcel",
         team: teamId,
@@ -2683,7 +2683,7 @@ function exportToExcel(teamId, month) {
     };
 
     // 這裡使用 fetch 發送請求給 GAS
-    fetch(VOLUNTEER_API_URL, {
+    fetch(REPORT_GAS_URL, {
         method: 'POST',
         body: JSON.stringify(params)
     })
@@ -2694,12 +2694,12 @@ function exportToExcel(teamId, month) {
             // 如果 GAS 回傳下載網址，直接開啟
             window.open(data.downloadUrl, '_blank');
         } else {
-            alert("報表產出成功，請查看您的電子郵件或直接下載。");
+            showmessage("報表產出成功，請查看您的電子郵件或直接下載。");
         }
     })
     .catch(err => {
         document.getElementById('loadingMask').style.display = 'none';
-        alert("匯出失敗，請檢查網路連線或稍後再試。");
+        showmessage("匯出失敗，請檢查網路連線或稍後再試。");
     });
 }
 
