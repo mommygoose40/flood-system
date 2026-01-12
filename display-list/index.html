@@ -1860,6 +1860,8 @@ function renderList(records) {
   // 管理員模式：確保篩選區域顯示
   if (globalRole === "管理員" && viewMode === "admin") {
     document.getElementById("adminFilterArea").style.display = "block";
+    document.getElementById('switchArea').style.display = 'flex';
+document.querySelector('.admin-action-row').style.display = 'flex';
   } else {
     document.getElementById("adminFilterArea").style.display = "none";
   }
