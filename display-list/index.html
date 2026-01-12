@@ -2682,25 +2682,30 @@ function exportToExcel(teamId, month) {
         type: type
     };
 
-    // 這裡使用 fetch 發送請求給 GAS
-    fetch(REPORT_GAS_URL, {
-        method: 'POST',
-        body: JSON.stringify(params)
-    })
-    .then(res => res.json())
-    .then(data => {
-        document.getElementById('loadingMask').style.display = 'none';
-        if (data.downloadUrl) {
-            // 如果 GAS 回傳下載網址，直接開啟
-            window.open(data.downloadUrl, '_blank');
-        } else {
-            showmessage("報表產出成功，請查看您的電子郵件或直接下載。");
-        }
-    })
-    .catch(err => {
-        document.getElementById('loadingMask').style.display = 'none';
-        showmessage("匯出失敗，請檢查網路連線或稍後再試。");
-    });
+    // 修改你前端的 exportToExcel 函式中的 fetch 部份
+fetch(VOLUNTEER_API_URL, {
+    method: 'POST',
+    body: JSON.stringify(params)
+})
+.then(res => res.json())
+.then(data => {
+    document.getElementById('loadingMask').style.display = 'none';
+    if (data.result === 'success') {
+        // 解碼 Base64 並觸發瀏覽器下載
+        const csvDecoded = atob(data.data);
+        const blob = new Blob([csvDecoded], { type: 'text/csv;charset=utf-8;' });
+        const link = document.createElement("a");
+        const url = URL.createObjectURL(blob);
+        link.setAttribute("href", url);
+        link.setAttribute("download", data.fileName);
+        link.style.visibility = 'hidden';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    } else {
+        showMessage(data.message || "找不到資料");
+    }
+});
 }
 
 function showLoadingMask() {
