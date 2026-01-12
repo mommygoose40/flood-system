@@ -1136,6 +1136,41 @@ body {
     color: #dc3545;
     background: #fff5f5;
 }
+
+    .report-section-title {
+    font-weight: bold; font-size: 20px; margin: 10px 0 15px; color: #0b5ed7;
+}
+
+/* 大隊外殼 */
+.team-row { border: 1px solid #eee; border-radius: 8px; margin-bottom: 8px; overflow: hidden; }
+.team-header { 
+    background: #f8f9fa; padding: 12px 15px; display: flex; justify-content: space-between; 
+    cursor: pointer; font-weight: bold; font-size: 18px;
+}
+
+/* 展開面板 */
+.team-panel { display: none; padding: 15px; background: #fff; border-top: 1px solid #eee; }
+.filter-group { margin-bottom: 15px; }
+.filter-group label { display: block; font-size: 14px; color: #666; margin-bottom: 5px; }
+
+/* 月份網格 */
+.month-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+.month-grid button { 
+    padding: 10px 0; border: 1px solid #0b5ed7; background: #fff; color: #0b5ed7; 
+    border-radius: 5px; cursor: pointer; font-size: 16px;
+}
+.month-grid button:active { background: #0b5ed7; color: #fff; }
+
+/* 類型切換 (Radio 樣式化) */
+.type-switch { display: flex; border: 1px solid #ddd; border-radius: 5px; overflow: hidden; }
+.type-switch input { display: none; }
+.type-switch label { flex: 1; text-align: center; padding: 8px; background: #f0f0f0; cursor: pointer; }
+.type-switch input:checked + label { background: #0b5ed7; color: white; }
+
+/* 合併報表按鈕 */
+.combined-btn { flex: 1; padding: 15px; border-radius: 8px; border: none; background: #198754; color: white; font-size: 18px; }
+.combined-btn.disaster { background: #dc3545; }
+    
 </style>
 
   <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
@@ -1339,7 +1374,7 @@ body {
   <!-- 搜尋 -->
   <div class="admin-action-row">
     <button id="adminSearchBtn" class="searchBtn">搜尋</button>
-    <button id="adminExportBtn" class="searchBtn" style="background-color: #198754; border-color: #198754;">產出報表</button>
+    <button id="adminExportBtn" class="searchBtn" style="background-color: #198754; border-color: #198754;">查看報表</button>
   </div>
 </div>
 </div>
@@ -1370,37 +1405,59 @@ body {
 <div id="listContainer" style="display: none;"></div>
 
 <div id="reportSelector" style="display: none; padding: 10px 0;">
-    <div style="background: white; border-radius: 15px; padding: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.05);">
+    <div style="background: white; border-radius: 15px; padding: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.05);">
         
-        <div style="font-weight: bold; font-size: 20px; margin-bottom: 15px; color: #0b5ed7; display: flex; align-items: center;">
-            <span style="width: 4px; height: 20px; background: #0b5ed7; margin-right: 10px; display: inline-block;"></span>
-            各分隊歷史報表 (月報/災中)
-        </div>
+        <div class="report-section-title">各分隊歷史報表</div>
         
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 30px;">
+        <div id="teamReportAccordion">
             <script>
                 for(let i=1; i<=10; i++) {
                     document.write(`
-                        <button class="report-option-btn" onclick="openHistoryReport('team', ${i})">
-                            第 ${i} 大隊
-                        </button>
+                        <div class="team-row">
+                            <div class="team-header" onclick="toggleTeamPanel(${i})">
+                                <span>第 ${i} 大隊</span>
+                                <span class="arrow-icon" id="arrow-${i}">▼</span>
+                            </div>
+                            <div class="team-panel" id="panel-${i}">
+                                <div class="filter-group">
+                                    <label>選擇年份</label>
+                                    <select id="year-${i}" class="report-select">
+                                        <option value="2025">2025 年</option>
+                                        <option value="2024">2024 年</option>
+                                    </select>
+                                </div>
+                                
+                                <div class="filter-group">
+                                    <label>報表類型</label>
+                                    <div class="type-switch">
+                                        <input type="radio" name="type-${i}" id="normal-${i}" value="normal" checked>
+                                        <label for="normal-${i}">每月月報</label>
+                                        <input type="radio" name="type-${i}" id="disaster-${i}" value="disaster">
+                                        <label for="disaster-${i}">災中報表</label>
+                                    </div>
+                                </div>
+
+                                <div class="filter-group">
+                                    <label>選擇月份</label>
+                                    <div class="month-grid">
+                                        ${[1,2,3,4,5,6,7,8,9,10,11,12].map(m => 
+                                            `<button onclick="exportToExcel(${i}, ${m})">${m}月</button>`
+                                        ).join('')}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     `);
                 }
             </script>
         </div>
 
-        <div style="font-weight: bold; font-size: 20px; margin-bottom: 15px; color: #198754; display: flex; align-items: center;">
-            <span style="width: 4px; height: 20px; background: #198754; margin-right: 10px; display: inline-block;"></span>
-            全大隊合併報表
-        </div>
+        <hr style="margin: 20px 0; border: 0; border-top: 1px solid #eee;">
         
-        <div style="display: flex; flex-direction: column; gap: 12px;">
-            <button class="report-option-btn combined-monthly" onclick="openHistoryReport('all', 'monthly')">
-                10 個大隊合併：每月報表
-            </button>
-            <button class="report-option-btn combined-disaster" onclick="openHistoryReport('all', 'disaster')">
-                10 個大隊合併：災中報表
-            </button>
+        <div class="report-section-title" style="color:#198754;">全大隊合併報表</div>
+        <div style="display: flex; gap: 10px;">
+            <button class="combined-btn" onclick="exportToExcel('all', 'monthly')">合併月報</button>
+            <button class="combined-btn disaster" onclick="exportToExcel('all', 'disaster')">合併災中</button>
         </div>
     </div>
 </div>
@@ -2580,6 +2637,70 @@ function openHistoryReport(mode, target) {
         // 使用你原本的 iframe 開啟函式
         openDetailView(url); 
     }
+}
+
+  // 控制面板展開/收合
+function toggleTeamPanel(id) {
+    const panel = document.getElementById(`panel-${id}`);
+    const arrow = document.getElementById(`arrow-${id}`);
+    const isVisible = panel.style.display === 'block';
+    
+    // 先關閉所有
+    document.querySelectorAll('.team-panel').forEach(p => p.style.display = 'none');
+    document.querySelectorAll('.arrow-icon').forEach(a => a.innerText = '▼');
+    
+    // 如果原本是關的，就打開
+    if (!isVisible) {
+        panel.style.display = 'block';
+        arrow.innerText = '▲';
+    }
+}
+
+// 核心匯出功能
+function exportToExcel(teamId, month) {
+    // 取得選定的年份
+    const year = (teamId === 'all') ? new Date().getFullYear() : document.getElementById(`year-${teamId}`).value;
+    
+    // 取得報表類型
+    let type = "";
+    if (teamId === 'all') {
+        type = month; // 'monthly' 或 'disaster'
+    } else {
+        type = document.querySelector(`input[name="type-${teamId}"]:checked`).value;
+    }
+
+    // 顯示載入中
+    document.getElementById('loadingMask').style.display = 'flex';
+    document.getElementById('text-update').innerText = "正在向資料庫請求報表...";
+
+    // 呼叫 GAS (使用原本定義的 VOLUNTEER_API_URL)
+    const params = {
+        action: "exportExcel",
+        team: teamId,
+        year: year,
+        month: month,
+        type: type
+    };
+
+    // 這裡使用 fetch 發送請求給 GAS
+    fetch(VOLUNTEER_API_URL, {
+        method: 'POST',
+        body: JSON.stringify(params)
+    })
+    .then(res => res.json())
+    .then(data => {
+        document.getElementById('loadingMask').style.display = 'none';
+        if (data.downloadUrl) {
+            // 如果 GAS 回傳下載網址，直接開啟
+            window.open(data.downloadUrl, '_blank');
+        } else {
+            alert("報表產出成功，請查看您的電子郵件或直接下載。");
+        }
+    })
+    .catch(err => {
+        document.getElementById('loadingMask').style.display = 'none';
+        alert("匯出失敗，請檢查網路連線或稍後再試。");
+    });
 }
 
 function showLoadingMask() {
