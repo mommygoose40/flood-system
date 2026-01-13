@@ -1203,43 +1203,54 @@ body {
 }
 
     /* =====================================================
-   🎯 終極對齊修正：強迫手機版兩組按鈕中軸線重合
-   請務必將此段放在 CSS 最底部
+   🎯 最終對齊修正：兼顧顯示時機與報表頁 280px 寬度
    ===================================================== */
 @media (max-width: 768px) {
 
-  /* 1. 強迫搜尋面板的容器寬度與螢幕一致，且不准有內距偏移 */
-  #adminFilterArea, 
-  .admin-inner-wrapper {
+  /* 只有當顯示時才套用置中邏輯 */
+  #adminFilterArea:not([style*="display: none"]),
+  #adminFilterArea:not([style*="display: none"]) .admin-inner-wrapper {
     width: 100% !important;
+    display: block !important;
     padding-left: 0 !important;
     padding-right: 0 !important;
     margin-left: 0 !important;
     margin-right: 0 !important;
-    display: block !important;
   }
 
-  /* 2. 針對按鈕那一列：強迫使用 flex 置中，並殺死所有之前的 padding-left */
-  #adminFilterArea .admin-inner-wrapper > div:last-child {
+  /* 按鈕那一列置中 */
+  #adminFilterArea:not([style*="display: none"]) .admin-inner-wrapper > div:last-child {
     display: flex !important;
-    justify-content: center !important; /* 絕對置中 */
-    padding-left: 0 !important;         /* 殺死之前的 70px 偏移 */
-    padding-right: 0 !important;
-    margin: 25px 0 0 0 !important;      /* 移除左右 margin */
+    justify-content: center !important;
+    padding-left: 0 !important;
+    margin: 25px 0 0 0 !important;
     width: 100% !important;
   }
 
-  /* 3. 同步按鈕寬度：確保「大隊紀錄」與「搜尋」按鈕尺寸完全一致，中軸線才會準 */
-  #btnTeam, #btnSelf, #adminSearchBtn, #adminExportBtn {
+  /* --- 關鍵修正：一般頁面按鈕 140px --- */
+  /* 我們排除掉 #reportPage 裡面的 adminExportBtn */
+  #btnTeam, 
+  #btnSelf, 
+  #adminSearchBtn,
+  #adminFilterArea:not(#reportPage) #adminExportBtn {
     width: 140px !important;
     min-width: 140px !important;
     max-width: 140px !important;
     flex: none !important;
-    margin: 0 6px !important; /* 給予統一的左右間距 */
+    margin: 0 6px !important;
   }
 
-  /* 4. 處理 switchArea 的容器 */
-  #switchArea {
+  /* --- 關鍵修正：歷史報表頁面維持 280px --- */
+  #reportPage #adminExportBtn {
+    width: 280px !important;
+    max-width: 280px !important;
+    min-width: 280px !important;
+    margin: 10px auto 0 !important;
+    display: block !important;
+  }
+
+  /* 大隊紀錄切換區置中 */
+  #switchArea:not([style*="display: none"]) {
     width: 100% !important;
     display: flex !important;
     justify-content: center !important;
