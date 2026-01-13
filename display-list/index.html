@@ -1225,20 +1225,26 @@ body {
     }
 }
 
-/* 修正歷史報表篩選區垂直位置 */
-#reportPage {
+/* =========================================
+   歷史報表：強制與大隊紀錄頂齊
+   ========================================= */
+
+/* 1️⃣ 移除 action-center 對歷史頁的垂直影響 */
+#reportPage.action-center {
   margin-top: 0 !important;
   padding-top: 0 !important;
 }
 
-/* 歷史報表：與大隊紀錄頂齊 */
-#reportPage .desktopActionCard {
+/* 2️⃣ 歷史報表篩選區，完全貼齊卡片頂 */
+#reportPage .history-filter-area {
   margin-top: 0 !important;
+  padding-top: 0 !important;
 }
 
-/* 歷史報表不需要額外上下留白 */
-#reportPage #adminFilterArea {
+/* 3️⃣ desktopActionCard 在歷史頁不要再被往下推 */
+#reportPage .desktopActionCard {
   margin-top: 0 !important;
+  padding-top: 0 !important;
 }
     
 </style>
@@ -1477,7 +1483,7 @@ body {
 <div id="reportPage" class="action-center" style="display:none;">
 
   <div class="desktopActionCard">
-    <div id="adminFilterArea" style="display: block;">
+    <div id="adminFilterArea" class="history-filter-area" style="display: block;">
       <div class="admin-inner-wrapper">
         
         <div style="margin-bottom:12px;">
