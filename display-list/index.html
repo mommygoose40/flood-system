@@ -1203,59 +1203,58 @@ body {
 }
 
     /* =====================================================
-   🎯 最終優化版：修正顯示時機、間距、與框框寬度
+   🎯 歷史報表頁面專屬修正：框框寬度、間距、與顯示邏輯
    ===================================================== */
 @media (max-width: 768px) {
 
-  /* 1. 確保 adminFilterArea 只有在 JS 切換顯示時才套用佈局，預設不干擾隱藏狀態 */
+  /* 1. 顯示邏輯：只有當 JS 切換為顯示時才套用，避免載入中閃現 */
   #adminFilterArea[style*="display: block"],
   #adminFilterArea[style*="display: flex"] {
     width: 100% !important;
     display: block !important;
     padding: 12px 0 !important;
-    margin-bottom: 30px !important; /* 🔥 增加與下方清單的間距 */
+    margin-bottom: 25px !important; /* 🔥 增加搜尋區與下方紀錄清單的間距 */
   }
 
-  /* 2. 統一所有下拉框/時間框的寬度 (以大隊框為基準) */
-  /* 根據您之前的程式碼，大隊框大約是 145px */
-  .fakeSelectBtn, 
-  #adminFilterArea .timeBtn,
-  #adminFilterArea button[onclick*="openDropdown"] {
-    width: 145px !important;      /* 🔥 統一設定一個舒適的固定寬度 */
+  /* 2. 【歷史報表頁面專用】框框寬度統一 */
+  /* 只在父層是 #reportPage 時，強迫裡面的框框跟大隊框框一樣寬 */
+  #reportPage .fakeSelectBtn,
+  #reportPage .timeBtn {
+    width: 145px !important;      /* 以大隊框框為基準寬度 */
     min-width: 145px !important;
     max-width: 145px !important;
     flex: none !important;
   }
 
-  /* 3. 時間那一列特別處理：確保兩個框框中間有波浪號且不擠壓 */
-  #timeWrapper.timeRow {
+  /* 3. 歷史報表頁面的時間列：確保兩個 145px 框框並排不折行 */
+  #reportPage #timeWrapper.timeRow {
     display: flex !important;
-    justify-content: flex-start !important; /* 跟隨 label 對齊 */
+    justify-content: flex-start !important;
     flex-wrap: nowrap !important;
     gap: 5px !important;
   }
 
-  /* 4. 按鈕列置中與間距修正 */
+  /* 4. 按鈕列置中處理 (不影響隱藏邏輯) */
   #adminFilterArea .admin-inner-wrapper > div:last-child {
     display: flex !important;
     justify-content: center !important;
     padding-left: 0 !important;
-    margin: 30px 0 10px 0 !important; /* 增加上方距離，並留一點底距 */
+    margin: 30px 0 10px 0 !important;
     width: 100% !important;
   }
 
-  /* 5. 按鈕寬度邏輯 (區分一般頁面與報表頁) */
-  /* 一般按鈕 140px */
+  /* 5. 按鈕寬度分流 */
+  /* 一般情況下的按鈕 (140px) */
   #btnTeam, #btnSelf, #adminSearchBtn, 
   #adminFilterArea:not(#reportPage) #adminExportBtn {
     width: 140px !important;
     min-width: 140px !important;
-    max-width: 140px !important;
     margin: 0 6px !important;
   }
 
-  /* 確保切換區置中 */
-  #switchArea {
+  /* 大隊紀錄/我的紀錄切換區置中 */
+  #switchArea[style*="display: block"],
+  #switchArea[style*="display: flex"] {
     width: 100% !important;
     display: flex !important;
     justify-content: center !important;
