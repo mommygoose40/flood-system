@@ -1171,21 +1171,6 @@ body {
 .combined-btn { flex: 1; padding: 15px; border-radius: 8px; border: none; background: #198754; color: white; font-size: 18px; }
 .combined-btn.disaster { background: #dc3545; }
 
-/* 歷史報表頁面的標題顏色與搜尋頁區隔 */
-#reportPage h2 {
-    color: #333;
-    margin-top: 30px;
-}
-
-/* 下載按鈕特別強調 (綠色) */
-#adminExportBtn {
-    background-color: #198754 !important; /* 綠色代表下載/成功 */
-    color: white !important;
-    width: 100% !important; /* 手機版撐滿，更專業 */
-    max-width: 280px;
-    margin: 20px auto 0 !important;
-}
-
 #adminExportBtn:active {
     background-color: #157347 !important;
 }
@@ -1424,7 +1409,6 @@ body {
 <div id="listContainer" style="display: none;"></div>
 
 <div id="reportPage" class="action-center" style="display:none;">
-  <h2 id="pageTitle">歷史報表匯出</h2>
 
   <div class="desktopActionCard">
     <div id="adminFilterArea" style="display: block; padding:12px;">
@@ -1455,9 +1439,20 @@ body {
         <div style="margin-bottom:12px;">
           <label>月份：</label>
 
-          <select id="reportMonth" style="display:none;"></select>
+          <select id="reportMonth" style="display:none;">
           <option value="01">1 月</option>
-  <option value="02">2 月</option>
+          <option value="02">2 月</option>
+          <option value="03">3 月</option>
+          <option value="04">4 月</option>
+          <option value="05">5 月</option>
+          <option value="06">6 月</option>
+          <option value="07">7 月</option>
+          <option value="08">8 月</option>
+          <option value="09">9 月</option>
+          <option value="10">10 月</option>
+          <option value="11">11 月</option>
+          <option value="12">12 月</option>
+          </select>
 
           <button class="fakeSelectBtn" onclick="openDropdown('reportMonth')">
             <span id="reportMonthText">01 月</span>
@@ -1476,10 +1471,11 @@ body {
         <div style="margin-bottom:12px;">
           <label>狀態：</label>
 
-          <select id="reportStatus" style="display:none;"></select>
+          <select id="reportStatus" style="display:none;">
           <option value="全部">全部</option>
           <option value="正常">正常</option>
           <option value="異常">異常</option>
+          </select>
 
           <button class="fakeSelectBtn" onclick="openDropdown('reportStatus')">
             <span id="reportStatusText">全部</span>
@@ -2565,19 +2561,33 @@ function updateSwitchUI() {
   const btnSelf = document.getElementById("btnSelf");
   const btnTeam = document.getElementById("btnTeam");
 
-  // 重置所有按鈕樣式
+  // reset
   btnSelf.style.background = "white";
   btnSelf.style.color = "#0b5ed7";
+  btnSelf.style.border = "2px solid #0b5ed7";
+
   btnTeam.style.background = "white";
   btnTeam.style.color = "#0b5ed7";
+  btnTeam.style.border = "2px solid #0b5ed7";
 
-  // 根據當前模式設定激活狀態
+  // self
   if (viewMode === "self") {
     btnSelf.style.background = "#0b5ed7";
     btnSelf.style.color = "white";
-  } else if (viewMode === "team" || viewMode === "admin") {
+  }
+
+  // team / admin
+  if (viewMode === "team" || viewMode === "admin") {
     btnTeam.style.background = "#0b5ed7";
     btnTeam.style.color = "white";
+  }
+
+  // 🔥 history（綠色）
+  if (viewMode === "history") {
+    btnSelf.textContent = "歷史報表";
+    btnSelf.style.background = "#198754";
+    btnSelf.style.color = "white";
+    btnSelf.style.border = "2px solid #198754";
   }
 
   // ★★★ 在這裡加入即可 ★★★
@@ -2612,9 +2622,6 @@ function applyAdminButtonFix() {
 
     // ----- 點擊後變成選中狀態（綠底白字） -----
     btnSelf.onclick = () => {
-      // 綠底白字
-      btnSelf.style.background = "#198754";
-      btnSelf.style.color = "white";
 
       showHistoryReportMenu();
       
