@@ -1186,40 +1186,43 @@ body {
   display: block;
 }
 
-/* 統一所有篩選列的標籤寬度與對齊 */
-#adminFilterArea label, 
-#reportPage label {
-    min-width: 70px !important;
-    font-size: 20px !important;
-    font-weight: bold;
-    flex-shrink: 0;
-    margin-right: 10px;
-}
-
-/* 統一每一列的間距與佈局 */
+/* --- 統一所有篩選列的行間距 --- */
 #adminFilterArea .admin-inner-wrapper > div,
 #reportPage .filter-group {
     display: flex !important;
     align-items: center !important;
-    flex-wrap: nowrap !important;
-    margin-bottom: 15px !important;
+    margin-bottom: 12px !important; /* 統一間距 */
     width: 100% !important;
+    min-height: 42px; /* 確保高度一致 */
 }
 
-/* 確保歷史報表中的按鈕/下拉框也遵循相同的基準寬度 */
-#reportPage .fakeSelectBtn,
-#reportPage .type-switch {
-    flex: 1; /* 讓它撐開 */
-    height: 42px !important;
-    min-width: 110px !important;
+/* --- 修正標籤 (Label) 寬度與對齊 --- */
+#adminFilterArea label, 
+#reportPage .filter-group label {
+    display: inline-block !important; /* 強制不換行 */
+    min-width: 70px !important;       /* 統一標籤寬度 */
+    margin-bottom: 0 !important;      /* 移除原本標籤下方的間距 */
+    font-size: 20px !important;
+    font-weight: bold;
+    color: #333;
+    flex-shrink: 0;
 }
 
-/* 針對時間列的對齊 */
-#reportPage .timeRow {
-    display: flex !important;
-    align-items: center !important;
-    gap: 10px !important;
-    flex: 1;
+/* --- 修正歷史報表內的內容容器 --- */
+#reportPage .filter-group > div,
+#reportPage .type-switch,
+#reportPage .month-grid {
+    flex: 1; /* 讓內容佔滿剩餘空間 */
+}
+
+/* --- 針對電腦版的卡片一致性 --- */
+@media (min-width: 769px) {
+    #reportPage {
+        width: 100%;
+        max-width: 820px; /* 與大隊紀錄卡片寬度一致 */
+        margin: 0 auto;
+        padding: 0 30px;
+    }
 }
     
 </style>
