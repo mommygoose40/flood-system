@@ -1423,7 +1423,7 @@ body {
 <!-- 清單真正呈現的地方，一開始先隱藏 -->
 <div id="listContainer" style="display: none;"></div>
 
-<div id="reportPage" class="action-center">
+<div id="reportPage" class="action-center" style="display:none;">
   <h2 id="pageTitle">歷史報表匯出</h2>
 
   <div class="desktopActionCard">
@@ -2233,6 +2233,8 @@ document.getElementById("btnSelf").onclick = function () {
 };
 
 document.getElementById("btnTeam").onclick = async function () {
+  document.getElementById('reportPage').style.display = 'none';
+  
   // 大隊長 → 讀自己的大隊
   if (globalRole === "大隊長") {
     viewMode = "team";
@@ -2614,19 +2616,24 @@ function applyAdminButtonFix() {
 // 這裡演示點擊後切換畫面的邏輯
 
 function showHistoryReportMenu() {
-    // 1. 隱藏清單區與搜尋區
-    document.getElementById('listContainer').style.display = 'none';
-    document.getElementById('adminFilterArea').style.display = 'none';
-    document.getElementById('switchArea').style.display = 'none';
-    
-    // 2. 顯示報表選單區
-    document.getElementById('reportSelector').style.display = 'block';
-    
-    // 3. 修改標題
-    document.getElementById('pageTitle').innerText = "歷史報表選擇";
-    
-    // 4. 強制滾動到頂部
-    window.scrollTo(0, 0);
+  viewMode = "history";
+
+  // 上方按鈕維持（只是切狀態）
+  updateSwitchUI();
+
+  // 主清單隱藏
+  document.getElementById('listContainer').style.display = 'none';
+
+  // 搜尋區隱藏
+  document.getElementById('adminFilterArea').style.display = 'none';
+
+  // 顯示報表區（像切頁）
+  document.getElementById('reportPage').style.display = 'block';
+
+  // 標題不動
+  document.getElementById('pageTitle').style.display = 'block';
+
+  window.scrollTo(0, 0);
 }
 
 // 修改原本「回上一頁」或「回清單」的邏輯，確保能從選單切換回來
@@ -2742,27 +2749,21 @@ function renderLoadingInList() {
   window.open("https://docs.google.com/spreadsheets/d/1GEjlfTy73kgZnMYrM0AHjnYIs1EPLIOQLCqsEE8BMAw/edit?gid=0#gid=0", "_blank");
 };*/
 
+// 取得當前年份
+const currentYear = new Date().getFullYear();
+
 // 彈窗資料表
 const dropdownData = {
+  // --- 原有的搜尋欄位 ---
   team: {
     title: "選擇大隊",
     target: "teamText",
     input: "adminTeamSelect",
     options: [
       {value:"全部", text:"全部"},
-      {value:"1", text:"第 1 大隊"},
-      {value:"2", text:"第 2 大隊"},
-      {value:"3", text:"第 3 大隊"},
-      {value:"4", text:"第 4 大隊"},
-      {value:"5", text:"第 5 大隊"},
-      {value:"6", text:"第 6 大隊"},
-      {value:"7", text:"第 7 大隊"},
-      {value:"8", text:"第 8 大隊"},
-      {value:"9", text:"第 9 大隊"},
-      {value:"10", text:"第 10 大隊"},
+      ...Array.from({length:10}, (_,i)=>({ value:String(i+1), text:`第 ${i+1} 大隊` }))
     ]
   },
-
   range: {
     title: "選擇範圍",
     target: "rangeText",
@@ -2773,7 +2774,6 @@ const dropdownData = {
       {value:"14", text:"最近 14 天"}
     ]
   },
-
   type: {
     title: "選擇類型",
     target: "typeText",
@@ -2785,7 +2785,6 @@ const dropdownData = {
       {value:"其他", text:"其他"}
     ]
   },
-
   timeStart: {
     title: "開始時間",
     target: "timeStartText",
@@ -2795,7 +2794,6 @@ const dropdownData = {
       text: `${String(i).padStart(2,'0')}:00`
     }))
   },
-
   timeEnd: {
     title: "結束時間",
     target: "timeEndText",
@@ -2806,20 +2804,31 @@ const dropdownData = {
     }))
   },
 
+  // --- 歷史報表專用欄位 (保持格式一致) ---
   reportYear: {
     title: "選擇年度",
-    options: ["2025", "2026"], // 可視需求增加
-    targetId: "reportYearText"
+    target: "reportYearText", // 對應 HTML 的 <span> ID
+    options: Array.from({length: currentYear - 2025 + 1}, (_, i) => {
+      const y = 2025 + i;
+      return { value: String(y), text: String(y) };
+    })
   },
   reportMonth: {
     title: "選擇月份",
-    options: ["01", "02", "03", "04", "05", "06", "07", "08", "09", "10", "11", "12"].map(m => m + " 月"),
-    targetId: "reportMonthText"
+    target: "reportMonthText", // 對應 HTML 的 <span> ID
+    options: Array.from({length: 12}, (_, i) => {
+      const m = String(i + 1).padStart(2, '0');
+      return { value: m, text: m + " 月" };
+    })
   },
   reportStatus: {
     title: "選擇狀態",
-    options: ["全部", "正常", "異常"],
-    targetId: "reportStatusText"
+    target: "reportStatusText", // 對應 HTML 的 <span> ID
+    options: [
+      { value: "全部", text: "全部" },
+      { value: "正常", text: "正常" },
+      { value: "異常", text: "異常" }
+    ]
   }
 };
 
