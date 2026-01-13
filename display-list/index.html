@@ -1657,7 +1657,7 @@ body {
 <script>
 
   const VOLUNTEER_API_URL = "https://script.google.com/macros/s/AKfycbxiGSG5hSMO6We-C6cyEJZLgf4Rnbjp-6w9Tmb0qfF9VM6JB4YGEMqj3QRfTzg7Czpc/exec"; 
-const REPORT_GAS_URL = "https://script.google.com/macros/s/AKfycbxRgiKZbcrSai4XPKsfOS0z9jeO_uMeuAvC1Tsc7zUitMEWsng1aIfr1KqpyphuQhme_w/exec";
+const REPORT_GAS_URL = "https://script.google.com/macros/s/AKfycbxqepuRknB0YBqSNP_cvWHaG2FTzKFoevCGuvBlAzBPgeea9X1F_LSxEdoH-FbmWZ9w6Q/exec";
 
 let globalAdminRecords = [];   // 管理員一次抓全部後存在這邊
 let adminViewDays = 3;        // 預設抓最近兩週，可改 30
@@ -2811,138 +2811,212 @@ function showHistoryReportOverlay() {
   renderHistoryReportOverlay(window.historyReportRecords);
 }
   
-  function fetchHistoryFromGAS(params) {
-  return new Promise((resolve) => {
+  /**
+ * 從 GAS 獲取歷史紀錄資料
+ * @param {Object} params 包含 year, month, team, type, status 的物件
+ * @returns {Promise<Array>} 返回資料陣列
+ */
+async function fetchHistoryFromGAS(params) {
+    try {
+        // 構建查詢字串
+        const query = new URLSearchParams({
+            action: 'getHistoryData', // 對應 GAS 中的 switch case
+            ...params
+        }).toString();
 
-    let finished = false;
+        const response = await fetch(`${REPORT_GAS_URL}?${query}`);
+        const result = await response.json();
 
-    const timer = setTimeout(() => {
-      if (finished) return;
-      finished = true;
-      historyReportRecords = [];
-      alert('查詢逾時，請稍後再試');
-      resolve();
-    }, 10000); // ⏱ 10 秒保命
-
-    const query = new URLSearchParams({
-      action: 'listAdminHistory',
-      ...params,
-      callback: 'historyReportCallback'
-    }).toString();
-
-    window.historyReportCallback = function (res) {
-      if (finished) return;
-      finished = true;
-      clearTimeout(timer);
-
-      if (res && res.success) {
-        historyReportRecords = res.records || [];
-      } else {
-        historyReportRecords = [];
-        alert(res?.message || '查詢失敗');
-      }
-      resolve();
-    };
-
-    const s = document.createElement('script');
-    s.src = `${REPORT_GAS_URL}?${query}`;
-    s.onerror = () => {
-      if (finished) return;
-      finished = true;
-      clearTimeout(timer);
-      historyReportRecords = [];
-      alert('連線失敗');
-      resolve();
-    };
-    document.body.appendChild(s);
-  });
-}
-
-  async function searchHistoryReport() {
-  const year = document.getElementById('reportYearText').innerText;
-  const month = document.getElementById('reportMonthText').innerText.replace(' 月', '');
-  const team = document.getElementById('historyTeamText').innerText;
-const type = document.getElementById('historyTypeText').innerText;;
-  const status = document.getElementById('reportStatusText').innerText;
-
-  const params = {
-    year,
-    month: parseInt(month),
-    team: team === '全部' ? 'all' : team,
-    type,
-    status: status === '全部' ? 'all' : status
-  };
-
-  document.getElementById('loadingMask').style.display = 'flex';
-
-  await fetchHistoryFromGAS(params);
-
-  document.getElementById('loadingMask').style.display = 'none';
+        if (result.status === "success") {
+            // 如果後端有回傳資料，則返回資料陣列；否則回傳空陣列
+            return result.data || [];
+        } else {
+            console.error("GAS 錯誤:", result.message);
+            return [];
+        }
+    } catch (err) {
+        console.error("連線到 GAS 失敗:", err);
+        return [];
+    }
 }
 
 // 核心下載邏輯
-// --- 修改：手機版「查看報表」邏輯修正 ---
 async function handleUnifiedDownload() {
-  const year = document.getElementById('reportYearText').innerText;
-  const month = document.getElementById('reportMonthText').innerText.replace(' 月', '');
-  const team = document.getElementById('teamText').innerText;
-  const type = document.getElementById('typeText').innerText;
-  const status = document.getElementById('reportStatusText').innerText;
+    const year = document.getElementById('reportYearText').innerText;
+    const month = document.getElementById('reportMonthText').innerText.replace(' 月', '');
+    const team = document.getElementById('teamText').innerText;
+    const type = document.getElementById('typeText').innerText;
+    const status = document.getElementById('reportStatusText').innerText;
 
-  const isMobile = window.innerWidth < 769;
+    const isMobile = window.innerWidth < 769;
 
-  // 顯示讀取中
-  document.getElementById('loadingMask').style.display = 'flex';
-  const textUpdate = document.getElementById('text-update');
-  textUpdate.innerText = isMobile ? "正在讀取報表資料..." : "正在檢查資料並產生報表...";
-  textUpdate.style.display = 'block';
+    // 顯示讀取中
+    document.getElementById('loadingMask').style.display = 'flex';
+    const textUpdate = document.getElementById('text-update');
+    textUpdate.innerText = isMobile ? "正在讀取報表資料..." : "正在檢查資料並產生報表...";
+    textUpdate.style.display = 'block';
 
-  try {
-    const params = {
-      year: year,
-      month: parseInt(month),
-      team: (team === "全部") ? "all" : team,
-      type: type,
-      status: (status === "全部") ? "all" : status
+    try {
+        const params = {
+            year: year,
+            month: parseInt(month),
+            team: (team === "全部") ? "all" : team,
+            type: type,
+            status: (status === "全部") ? "all" : status
+        };
+
+        // --- 手機版邏輯：跳出視窗查看 ---
+        if (isMobile) {
+            // 這裡假設你有一個與後端溝通獲取 JSON 的 function，或是從全域變數抓取
+            // 如果 fetchHistoryFromGAS(params) 會更新全域變數 historyReportRecords，請使用它
+            const data = await fetchHistoryFromGAS(params); 
+            
+            if (!data || data.length === 0) {
+                alert("尚無符合資料!");
+                return;
+            }
+
+            renderMobileReportOverlay(data); // 呼叫下方新寫的繪製函式
+            return;
+        }
+
+        // --- 電腦版下載邏輯 (維持原樣) ---
+        const query = new URLSearchParams({ action: 'exportExcelBinary', ...params }).toString();
+        const response = await fetch(`${REPORT_GAS_URL}?${query}`);
+        const result = await response.json();
+
+        if (result.result === "success") {
+            const byteCharacters = atob(result.data);
+            const byteNumbers = new Array(byteCharacters.length);
+            for (let i = 0; i < byteCharacters.length; i++) {
+                byteNumbers[i] = byteCharacters.charCodeAt(i);
+            }
+            const byteArray = new Uint8Array(byteNumbers);
+            const blob = new Blob([byteArray], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+            const fileName = `${year}年${month}月_${team}大隊_報表.xlsx`;
+            const link = document.createElement('a');
+            link.href = window.URL.createObjectURL(blob);
+            link.download = fileName;
+            link.click();
+        } else {
+            alert("【查無資料】\n" + (result.message || "所選條件下沒有任何紀錄。"));
+        }
+    } catch (err) {
+        console.error(err);
+        alert("連線失敗，請稍後再試。");
+    } finally {
+        document.getElementById('loadingMask').style.display = 'none';
+        textUpdate.style.display = 'none';
+    }
+}
+
+/**
+ * 新增：專門負責生成手機版 Overlay 的函式
+ * @param {Array} filteredData 
+ */
+function renderMobileReportOverlay(filteredData) {
+    const isMobile = window.innerWidth < 769;
+    
+    // 隱藏小圓鈕 (如果有)
+    const fb = document.getElementById("floatingButtons");
+    if (fb) fb.style.setProperty("display", "none", "important");
+
+    // 攔截返回鍵
+    history.pushState({ action: "closeReport" }, "");
+    window.onpopstate = function() {
+        if (document.getElementById("reportOverlay")) closeReportLayer();
     };
 
-    // 👉 關鍵修正：手機版也要先去 fetch 才有資料可以看
-    if (isMobile) {
-      await fetchHistoryFromGAS(params); // 先抓資料存入 historyReportRecords
-      document.getElementById('loadingMask').style.display = 'none';
-      textUpdate.style.display = 'none';
-      showHistoryReportOverlay(); // 資料抓完後再開視窗
-      return;
-    }
+    let tableRows = "";
+    filteredData.forEach(r => {
+        // 解析時間 (依據你提供的邏輯)
+        let hh = "--", mm = "--";
+        try {
+            const match = r.詳細紀錄.match(/report_(\d+)/);
+            if (match) {
+                const dateObj = new Date(parseInt(match[1], 10));
+                hh = String(dateObj.getHours()).padStart(2, "0");
+                mm = String(dateObj.getMinutes()).padStart(2, "0");
+            }
+        } catch(e) {}
 
-    // --- 電腦版下載邏輯 (維持原樣) ---
-    const query = new URLSearchParams({ action: 'exportExcelBinary', ...params }).toString();
-    const response = await fetch(`${REPORT_GAS_URL}?${query}`);
-    const result = await response.json();
+        const note = (r.說明 || "").trim();
+        const voice = (r.語音轉文字 || "").trim();
+        let combinedNote = (note && voice) ? `${note} / ${voice}` : (note || voice);
 
-    if (result.result === "success") {
-      const byteCharacters = atob(result.data);
-      const byteNumbers = new Array(byteCharacters.length);
-      for (let i = 0; i < byteCharacters.length; i++) {
-        byteNumbers[i] = byteCharacters.charCodeAt(i);
-      }
-      const byteArray = new Uint8Array(byteNumbers);
-      const blob = new Blob([byteArray], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
-      const fileName = `${year}年${month}月_${team}大隊_報表.xlsx`;
-      const link = document.createElement('a');
-      link.href = window.URL.createObjectURL(blob);
-      link.download = fileName;
-      link.click();
-    } else {
-      alert("【查無資料】\n" + (result.message || "所選條件下沒有任何紀錄。"));
+        let reporterInfo = (r.回報者 || "").trim();
+        if (r.同行者 && r.同行者.trim() !== "") {
+            reporterInfo += `,${r.同行者.trim()}`;
+        }
+
+        const detailLink = `<a href="${r.詳細紀錄}" target="_blank" style="color: #0b5ed7; text-decoration: underline;">連結</a>`;
+
+        tableRows += `
+            <tr>
+                <td>${r.日期 ? normalizeDate(r.日期) : ''}</td>
+                <td>${hh}:${mm}</td>
+                <td>${r.通報類型 || ''}</td>
+                <td style="color: ${r.狀態 === '異常' ? 'red' : 'black'}; font-weight: ${r.狀態 === '異常' ? 'bold' : 'normal'}">${r.狀態 || ''}</td>
+                <td>${r.異常分類 || ''}</td>
+                <td style="text-align:center;">${detailLink}</td>
+                <td>${combinedNote}</td>
+                <td>${reporterInfo}</td>
+                <td>${r.所屬大隊 || ''}</td>
+            </tr>
+        `;
+    });
+
+    const reportHtml = `
+        <div id="reportOverlay" style="position:fixed; top:0; left:0; width:100%; height:100%; background: white; z-index: 9999; display: flex; flex-direction: column; font-family:sans-serif;">
+            <div style="padding: 15px; border-bottom: 1px solid #ddd; display: flex; justify-content: space-between; align-items: center; background: #f8f9fa;">
+                <span style="font-weight: bold;">報表預覽 (共 ${filteredData.length} 筆)</span>
+                <button onclick="closeReportLayer()" style="padding: 5px 15px; background: #dc3545; color: white; border: none; border-radius: 4px;">關閉</button>
+            </div>
+            
+            <div id="reportContent" style="flex: 1; padding: 10px; box-sizing: border-box; overflow-y: auto;">
+                <h2 style="text-align:center; margin-bottom:10px; font-size: 20px;">巡視紀錄明細報表</h2>
+                
+                <div style="overflow-x: auto;">
+                    <table id="targetTable" style="width:100%; border-collapse:collapse; font-size:12px; min-width: 600px;">
+                        <thead>
+                            <tr style="background:#f2f2f2;">
+                                <th style="border:1px solid #ccc; padding:8px;">日期</th>
+                                <th style="border:1px solid #ccc; padding:8px;">時間</th>
+                                <th style="border:1px solid #ccc; padding:8px;">類型</th>
+                                <th style="border:1px solid #ccc; padding:8px;">狀態</th>
+                                <th style="border:1px solid #ccc; padding:8px;">分類</th>
+                                <th style="border:1px solid #ccc; padding:8px;">紀錄</th>
+                                <th style="border:1px solid #ccc; padding:8px;">說明</th>
+                                <th style="border:1px solid #ccc; padding:8px;">回報</th>
+                                <th style="border:1px solid #ccc; padding:8px;">大隊</th>
+                            </tr>
+                        </thead>
+                        <tbody>${tableRows}</tbody>
+                    </table>
+                </div>
+            </div>
+            <style>
+                tr:nth-child(even) { background-color: #fafafa; }
+                td { border:1px solid #ccc; padding:8px; text-align: left; word-break: break-all; }
+            </style>
+        </div>
+    `;
+
+    const div = document.createElement('div');
+    div.id = "temp_container";
+    div.innerHTML = reportHtml;
+    document.body.appendChild(div);
+}
+
+// 關閉視窗函式
+function closeReportLayer() {
+    const el = document.getElementById("reportOverlay");
+    if (el) {
+        el.parentElement.remove();
+        // 顯示回小圓鈕
+        const fb = document.getElementById("floatingButtons");
+        if (fb) fb.style.display = "flex";
     }
-  } catch (err) {
-    console.error(err);
-    alert("連線失敗，請稍後再試。");
-  } finally {
-    document.getElementById('loadingMask').style.display = 'none';
-    textUpdate.style.display = 'none';
-  }
 }
 
 function showLoadingMask() {
