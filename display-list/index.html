@@ -1213,7 +1213,7 @@ body {
     width: 100% !important;
     display: block !important;
     padding: 12px 0 !important;
-    margin-bottom: 25px !important; /* 🔥 增加搜尋區與下方紀錄清單的間距 */
+    margin-bottom: 20px !important; /* 🔥 增加搜尋區與下方紀錄清單的間距 */
   }
 
   /* 2. 【歷史報表頁面專用】框框寬度統一 */
@@ -3127,6 +3127,41 @@ window.addEventListener("message", (e) => {
 document.addEventListener("DOMContentLoaded", () => {
   if (window.innerWidth >= 769) {
     document.getElementById("floatingButtons").style.display = "flex";
+  }
+});
+
+  document.addEventListener("DOMContentLoaded", () => {
+  // === 歷史報表預設為「上一個月份」 ===
+  const now = new Date();
+
+  let year = now.getFullYear();
+  let month = now.getMonth(); // ⚠️ 0 = 1月，所以這裡剛好是「上個月」
+
+  // 若現在是 1 月，上一個月是去年 12 月
+  if (month === 0) {
+    month = 12;
+    year -= 1;
+  }
+
+  // 補 0 成 01~12
+  const monthValue = String(month).padStart(2, "0");
+
+  // === 年度 ===
+  const reportYearSelect = document.getElementById("reportYear");
+  const reportYearText   = document.getElementById("reportYearText");
+
+  if (reportYearSelect && reportYearText) {
+    reportYearSelect.value = String(year);
+    reportYearText.textContent = String(year);
+  }
+
+  // === 月份 ===
+  const reportMonthSelect = document.getElementById("reportMonth");
+  const reportMonthText   = document.getElementById("reportMonthText");
+
+  if (reportMonthSelect && reportMonthText) {
+    reportMonthSelect.value = monthValue;
+    reportMonthText.textContent = `${month} 月`;
   }
 });
   
