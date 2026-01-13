@@ -2813,6 +2813,17 @@ document.addEventListener('DOMContentLoaded', function() {
 
   function fetchHistoryFromGAS(params) {
   return new Promise((resolve) => {
+
+    let finished = false;
+
+    const timer = setTimeout(() => {
+      if (finished) return;
+      finished = true;
+      historyReportRecords = [];
+      alert('查詢逾時，請稍後再試');
+      resolve();
+    }, 10000); // ⏱ 10 秒保命
+
     const query = new URLSearchParams({
       action: 'listAdminHistory',
       ...params,
@@ -2820,17 +2831,29 @@ document.addEventListener('DOMContentLoaded', function() {
     }).toString();
 
     window.historyReportCallback = function (res) {
-      if (res.success) {
+      if (finished) return;
+      finished = true;
+      clearTimeout(timer);
+
+      if (res && res.success) {
         historyReportRecords = res.records || [];
       } else {
         historyReportRecords = [];
-        alert(res.message || '查詢失敗');
+        alert(res?.message || '查詢失敗');
       }
       resolve();
     };
 
     const s = document.createElement('script');
     s.src = `${REPORT_GAS_URL}?${query}`;
+    s.onerror = () => {
+      if (finished) return;
+      finished = true;
+      clearTimeout(timer);
+      historyReportRecords = [];
+      alert('連線失敗');
+      resolve();
+    };
     document.body.appendChild(s);
   });
 }
@@ -2870,7 +2893,9 @@ const type = document.getElementById('historyTypeText').innerText;
 
   // 👉 手機：只查看，不下載
   if (isMobile) {
+  showLoadingMask();
   await searchHistoryReport();
+  document.getElementById('loadingMask').style.display = 'none';
   showHistoryReportOverlay();
   return;
 }
