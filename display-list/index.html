@@ -946,7 +946,8 @@ body {
   /* 搜尋 / 產出報表按鈕那一列 */
   #adminFilterArea .admin-inner-wrapper > div:last-child {
     display: flex !important;
-    justify-content: center !important;
+    justify-content: flex-start !important;
+    padding-left: 70px; /* 🔥 對齊 label 寬度，甜蜜點 */
     gap: 12px !important;
     margin-top: 20px !important;
   }
@@ -1141,36 +1142,6 @@ body {
     font-weight: bold; font-size: 20px; margin: 10px 0 15px; color: #0b5ed7;
 }
 
-/* 大隊外殼 */
-.team-row { border: 1px solid #eee; border-radius: 8px; margin-bottom: 8px; overflow: hidden; }
-.team-header { 
-    background: #f8f9fa; padding: 12px 15px; display: flex; justify-content: space-between; 
-    cursor: pointer; font-weight: bold; font-size: 18px;
-}
-
-/* 展開面板 */
-.team-panel { display: none; padding: 15px; background: #fff; border-top: 1px solid #eee; }
-.filter-group { margin-bottom: 15px; }
-.filter-group label { display: block; font-size: 14px; color: #666; margin-bottom: 5px; }
-
-/* 月份網格 */
-.month-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
-.month-grid button { 
-    padding: 10px 0; border: 1px solid #0b5ed7; background: #fff; color: #0b5ed7; 
-    border-radius: 5px; cursor: pointer; font-size: 16px;
-}
-.month-grid button:active { background: #0b5ed7; color: #fff; }
-
-/* 類型切換 (Radio 樣式化) */
-.type-switch { display: flex; border: 1px solid #ddd; border-radius: 5px; overflow: hidden; }
-.type-switch input { display: none; }
-.type-switch label { flex: 1; text-align: center; padding: 8px; background: #f0f0f0; cursor: pointer; }
-.type-switch input:checked + label { background: #0b5ed7; color: white; }
-
-/* 合併報表按鈕 */
-.combined-btn { flex: 1; padding: 15px; border-radius: 8px; border: none; background: #198754; color: white; font-size: 18px; }
-.combined-btn.disaster { background: #dc3545; }
-
 #adminExportBtn:active {
     background-color: #157347 !important;
 }
@@ -1182,7 +1153,7 @@ body {
 #reportPage #adminExportBtn {
   width: 280px !important;
   max-width: 280px;
-  margin: 10px auto 0 !important;
+  margin-left: 0 !important;
   display: block;
 }
 
