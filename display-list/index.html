@@ -2755,6 +2755,12 @@ function showHistoryReportMenu() {
   // 標題不動
   document.getElementById('pageTitle').style.display = 'block';
 
+  // 🔥 手機版：改成「查看報表」
+  if (window.innerWidth < 769) {
+    const btn = document.querySelector("#reportPage #adminExportBtn");
+    if (btn) btn.textContent = "查看報表";
+  }
+
   window.scrollTo(0, 0);
 }
 
@@ -2795,6 +2801,18 @@ document.addEventListener('DOMContentLoaded', function() {
     document.getElementById('export-month').value = lastMonth === 0 ? 12 : lastMonth;
 });
 
+  function showHistoryReportOverlay() {
+  const filteredData = filterAdminRecords();
+
+  if (filteredData.length === 0) {
+    alert("查無資料");
+    return;
+  }
+
+  // 🔥 直接用你原本的大隊紀錄查看報表
+  exportReport();
+}
+
 // 核心下載邏輯
 async function handleUnifiedDownload() {
     // 1. 抓取偽下拉 UI 上的當前文字
@@ -2803,6 +2821,14 @@ async function handleUnifiedDownload() {
     const team = document.getElementById('teamText').innerText;
     const type = document.getElementById('typeText').innerText;
     const status = document.getElementById('reportStatusText').innerText;
+
+  const isMobile = window.innerWidth < 769;
+
+  // 👉 手機：只查看，不下載
+  if (isMobile) {
+    showHistoryReportOverlay();
+    return;
+  }
 
     // 2. 顯示讀取遮罩 (延用你的 loadingMask)
     document.getElementById('loadingMask').style.display = 'flex';
