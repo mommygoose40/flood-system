@@ -1404,62 +1404,57 @@ body {
 <!-- 清單真正呈現的地方，一開始先隱藏 -->
 <div id="listContainer" style="display: none;"></div>
 
-<div id="reportSelector" style="display: none; padding: 10px 0;">
-    <div style="background: white; border-radius: 15px; padding: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.05);">
-        
-        <div class="report-section-title">各分隊歷史報表</div>
-        
-        <div id="teamReportAccordion">
-            <script>
-                for(let i=1; i<=10; i++) {
-                    document.write(`
-                        <div class="team-row">
-                            <div class="team-header" onclick="toggleTeamPanel(${i})">
-                                <span>第 ${i} 大隊</span>
-                                <span class="arrow-icon" id="arrow-${i}">▼</span>
-                            </div>
-                            <div class="team-panel" id="panel-${i}">
-                                <div class="filter-group">
-                                    <label>選擇年份</label>
-                                    <select id="year-${i}" class="report-select">
-                                        <option value="2025">2025 年</option>
-                                        <option value="2024">2024 年</option>
-                                    </select>
-                                </div>
-                                
-                                <div class="filter-group">
-                                    <label>報表類型</label>
-                                    <div class="type-switch">
-                                        <input type="radio" name="type-${i}" id="normal-${i}" value="normal" checked>
-                                        <label for="normal-${i}">每月月報</label>
-                                        <input type="radio" name="type-${i}" id="disaster-${i}" value="disaster">
-                                        <label for="disaster-${i}">災中報表</label>
-                                    </div>
-                                </div>
-
-                                <div class="filter-group">
-                                    <label>選擇月份</label>
-                                    <div class="month-grid">
-                                        ${[1,2,3,4,5,6,7,8,9,10,11,12].map(m => 
-                                            `<button onclick="exportToExcel(${i}, ${m})">${m}月</button>`
-                                        ).join('')}
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    `);
-                }
-            </script>
-        </div>
-
-        <hr style="margin: 20px 0; border: 0; border-top: 1px solid #eee;">
-        
-        <div class="report-section-title" style="color:#198754;">全大隊合併報表</div>
-        <div style="display: flex; gap: 10px;">
-            <button class="combined-btn" onclick="exportToExcel('all', 'monthly')">合併月報</button>
-            <button class="combined-btn disaster" onclick="exportToExcel('all', 'disaster')">合併災中</button>
-        </div>
+<div class="report-export-panel" style="background: #f8f9fa; padding: 20px; border-radius: 8px; border: 1px solid #ddd; margin: 20px 0;">
+  <h3><i class="fas fa-file-export"></i> 報表匯出中心</h3>
+  <div style="display: flex; flex-wrap: wrap; gap: 15px; align-items: flex-end;">
+    
+    <div>
+      <label>年度</label><br>
+      <select id="export-year" class="form-control"></select>
     </div>
+
+    <div>
+      <label>月份</label><br>
+      <select id="export-month" class="form-control">
+        <option value="1">01月</option><option value="2">02月</option>
+        <option value="3">03月</option><option value="4">04月</option>
+        <option value="5">05月</option><option value="6">06月</option>
+        <option value="7">07月</option><option value="8">08月</option>
+        <option value="9">09月</option><option value="10">10月</option>
+        <option value="11">11月</option><option value="12">12月</option>
+      </select>
+    </div>
+
+    <div>
+      <label>類型</label><br>
+      <select id="export-type" class="form-control">
+        <option value="all">全部類型</option>
+        <option value="normal">平時通報</option>
+        <option value="disaster">災中專報</option>
+        <option value="other">其他</option>
+      </select>
+    </div>
+
+    <div>
+      <label>狀態</label><br>
+      <select id="export-status" class="form-control">
+        <option value="all">全部</option>
+        <option value="正常">正常</option>
+        <option value="異常">異常</option>
+      </select>
+    </div>
+
+    <div>
+      <label>大隊</label><br>
+      <select id="export-team" class="form-control">
+        <option value="all">全部大隊</option>
+        </select>
+    </div>
+
+    <button onclick="handleUnifiedDownload()" class="btn btn-primary" style="height: 38px;">
+      <i class="fas fa-download"></i> 下載報表
+    </button>
+  </div>
 </div>
 
 </div>
@@ -1515,7 +1510,7 @@ body {
 <script>
 
   const VOLUNTEER_API_URL = "https://script.google.com/macros/s/AKfycbxiGSG5hSMO6We-C6cyEJZLgf4Rnbjp-6w9Tmb0qfF9VM6JB4YGEMqj3QRfTzg7Czpc/exec"; 
-const REPORT_GAS_URL = "https://script.google.com/macros/s/AKfycbwKI2p8FyxEmMMo7I1CBUHxR7kRfiFavjUnGxQIokiB2402dotB_XR2wFasIGE-kkzjhA/exec";
+const REPORT_GAS_URL = "https://script.google.com/macros/s/AKfycbyPNo4pgogqLxNHO7lC5KjWoCIJYlolZRSWez67P_SUyDnDV5rpE97bYQeuTMaZ4I8_Gg/exec";
 
 let globalAdminRecords = [];   // 管理員一次抓全部後存在這邊
 let adminViewDays = 3;        // 預設抓最近兩週，可改 30
@@ -2619,64 +2614,54 @@ function backToMainList() {
     document.getElementById('pageTitle').innerText = "回報紀錄";
 }
 
-// 點擊具體報表後的動作
-function openHistoryReport(mode, target) {
-    let url = "";
-    
-    // 這裡替換成你實際的 Google Sheets 報表連結
-    if(mode === 'team') {
-        // 例如：根據大隊編號跳轉不同連結
-        url = "https://docs.google.com/spreadsheets/d/YOUR_ID/edit#gid=TEAM_" + target;
-    } else if(target === 'monthly') {
-        url = "https://docs.google.com/spreadsheets/d/YOUR_ID/edit#gid=ALL_MONTHLY";
-    } else if(target === 'disaster') {
-        url = "https://docs.google.com/spreadsheets/d/YOUR_ID/edit#gid=ALL_DISASTER";
+// 頁面載入時初始化下拉選單
+document.addEventListener('DOMContentLoaded', function() {
+    const currentYear = new Date().getFullYear();
+    const yearSelect = document.getElementById('export-year');
+    const teamSelect = document.getElementById('export-team');
+
+    // 1. 生成年度 (從 2025 到當前年度)
+    for (let y = 2025; y <= currentYear; y++) {
+        let opt = document.createElement('option');
+        opt.value = y;
+        opt.innerText = y + " 年";
+        yearSelect.appendChild(opt);
+    }
+    yearSelect.value = currentYear; // 預設今年
+
+    // 2. 生成大隊 (1~10)
+    for (let t = 1; t <= 10; t++) {
+        let opt = document.createElement('option');
+        opt.value = t;
+        opt.innerText = "第 " + t + " 大隊";
+        teamSelect.appendChild(opt);
     }
 
-    if(url) {
-        // 使用你原本的 iframe 開啟函式
-        openDetailView(url); 
-    }
-}
+    // 3. 預設月份為上個月 (通常行政是在月初下載上個月的)
+    const lastMonth = new Date().getMonth(); // getMonth() 是 0-11
+    document.getElementById('export-month').value = lastMonth === 0 ? 12 : lastMonth;
+});
 
-  // 控制面板展開/收合
-function toggleTeamPanel(id) {
-    const panel = document.getElementById(`panel-${id}`);
-    const arrow = document.getElementById(`arrow-${id}`);
-    const isVisible = panel.style.display === 'block';
-    
-    // 先關閉所有
-    document.querySelectorAll('.team-panel').forEach(p => p.style.display = 'none');
-    document.querySelectorAll('.arrow-icon').forEach(a => a.innerText = '▼');
-    
-    // 如果原本是關的，就打開
-    if (!isVisible) {
-        panel.style.display = 'block';
-        arrow.innerText = '▲';
-    }
-}
+// 統一匯出按鈕動作
+async function handleUnifiedDownload() {
+    const params = {
+        action: 'exportExcelBinary',
+        year: document.getElementById('export-year').value,
+        month: document.getElementById('export-month').value,
+        type: document.getElementById('export-type').value,
+        status: document.getElementById('export-status').value,
+        team: document.getElementById('export-team').value
+    };
 
-// 核心匯出功能
-async function exportToExcel(teamId, month) {
-    // 1. 顯示讀取中動畫
     document.getElementById('loadingMask').style.display = 'flex';
-    document.getElementById('text-update').innerText = "雲端報表產出中，請稍候...";
+    document.getElementById('text-update').innerText = "雲端篩選中，請稍候...";
 
     try {
-        // 取得年份與類型
-        const yearSelect = document.getElementById(`year-${teamId}`);
-        const year = yearSelect ? yearSelect.value : new Date().getFullYear();
-        const typeEl = document.querySelector(`input[name="type-${teamId}"]:checked`);
-        const type = typeEl ? typeEl.value : 'monthly';
-
-        // 2. 呼叫 GAS (使用你剛才測試成功的網址格式)
-        const url = `${REPORT_GAS_URL}?action=exportExcelBinary&team=${teamId}&year=${year}&month=${month}&type=${type}`;
-        
-        const response = await fetch(url);
+        const query = new URLSearchParams(params).toString();
+        const response = await fetch(`${REPORT_GAS_URL}?${query}`);
         const result = await response.json();
 
         if (result.result === "success") {
-            // 3. 將 Base64 轉換為二進位 Blob
             const byteCharacters = atob(result.data);
             const byteNumbers = new Array(byteCharacters.length);
             for (let i = 0; i < byteCharacters.length; i++) {
@@ -2685,35 +2670,21 @@ async function exportToExcel(teamId, month) {
             const byteArray = new Uint8Array(byteNumbers);
             const blob = new Blob([byteArray], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
 
-            // 4. 建立虛擬連結並點擊下載
+            // 根據選擇動態產生檔名
+            const fileName = `${params.year}年${params.month}月_報表_${params.team}大隊.xlsx`;
+
             const link = document.createElement('a');
             link.href = window.URL.createObjectURL(blob);
-            link.download = result.fileName || `Report_${year}_${month}.xlsx`;
-            document.body.appendChild(link);
+            link.download = fileName;
             link.click();
-            document.body.removeChild(link);
-            
-            console.log("下載成功！");
         } else {
-            alert("匯出失敗：" + (result.message || "未知錯誤"));
+            alert("匯出失敗：" + result.message);
         }
     } catch (err) {
-        console.error("下載發生錯誤:", err);
-        alert("無法連線至伺服器或轉換資料失敗");
+        alert("連線 GAS 發生錯誤，請稍後再試");
     } finally {
-        // 關閉載入遮罩
         document.getElementById('loadingMask').style.display = 'none';
     }
-}
-  
-  /** 輔助函式：正確解碼 UTF-8 的 Base64 */
-function decodeBase64Utf8(base64) {
-    const binString = atob(base64);
-    const bytes = new Uint8Array(binString.length);
-    for (let i = 0; i < binString.length; i++) {
-        bytes[i] = binString.charCodeAt(i);
-    }
-    return new TextDecoder().decode(bytes);
 }
 
 function showLoadingMask() {
