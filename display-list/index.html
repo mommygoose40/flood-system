@@ -1170,6 +1170,25 @@ body {
 /* 合併報表按鈕 */
 .combined-btn { flex: 1; padding: 15px; border-radius: 8px; border: none; background: #198754; color: white; font-size: 18px; }
 .combined-btn.disaster { background: #dc3545; }
+
+/* 歷史報表頁面的標題顏色與搜尋頁區隔 */
+#reportPage h2 {
+    color: #333;
+    margin-top: 30px;
+}
+
+/* 下載按鈕特別強調 (綠色) */
+#adminExportBtn {
+    background-color: #198754 !important; /* 綠色代表下載/成功 */
+    color: white !important;
+    width: 100% !important; /* 手機版撐滿，更專業 */
+    max-width: 280px;
+    margin: 20px auto 0 !important;
+}
+
+#adminExportBtn:active {
+    background-color: #157347 !important;
+}
     
 </style>
 
@@ -1404,56 +1423,61 @@ body {
 <!-- 清單真正呈現的地方，一開始先隱藏 -->
 <div id="listContainer" style="display: none;"></div>
 
-<div class="report-export-panel" style="background: #f8f9fa; padding: 20px; border-radius: 8px; border: 1px solid #ddd; margin: 20px 0;">
-  <h3><i class="fas fa-file-export"></i> 報表匯出中心</h3>
-  <div style="display: flex; flex-wrap: wrap; gap: 15px; align-items: flex-end;">
-    
-    <div>
-      <label>年度</label><br>
-      <select id="export-year" class="form-control"></select>
-    </div>
+<div id="reportPage" class="action-center">
+  <h2 id="pageTitle">歷史報表匯出</h2>
 
-    <div>
-      <label>月份</label><br>
-      <select id="export-month" class="form-control">
-        <option value="1">01月</option><option value="2">02月</option>
-        <option value="3">03月</option><option value="4">04月</option>
-        <option value="5">05月</option><option value="6">06月</option>
-        <option value="7">07月</option><option value="8">08月</option>
-        <option value="9">09月</option><option value="10">10月</option>
-        <option value="11">11月</option><option value="12">12月</option>
-      </select>
-    </div>
+  <div class="desktopActionCard">
+    <div id="adminFilterArea" style="display: block; padding:12px;">
+      <div class="admin-inner-wrapper">
+        
+        <div style="margin-bottom:12px;">
+          <label>大隊：</label>
+          <button class="fakeSelectBtn" onclick="openDropdown('team')">
+            <span id="teamText">全部</span>
+            <span class="arrow">▾</span>
+          </button>
+        </div>
 
-    <div>
-      <label>類型</label><br>
-      <select id="export-type" class="form-control">
-        <option value="all">全部類型</option>
-        <option value="normal">平時通報</option>
-        <option value="disaster">災中專報</option>
-        <option value="other">其他</option>
-      </select>
-    </div>
+        <div style="margin-bottom:12px;">
+          <label>年度：</label>
+          <button class="fakeSelectBtn" onclick="openDropdown('reportYear')">
+            <span id="reportYearText">2025</span>
+            <span class="arrow">▾</span>
+          </button>
+        </div>
 
-    <div>
-      <label>狀態</label><br>
-      <select id="export-status" class="form-control">
-        <option value="all">全部</option>
-        <option value="正常">正常</option>
-        <option value="異常">異常</option>
-      </select>
-    </div>
+        <div style="margin-bottom:12px;">
+          <label>月份：</label>
+          <button class="fakeSelectBtn" onclick="openDropdown('reportMonth')">
+            <span id="reportMonthText">01 月</span>
+            <span class="arrow">▾</span>
+          </button>
+        </div>
 
-    <div>
-      <label>大隊</label><br>
-      <select id="export-team" class="form-control">
-        <option value="all">全部大隊</option>
-        </select>
-    </div>
+        <div style="margin-bottom:12px;">
+          <label>類型：</label>
+          <button class="fakeSelectBtn" onclick="openDropdown('type')">
+            <span id="typeText">全部</span>
+            <span class="arrow">▾</span>
+          </button>
+        </div>
 
-    <button onclick="handleUnifiedDownload()" class="btn btn-primary" style="height: 38px;">
-      <i class="fas fa-download"></i> 下載報表
-    </button>
+        <div style="margin-bottom:12px;">
+          <label>狀態：</label>
+          <button class="fakeSelectBtn" onclick="openDropdown('reportStatus')">
+            <span id="reportStatusText">全部</span>
+            <span class="arrow">▾</span>
+          </button>
+        </div>
+
+        <div class="admin-action-row">
+          <button id="adminExportBtn" class="searchBtn" onclick="handleUnifiedDownload()">
+            下載報表
+          </button>
+        </div>
+
+      </div>
+    </div>
   </div>
 </div>
 
@@ -2642,25 +2666,36 @@ document.addEventListener('DOMContentLoaded', function() {
     document.getElementById('export-month').value = lastMonth === 0 ? 12 : lastMonth;
 });
 
-// 統一匯出按鈕動作
+// 核心下載邏輯
 async function handleUnifiedDownload() {
-    const params = {
-        action: 'exportExcelBinary',
-        year: document.getElementById('export-year').value,
-        month: document.getElementById('export-month').value,
-        type: document.getElementById('export-type').value,
-        status: document.getElementById('export-status').value,
-        team: document.getElementById('export-team').value
-    };
+    // 1. 抓取偽下拉 UI 上的當前文字
+    const year = document.getElementById('reportYearText').innerText;
+    const month = document.getElementById('reportMonthText').innerText.replace(' 月', '');
+    const team = document.getElementById('teamText').innerText;
+    const type = document.getElementById('typeText').innerText;
+    const status = document.getElementById('reportStatusText').innerText;
 
+    // 2. 顯示讀取遮罩 (延用你的 loadingMask)
     document.getElementById('loadingMask').style.display = 'flex';
-    document.getElementById('text-update').innerText = "雲端篩選中，請稍候...";
+    const textUpdate = document.getElementById('text-update');
+    textUpdate.innerText = "正在檢查資料並產生報表...";
+    textUpdate.style.display = 'block';
 
     try {
+        const params = {
+            action: 'exportExcelBinary',
+            year: year,
+            month: parseInt(month),
+            team: (team === "全部") ? "all" : team,
+            type: type,
+            status: (status === "全部") ? "all" : status
+        };
+
         const query = new URLSearchParams(params).toString();
         const response = await fetch(`${REPORT_GAS_URL}?${query}`);
         const result = await response.json();
 
+        // 3. 判斷有無資料：若 result 為 error 則跳視窗，不下載
         if (result.result === "success") {
             const byteCharacters = atob(result.data);
             const byteNumbers = new Array(byteCharacters.length);
@@ -2670,20 +2705,20 @@ async function handleUnifiedDownload() {
             const byteArray = new Uint8Array(byteNumbers);
             const blob = new Blob([byteArray], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
 
-            // 根據選擇動態產生檔名
-            const fileName = `${params.year}年${params.month}月_報表_${params.team}大隊.xlsx`;
-
+            const fileName = `${year}年${month}月_${team}大隊_報表.xlsx`;
             const link = document.createElement('a');
             link.href = window.URL.createObjectURL(blob);
             link.download = fileName;
             link.click();
         } else {
-            alert("匯出失敗：" + result.message);
+            // 關鍵：符合你要求的「跳視窗而不是下載空檔」
+            alert("【查無資料】\n" + (result.message || "所選條件下沒有任何紀錄，請重新篩選。"));
         }
     } catch (err) {
-        alert("連線 GAS 發生錯誤，請稍後再試");
+        alert("連線失敗，請稍後再試。");
     } finally {
         document.getElementById('loadingMask').style.display = 'none';
+        textUpdate.style.display = 'none';
     }
 }
 
@@ -2769,6 +2804,22 @@ const dropdownData = {
       value: `${String(i).padStart(2,'0')}:59`,
       text: `${String(i).padStart(2,'0')}:59`
     }))
+  },
+
+  reportYear: {
+    title: "選擇年度",
+    options: ["2025", "2026"], // 可視需求增加
+    targetId: "reportYearText"
+  },
+  reportMonth: {
+    title: "選擇月份",
+    options: ["01", "02", "03", "04", "05", "06", "07", "08", "09", "10", "11", "12"].map(m => m + " 月"),
+    targetId: "reportMonthText"
+  },
+  reportStatus: {
+    title: "選擇狀態",
+    options: ["全部", "正常", "異常"],
+    targetId: "reportStatusText"
   }
 };
 
