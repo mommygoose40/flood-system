@@ -1246,6 +1246,58 @@ body {
   margin-top: 0 !important;
   padding-top: 0 !important;
 }
+
+    /* =========================================
+   🎯 強制對齊系統：大隊紀錄 & 歷史報表
+   ========================================= */
+
+/* 1. 統一所有篩選列的行容器 */
+#adminFilterArea .admin-inner-wrapper > div,
+#reportPage .filter-group {
+    display: flex !important;
+    align-items: center !important;
+    margin-bottom: 14px !important; /* 統一每一行之間的間距 */
+    width: 100% !important;
+    min-height: 42px; /* 統一列高 */
+}
+
+/* 2. 統一標籤 (Label) 寬度：這是對齊的靈魂 */
+#adminFilterArea label, 
+#reportPage .filter-group label,
+#reportPage .report-section-title {
+    display: inline-block !important;
+    min-width: 80px !important;       /* 統一固定寬度 */
+    max-width: 80px !important;
+    font-size: 20px !important;
+    font-weight: bold !important;
+    color: #333;
+    margin-bottom: 0 !important;      /* 移除歷史報表原本可能有的下邊距 */
+    flex-shrink: 0;                   /* 防止標籤被擠壓 */
+    text-align: left;
+}
+
+/* 3. 統一輸入控制項 (下拉框與按鈕) */
+.fakeSelectBtn, 
+.type-switch,
+.month-grid {
+    flex: 1 !important;               /* 讓後方控制項自動填滿剩餘空間 */
+    height: 42px !important;
+    box-sizing: border-box;
+}
+
+/* 4. 針對時間範圍的特殊對齊 (Start ~ End) */
+#timeWrapper.timeRow {
+    display: flex !important;
+    align-items: center !important;
+    gap: 8px !important;
+    flex: 1;
+}
+
+.tilde {
+    font-size: 20px;
+    font-weight: bold;
+    padding: 0 5px;
+}
     
 </style>
 
