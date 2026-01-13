@@ -1174,6 +1174,17 @@ body {
 #adminExportBtn:active {
     background-color: #157347 !important;
 }
+
+/* ===============================
+   歷史報表頁：下載按鈕加寬
+   =============================== */
+
+#reportPage #adminExportBtn {
+  width: 280px !important;
+  max-width: 280px;
+  margin: 20px auto 0 !important;
+  display: block;
+}
     
 </style>
 
@@ -1411,11 +1422,26 @@ body {
 <div id="reportPage" class="action-center" style="display:none;">
 
   <div class="desktopActionCard">
-    <div id="adminFilterArea" style="display: block; padding:12px;">
+    <div id="adminFilterArea" style="display: block;">
       <div class="admin-inner-wrapper">
         
         <div style="margin-bottom:12px;">
           <label>大隊：</label>
+
+          <select id="adminTeamSelect" style="display:none;">
+      <option value="全部">全部</option>
+      <option value="1">第 1 大隊</option>
+      <option value="2">第 2 大隊</option>
+      <option value="3">第 3 大隊</option>
+      <option value="4">第 4 大隊</option>
+      <option value="5">第 5 大隊</option>
+      <option value="6">第 6 大隊</option>
+      <option value="7">第 7 大隊</option>
+      <option value="8">第 8 大隊</option>
+      <option value="9">第 9 大隊</option>
+      <option value="10">第 10 大隊</option>
+    </select>
+          
           <button class="fakeSelectBtn" onclick="openDropdown('team')">
             <span id="teamText">全部</span>
             <span class="arrow">▾</span>
@@ -1462,6 +1488,14 @@ body {
 
         <div style="margin-bottom:12px;">
           <label>類型：</label>
+
+          <select id="adminTypeSelect" style="display:none;">
+      <option value="全部">全部</option>
+      <option value="平時">平時</option>
+      <option value="災中">災中</option>
+      <option value="其他">其他</option>
+    </select>
+
           <button class="fakeSelectBtn" onclick="openDropdown('type')">
             <span id="typeText">全部</span>
             <span class="arrow">▾</span>
@@ -2607,18 +2641,6 @@ function applyAdminButtonFix() {
     btnSelf.style.background = "white";
     btnSelf.style.color = "#28a745";
     btnSelf.style.border = "2px solid #198754";
-
-    // hover（還是白底，只是顏色微變）
-    btnSelf.onmouseover = () => {
-      btnSelf.style.background = "#f1fdf1";
-    };
-    btnSelf.onmouseout = () => {
-      // 若目前仍未選中 → 回到白底綠字
-      if (viewMode === "admin") {
-        btnSelf.style.background = "white";
-        btnSelf.style.color = "#198754";
-      }
-    };
 
     // ----- 點擊後變成選中狀態（綠底白字） -----
     btnSelf.onclick = () => {
