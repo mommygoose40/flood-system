@@ -1247,56 +1247,48 @@ body {
   padding-top: 0 !important;
 }
 
-    /* =========================================
-   🎯 強制對齊系統：大隊紀錄 & 歷史報表
+/* =========================================
+   🎯 歷史報表修正：恢復寬度並對齊頂部
    ========================================= */
 
-/* 1. 統一所有篩選列的行容器 */
-#adminFilterArea .admin-inner-wrapper > div,
+/* 1. 確保每一列都是水平並排，且標籤不換行 */
 #reportPage .filter-group {
     display: flex !important;
-    align-items: center !important;
-    margin-bottom: 14px !important; /* 統一每一行之間的間距 */
+    flex-direction: row !important; /* 強制水平 */
+    align-items: center !important; /* 垂直居中對齊 */
+    justify-content: flex-start !important;
+    margin-bottom: 12px !important; /* 與大隊紀錄一致的行距 */
     width: 100% !important;
-    min-height: 42px; /* 統一列高 */
 }
 
-/* 2. 統一標籤 (Label) 寬度：這是對齊的靈魂 */
-#adminFilterArea label, 
-#reportPage .filter-group label,
-#reportPage .report-section-title {
-    display: inline-block !important;
-    min-width: 80px !important;       /* 統一固定寬度 */
-    max-width: 80px !important;
+/* 2. 標籤對齊：只設定寬度，不准標籤往下掉 */
+#reportPage .filter-group label {
+    width: 70px !important;    /* 與您手機版 label 寬度一致 */
+    min-width: 70px !important;
+    margin: 0 10px 0 0 !important; /* 只有右邊距，移除下邊距防止偏移 */
     font-size: 20px !important;
-    font-weight: bold !important;
-    color: #333;
-    margin-bottom: 0 !important;      /* 移除歷史報表原本可能有的下邊距 */
-    flex-shrink: 0;                   /* 防止標籤被擠壓 */
-    text-align: left;
+    display: inline-block !important;
+    white-space: nowrap !important;
 }
 
-/* 3. 統一輸入控制項 (下拉框與按鈕) */
-.fakeSelectBtn, 
-.type-switch,
-.month-grid {
-    flex: 1 !important;               /* 讓後方控制項自動填滿剩餘空間 */
-    height: 42px !important;
-    box-sizing: border-box;
+/* 3. 恢復原本的按鈕樣式，不強制撐滿 */
+#reportPage .fakeSelectBtn {
+    /* 這裡不寫 width: 100%，讓它繼承您原本定義的 110px 或 145px */
+    flex: none !important; 
 }
 
-/* 4. 針對時間範圍的特殊對齊 (Start ~ End) */
-#timeWrapper.timeRow {
-    display: flex !important;
-    align-items: center !important;
-    gap: 8px !important;
-    flex: 1;
+/* 4. 針對月份網格與類型切換的微調 */
+#reportPage .month-grid, 
+#reportPage .type-switch {
+    display: flex !important; /* 或 grid */
+    flex-grow: 0 !important;   /* 不要強制填滿，保持自然寬度 */
+    margin-top: 0 !important;  /* 移除可能導致偏移的頂距 */
 }
 
-.tilde {
-    font-size: 20px;
-    font-weight: bold;
-    padding: 0 5px;
+/* 5. 確保歷史報表容器從最頂部開始，不要有額外推擠 */
+.desktopActionCard #reportPage {
+    padding-top: 0 !important;
+    margin-top: 0 !important;
 }
     
 </style>
