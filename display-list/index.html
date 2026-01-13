@@ -1203,40 +1203,48 @@ body {
 }
 
     /* =====================================================
-   📱 手機版最終對齊方案：解決「搜尋按鈕靠右」問題
+   🎯 終極對齊修正：強迫手機版兩組按鈕中軸線重合
+   請務必將此段放在 CSS 最底部
    ===================================================== */
 @media (max-width: 768px) {
 
-  /* 1. 確保外層 wrapper 不會限制內部置中 */
-  #adminFilterArea .admin-inner-wrapper {
-    padding: 10px 0 !important; /* 移除左右內距，防止推擠 */
+  /* 1. 強迫搜尋面板的容器寬度與螢幕一致，且不准有內距偏移 */
+  #adminFilterArea, 
+  .admin-inner-wrapper {
     width: 100% !important;
-    display: block !important;
-  }
-
-  /* 2. 針對「按鈕那一列」：強迫寬度 100% 且不准有 Padding */
-  #adminFilterArea .admin-inner-wrapper > div:last-child {
-    display: flex !important;
-    justify-content: center !important; /* 強制水平居中 */
-    align-items: center !important;
-    padding-left: 0 !important;        /* ★ 徹底刪除之前的 70px */
+    padding-left: 0 !important;
     padding-right: 0 !important;
     margin-left: 0 !important;
     margin-right: 0 !important;
-    width: 100% !important;             /* 確保佔滿全寬，center 才有意義 */
-    gap: 12px !important;
-    margin-top: 25px !important;
+    display: block !important;
   }
 
-  /* 3. 確保按鈕本身沒有 margin 影響對齊 */
-  #adminSearchBtn, #adminExportBtn {
-    margin: 0 !important; 
+  /* 2. 針對按鈕那一列：強迫使用 flex 置中，並殺死所有之前的 padding-left */
+  #adminFilterArea .admin-inner-wrapper > div:last-child {
+    display: flex !important;
+    justify-content: center !important; /* 絕對置中 */
+    padding-left: 0 !important;         /* 殺死之前的 70px 偏移 */
+    padding-right: 0 !important;
+    margin: 25px 0 0 0 !important;      /* 移除左右 margin */
+    width: 100% !important;
+  }
+
+  /* 3. 同步按鈕寬度：確保「大隊紀錄」與「搜尋」按鈕尺寸完全一致，中軸線才會準 */
+  #btnTeam, #btnSelf, #adminSearchBtn, #adminExportBtn {
+    width: 140px !important;
+    min-width: 140px !important;
+    max-width: 140px !important;
     flex: none !important;
+    margin: 0 6px !important; /* 給予統一的左右間距 */
   }
 
-  /* 4. 檢查：如果還是不對齊，可能是因為標籤列的 width: 100% 撐開了容器 */
-  #adminFilterArea .admin-inner-wrapper > div {
-    box-sizing: border-box !important;
+  /* 4. 處理 switchArea 的容器 */
+  #switchArea {
+    width: 100% !important;
+    display: flex !important;
+    justify-content: center !important;
+    padding: 0 !important;
+    margin: 10px 0 18px 0 !important;
   }
 }
     
