@@ -1203,59 +1203,63 @@ body {
 }
 
     /* =====================================================
-   🎯 最終對齊修正：兼顧顯示時機與報表頁 280px 寬度
+   🎯 最終優化版：修正顯示時機、間距、與框框寬度
    ===================================================== */
 @media (max-width: 768px) {
 
-  /* 只有當顯示時才套用置中邏輯 */
-  #adminFilterArea:not([style*="display: none"]),
-  #adminFilterArea:not([style*="display: none"]) .admin-inner-wrapper {
+  /* 1. 確保 adminFilterArea 只有在 JS 切換顯示時才套用佈局，預設不干擾隱藏狀態 */
+  #adminFilterArea[style*="display: block"],
+  #adminFilterArea[style*="display: flex"] {
     width: 100% !important;
     display: block !important;
-    padding-left: 0 !important;
-    padding-right: 0 !important;
-    margin-left: 0 !important;
-    margin-right: 0 !important;
+    padding: 12px 0 !important;
+    margin-bottom: 30px !important; /* 🔥 增加與下方清單的間距 */
   }
 
-  /* 按鈕那一列置中 */
-  #adminFilterArea:not([style*="display: none"]) .admin-inner-wrapper > div:last-child {
+  /* 2. 統一所有下拉框/時間框的寬度 (以大隊框為基準) */
+  /* 根據您之前的程式碼，大隊框大約是 145px */
+  .fakeSelectBtn, 
+  #adminFilterArea .timeBtn,
+  #adminFilterArea button[onclick*="openDropdown"] {
+    width: 145px !important;      /* 🔥 統一設定一個舒適的固定寬度 */
+    min-width: 145px !important;
+    max-width: 145px !important;
+    flex: none !important;
+  }
+
+  /* 3. 時間那一列特別處理：確保兩個框框中間有波浪號且不擠壓 */
+  #timeWrapper.timeRow {
+    display: flex !important;
+    justify-content: flex-start !important; /* 跟隨 label 對齊 */
+    flex-wrap: nowrap !important;
+    gap: 5px !important;
+  }
+
+  /* 4. 按鈕列置中與間距修正 */
+  #adminFilterArea .admin-inner-wrapper > div:last-child {
     display: flex !important;
     justify-content: center !important;
     padding-left: 0 !important;
-    margin: 25px 0 0 0 !important;
+    margin: 30px 0 10px 0 !important; /* 增加上方距離，並留一點底距 */
     width: 100% !important;
   }
 
-  /* --- 關鍵修正：一般頁面按鈕 140px --- */
-  /* 我們排除掉 #reportPage 裡面的 adminExportBtn */
-  #btnTeam, 
-  #btnSelf, 
-  #adminSearchBtn,
+  /* 5. 按鈕寬度邏輯 (區分一般頁面與報表頁) */
+  /* 一般按鈕 140px */
+  #btnTeam, #btnSelf, #adminSearchBtn, 
   #adminFilterArea:not(#reportPage) #adminExportBtn {
     width: 140px !important;
     min-width: 140px !important;
     max-width: 140px !important;
-    flex: none !important;
     margin: 0 6px !important;
   }
 
-  /* --- 關鍵修正：歷史報表頁面維持 280px --- */
-  #reportPage #adminExportBtn {
-    width: 280px !important;
-    max-width: 280px !important;
-    min-width: 280px !important;
-    margin: 10px auto 0 !important;
-    display: block !important;
-  }
-
-  /* 大隊紀錄切換區置中 */
-  #switchArea:not([style*="display: none"]) {
+  /* 確保切換區置中 */
+  #switchArea {
     width: 100% !important;
     display: flex !important;
     justify-content: center !important;
-    padding: 0 !important;
-    margin: 10px 0 18px 0 !important;
+    margin: 10px 0 20px 0 !important;
   }
 }
     
