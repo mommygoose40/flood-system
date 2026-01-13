@@ -1182,47 +1182,8 @@ body {
 #reportPage #adminExportBtn {
   width: 280px !important;
   max-width: 280px;
-  margin: 20px auto 0 !important;
+  margin: 10px auto 0 !important;
   display: block;
-}
-
-/* =========================================
-   🎯 歷史報表篩選欄位「對齊修正」
-   ========================================= */
-
-/* 1. 強制讓歷史報表的每一行變為水平排列 */
-#reportPage .filter-group {
-    display: flex !important;           /* 核心：讓標籤與框框並排 */
-    flex-direction: row !important;      /* 確保不換行 */
-    align-items: center !important;      /* 垂直置中，解決「往下偏」的問題 */
-    justify-content: flex-start !important;
-    margin-bottom: 15px !important;      /* 間距設定與大隊紀錄一致 */
-    width: 100% !important;
-}
-
-/* 2. 修正標籤（年份、月份、類型）的樣式 */
-#reportPage .filter-group label {
-    display: inline-block !important;    /* 移除 block 屬性防止換行 */
-    min-width: 70px !important;          /* 基準寬度與大隊紀錄一致 */
-    margin: 0 10px 0 0 !important;       /* 移除 bottom margin，只留右邊距 */
-    padding: 0 !important;
-    font-size: 20px !important;          /* 字體大小同步 */
-    line-height: 1 !important;           /* 解決行高導致的視覺偏低 */
-    flex-shrink: 0 !important;           /* 防止標籤被擠壓 */
-}
-
-/* 3. 確保控制項（下拉框、網格）與標籤在同一水平線上 */
-#reportPage .fakeSelectBtn,
-#reportPage .type-switch,
-#reportPage .month-grid {
-    margin-top: 0 !important;            /* 移除可能存在的頂部間距 */
-    vertical-align: middle !important;
-}
-
-/* 4. 針對「歷史報表」頁面頂部進行貼齊 */
-#reportPage {
-    padding-top: 0 !important;
-    margin-top: 0 !important;
 }
 
 /* =========================================
