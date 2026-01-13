@@ -1657,7 +1657,7 @@ body {
 <script>
 
   const VOLUNTEER_API_URL = "https://script.google.com/macros/s/AKfycbxiGSG5hSMO6We-C6cyEJZLgf4Rnbjp-6w9Tmb0qfF9VM6JB4YGEMqj3QRfTzg7Czpc/exec"; 
-const REPORT_GAS_URL = "https://script.google.com/macros/s/AKfycbyPNo4pgogqLxNHO7lC5KjWoCIJYlolZRSWez67P_SUyDnDV5rpE97bYQeuTMaZ4I8_Gg/exec";
+const REPORT_GAS_URL = "https://script.google.com/macros/s/AKfycbwCoFzlqgfD2wts4X86awuQm8SxAE4ucELAGEI33ABd95IXcBk1QUEPqZuVFRtE8Z_yGg/exec";
 
 let globalAdminRecords = [];   // 管理員一次抓全部後存在這邊
 let adminViewDays = 3;        // 預設抓最近兩週，可改 30
@@ -1670,6 +1670,7 @@ let shouldKeepMask = false;
 let restoredOnce = false;
 let isInitialLoad = true;
 let globalRecords = [];
+let historyReportRecords = [];
 
 // ------------------------------------------
 // ★★★ Session Storage 預快取輔助函式 ★★★
@@ -2802,15 +2803,58 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
   function showHistoryReportOverlay() {
-  const filteredData = filterAdminRecords();
-
-  if (filteredData.length === 0) {
+  if (!historyReportRecords || historyReportRecords.length === 0) {
     alert("查無資料");
     return;
   }
 
-  // 🔥 直接用你原本的大隊紀錄查看報表
-  exportReport();
+  renderHistoryReportOverlay(historyReportRecords);
+}
+
+  function fetchHistoryFromGAS(params) {
+  return new Promise((resolve) => {
+    const query = new URLSearchParams({
+      action: 'listAdminHistory',
+      ...params,
+      callback: 'historyReportCallback'
+    }).toString();
+
+    window.historyReportCallback = function (res) {
+      if (res.success) {
+        historyReportRecords = res.records || [];
+      } else {
+        historyReportRecords = [];
+        alert(res.message || '查詢失敗');
+      }
+      resolve();
+    };
+
+    const s = document.createElement('script');
+    s.src = `${REPORT_GAS_URL}?${query}`;
+    document.body.appendChild(s);
+  });
+}
+
+  async function searchHistoryReport() {
+  const year = document.getElementById('reportYearText').innerText;
+  const month = document.getElementById('reportMonthText').innerText.replace(' 月', '');
+  const team = document.getElementById('teamText').innerText;
+  const type = document.getElementById('typeText').innerText;
+  const status = document.getElementById('reportStatusText').innerText;
+
+  const params = {
+    year,
+    month: parseInt(month),
+    team: team === '全部' ? 'all' : team,
+    type,
+    status: status === '全部' ? 'all' : status
+  };
+
+  document.getElementById('loadingMask').style.display = 'flex';
+
+  await fetchHistoryFromGAS(params);
+
+  document.getElementById('loadingMask').style.display = 'none';
 }
 
 // 核心下載邏輯
@@ -3190,6 +3234,87 @@ document.addEventListener("DOMContentLoaded", () => {
     reportMonthText.textContent = `${month} 月`;
   }
 });
+
+  function renderHistoryReportOverlay(records) {
+  const isMobile = window.innerWidth < 769;
+
+  // 避免重複開啟
+  const old = document.getElementById('historyReportOverlay');
+  if (old) old.remove();
+
+  let rows = '';
+
+  records.forEach(r => {
+    let time = '';
+    if (r.詳細紀錄) {
+      const m = String(r.詳細紀錄).match(/report_(\d+)/);
+      if (m) {
+        const d = new Date(Number(m[1]));
+        time = `${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
+      }
+    }
+
+    rows += `
+      <tr>
+        <td>${r.日期 || ''}</td>
+        <td>${time}</td>
+        <td>${r.通報類型 || ''}</td>
+        <td>${r.狀態 || ''}</td>
+        <td>${r.異常分類 || ''}</td>
+        <td>${r.回報者 || ''}</td>
+        <td>${r.所屬大隊 || ''}</td>
+      </tr>
+    `;
+  });
+
+  const html = `
+    <div id="historyReportOverlay" style="
+      position:fixed; inset:0;
+      background:${isMobile ? '#fff' : 'rgba(0,0,0,0.6)'};
+      z-index:9999;
+      overflow:auto;
+    ">
+      <div style="
+        background:#fff;
+        width:${isMobile ? '100%' : '95%'};
+        margin:${isMobile ? '0' : '30px auto'};
+        padding:16px;
+        box-sizing:border-box;
+      ">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+          <div style="font-size:20px;font-weight:bold;">歷史報表</div>
+          <button onclick="closeHistoryReportOverlay()">關閉</button>
+        </div>
+
+        <table style="width:100%;border-collapse:collapse;font-size:13px;">
+          <thead>
+            <tr style="background:#f2f2f2;">
+              <th>日期</th>
+              <th>時間</th>
+              <th>類型</th>
+              <th>狀態</th>
+              <th>異常分類</th>
+              <th>回報者</th>
+              <th>大隊</th>
+            </tr>
+          </thead>
+          <tbody>${rows}</tbody>
+        </table>
+
+        <div style="margin-top:12px;text-align:right;">
+          共 ${records.length} 筆
+        </div>
+      </div>
+    </div>
+  `;
+
+  document.body.insertAdjacentHTML('beforeend', html);
+}
+
+  function closeHistoryReportOverlay() {
+  const el = document.getElementById('historyReportOverlay');
+  if (el) el.remove();
+}
   
 </script>
 
