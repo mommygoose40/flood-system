@@ -2802,15 +2802,15 @@ document.addEventListener('DOMContentLoaded', function() {
     document.getElementById('export-month').value = lastMonth === 0 ? 12 : lastMonth;
 });
 
-  function showHistoryReportOverlay() {
-  if (!historyReportRecords || historyReportRecords.length === 0) {
-    alert("查無資料");
+  // --- 修改：showHistoryReportOverlay 增加防錯 ---
+function showHistoryReportOverlay() {
+  if (!window.historyReportRecords || window.historyReportRecords.length === 0) {
+    alert("所選月份查無巡視紀錄");
     return;
   }
-
-  renderHistoryReportOverlay(historyReportRecords);
+  renderHistoryReportOverlay(window.historyReportRecords);
 }
-
+  
   function fetchHistoryFromGAS(params) {
   return new Promise((resolve) => {
 
@@ -2881,70 +2881,68 @@ const type = document.getElementById('historyTypeText').innerText;;
 }
 
 // 核心下載邏輯
+// --- 修改：手機版「查看報表」邏輯修正 ---
 async function handleUnifiedDownload() {
-    // 1. 抓取偽下拉 UI 上的當前文字
-    const year = document.getElementById('reportYearText').innerText;
-    const month = document.getElementById('reportMonthText').innerText.replace(' 月', '');
-    const team = document.getElementById('historyTeamText').innerText;
-const type = document.getElementById('historyTypeText').innerText;
-    const status = document.getElementById('reportStatusText').innerText;
+  const year = document.getElementById('reportYearText').innerText;
+  const month = document.getElementById('reportMonthText').innerText.replace(' 月', '');
+  const team = document.getElementById('teamText').innerText;
+  const type = document.getElementById('typeText').innerText;
+  const status = document.getElementById('reportStatusText').innerText;
 
   const isMobile = window.innerWidth < 769;
 
-  // 👉 手機：只查看，不下載
-  if (isMobile) {
-  showLoadingMask();
-  await searchHistoryReport();
-  document.getElementById('loadingMask').style.display = 'none';
-  showHistoryReportOverlay();
-  return;
-}
+  // 顯示讀取中
+  document.getElementById('loadingMask').style.display = 'flex';
+  const textUpdate = document.getElementById('text-update');
+  textUpdate.innerText = isMobile ? "正在讀取報表資料..." : "正在檢查資料並產生報表...";
+  textUpdate.style.display = 'block';
 
-    // 2. 顯示讀取遮罩 (延用你的 loadingMask)
-    document.getElementById('loadingMask').style.display = 'flex';
-    const textUpdate = document.getElementById('text-update');
-    textUpdate.innerText = "正在檢查資料並產生報表...";
-    textUpdate.style.display = 'block';
+  try {
+    const params = {
+      year: year,
+      month: parseInt(month),
+      team: (team === "全部") ? "all" : team,
+      type: type,
+      status: (status === "全部") ? "all" : status
+    };
 
-    try {
-        const params = {
-            action: 'exportExcelBinary',
-            year: year,
-            month: parseInt(month),
-            team: (team === "全部") ? "all" : team,
-            type: type,
-            status: (status === "全部") ? "all" : status
-        };
-
-        const query = new URLSearchParams(params).toString();
-        const response = await fetch(`${REPORT_GAS_URL}?${query}`);
-        const result = await response.json();
-
-        // 3. 判斷有無資料：若 result 為 error 則跳視窗，不下載
-        if (result.result === "success") {
-            const byteCharacters = atob(result.data);
-            const byteNumbers = new Array(byteCharacters.length);
-            for (let i = 0; i < byteCharacters.length; i++) {
-                byteNumbers[i] = byteCharacters.charCodeAt(i);
-            }
-            const byteArray = new Uint8Array(byteNumbers);
-            const blob = new Blob([byteArray], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
-
-            const fileName = `${year}年${month}月_${team}大隊_報表.xlsx`;
-            const link = document.createElement('a');
-            link.href = window.URL.createObjectURL(blob);
-            link.download = fileName;
-            link.click();
-        } else {
-            // 關鍵：符合你要求的「跳視窗而不是下載空檔」
-            alert("【查無資料】\n" + (result.message || "所選條件下沒有任何紀錄，請重新篩選。"));
-        }
-    } catch (err) {
-        alert("連線失敗，請稍後再試。");
-    } finally {
-        document.getElementById('loadingMask').style.display = 'none';
-        textUpdate.style.display = 'none';
+    // 👉 關鍵修正：手機版也要先去 fetch 才有資料可以看
+    if (isMobile) {
+      await fetchHistoryFromGAS(params); // 先抓資料存入 historyReportRecords
+      document.getElementById('loadingMask').style.display = 'none';
+      textUpdate.style.display = 'none';
+      showHistoryReportOverlay(); // 資料抓完後再開視窗
+      return;
     }
+
+    // --- 電腦版下載邏輯 (維持原樣) ---
+    const query = new URLSearchParams({ action: 'exportExcelBinary', ...params }).toString();
+    const response = await fetch(`${REPORT_GAS_URL}?${query}`);
+    const result = await response.json();
+
+    if (result.result === "success") {
+      const byteCharacters = atob(result.data);
+      const byteNumbers = new Array(byteCharacters.length);
+      for (let i = 0; i < byteCharacters.length; i++) {
+        byteNumbers[i] = byteCharacters.charCodeAt(i);
+      }
+      const byteArray = new Uint8Array(byteNumbers);
+      const blob = new Blob([byteArray], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+      const fileName = `${year}年${month}月_${team}大隊_報表.xlsx`;
+      const link = document.createElement('a');
+      link.href = window.URL.createObjectURL(blob);
+      link.download = fileName;
+      link.click();
+    } else {
+      alert("【查無資料】\n" + (result.message || "所選條件下沒有任何紀錄。"));
+    }
+  } catch (err) {
+    console.error(err);
+    alert("連線失敗，請稍後再試。");
+  } finally {
+    document.getElementById('loadingMask').style.display = 'none';
+    textUpdate.style.display = 'none';
+  }
 }
 
 function showLoadingMask() {
