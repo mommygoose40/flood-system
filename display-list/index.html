@@ -1185,6 +1185,42 @@ body {
   margin: 20px auto 0 !important;
   display: block;
 }
+
+/* 統一所有篩選列的標籤寬度與對齊 */
+#adminFilterArea label, 
+#reportPage label {
+    min-width: 70px !important;
+    font-size: 20px !important;
+    font-weight: bold;
+    flex-shrink: 0;
+    margin-right: 10px;
+}
+
+/* 統一每一列的間距與佈局 */
+#adminFilterArea .admin-inner-wrapper > div,
+#reportPage .filter-group {
+    display: flex !important;
+    align-items: center !important;
+    flex-wrap: nowrap !important;
+    margin-bottom: 15px !important;
+    width: 100% !important;
+}
+
+/* 確保歷史報表中的按鈕/下拉框也遵循相同的基準寬度 */
+#reportPage .fakeSelectBtn,
+#reportPage .type-switch {
+    flex: 1; /* 讓它撐開 */
+    height: 42px !important;
+    min-width: 110px !important;
+}
+
+/* 針對時間列的對齊 */
+#reportPage .timeRow {
+    display: flex !important;
+    align-items: center !important;
+    gap: 10px !important;
+    flex: 1;
+}
     
 </style>
 
