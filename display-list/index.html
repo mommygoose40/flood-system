@@ -1268,6 +1268,38 @@ body {
     position: relative;
     top: -10px; /* ★ 如果感覺還是偏低，利用負值 margin 或 top 直接向上拉動 */
 }
+
+/* =========================================
+   🎯 歷史報表：垂直對齊最終修正
+   只影響歷史報表，不動大隊紀錄
+   ========================================= */
+@media (min-width: 769px) {
+
+  /* 1️⃣ 移除 action-center 給歷史報表的上方空隙 */
+  #reportPage.action-center {
+    padding-top: 0 !important;
+    margin-top: 0 !important;
+  }
+
+  /* 2️⃣ 歷史報表卡片不要再往下推 */
+  #reportPage .desktopActionCard {
+    margin-top: 0 !important;
+    margin-bottom: 0 !important;
+    padding-top: 0 !important;
+  }
+
+  /* 3️⃣ 移除 adminFilterArea 自己的上下 margin */
+  #reportPage #adminFilterArea {
+    margin-top: 0 !important;
+    padding-top: 0 !important;
+  }
+
+  /* 4️⃣ 如果還差 2~4px，用這行做「微調」 */
+  #reportPage {
+    position: relative;
+    top: -6px;   /* ⭐ 建議值：-4 ~ -8 自己選 */
+  }
+}
     
 </style>
 
