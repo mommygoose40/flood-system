@@ -1224,6 +1224,45 @@ body {
     padding-top: 0 !important;
     margin-top: 0 !important;
 }
+
+    /* =========================================
+   🎯 歷史報表：精準垂直對齊修正
+   ========================================= */
+
+/* 1. 強制消除歷史報表篩選組件的預設推擠 */
+#reportPage .filter-group {
+    display: flex !important;
+    align-items: center !important;    /* ★ 核心：確保標籤與框在垂直中線對齊 */
+    margin-top: 0 !important;          /* 消除頂部推擠 */
+    margin-bottom: 12px !important;    /* 保持與大隊紀錄一致的行距 */
+    padding-top: 0 !important;
+    min-height: 42px !important;       /* 與大隊紀錄的框高一致 */
+}
+
+/* 2. 修正標籤本身的垂直偏移 */
+#reportPage .filter-group label {
+    margin: 0 10px 0 0 !important;     /* ★ 確保 margin-top/bottom 都是 0 */
+    padding: 0 !important;
+    line-height: 1.2 !important;       /* 避免行高撐開高度 */
+    display: flex !important;          /* 讓標籤內部也能垂直置中 */
+    align-items: center !important;
+    height: 42px !important;           /* 強制標籤高度等於框的高度 */
+}
+
+/* 3. 確保控制項（下拉框、網格）沒有自帶的 margin-top */
+#reportPage .fakeSelectBtn,
+#reportPage .type-switch,
+#reportPage .month-grid {
+    margin: 0 !important;              /* ★ 消除所有方向的 margin */
+    align-self: center !important;     /* 再次確保自己在 flex 容器中置中 */
+}
+
+/* 4. 針對歷史報表頁面的整體頂部偏移 */
+#reportPage .history-filter-area,
+#reportPage .desktopActionCard {
+    margin-top: 0 !important;
+    padding-top: 0 !important;
+}
     
 </style>
 
@@ -1520,7 +1559,7 @@ body {
           </select>
 
           <button class="fakeSelectBtn" onclick="openDropdown('reportMonth')">
-            <span id="reportMonthText">01 月</span>
+            <span id="reportMonthText">1 月</span>
             <span class="arrow">▾</span>
           </button>
         </div>
