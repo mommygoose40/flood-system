@@ -2838,8 +2838,8 @@ document.addEventListener('DOMContentLoaded', function() {
   async function searchHistoryReport() {
   const year = document.getElementById('reportYearText').innerText;
   const month = document.getElementById('reportMonthText').innerText.replace(' 月', '');
-  const team = document.getElementById('teamText').innerText;
-  const type = document.getElementById('typeText').innerText;
+  const team = document.getElementById('historyTeamText').innerText;
+const type = document.getElementById('historyTypeText').innerText;;
   const status = document.getElementById('reportStatusText').innerText;
 
   const params = {
@@ -2862,17 +2862,18 @@ async function handleUnifiedDownload() {
     // 1. 抓取偽下拉 UI 上的當前文字
     const year = document.getElementById('reportYearText').innerText;
     const month = document.getElementById('reportMonthText').innerText.replace(' 月', '');
-    const team = document.getElementById('teamText').innerText;
-    const type = document.getElementById('typeText').innerText;
+    const team = document.getElementById('historyTeamText').innerText;
+const type = document.getElementById('historyTypeText').innerText;
     const status = document.getElementById('reportStatusText').innerText;
 
   const isMobile = window.innerWidth < 769;
 
   // 👉 手機：只查看，不下載
   if (isMobile) {
-    showHistoryReportOverlay();
-    return;
-  }
+  await searchHistoryReport();
+  showHistoryReportOverlay();
+  return;
+}
 
     // 2. 顯示讀取遮罩 (延用你的 loadingMask)
     document.getElementById('loadingMask').style.display = 'flex';
