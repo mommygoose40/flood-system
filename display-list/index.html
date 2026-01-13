@@ -1092,7 +1092,7 @@ body {
   /* ✅ 讓 adminFilterArea 不要自己再額外推寬 */
   .desktopActionCard #adminFilterArea{
     width: 100% !important;
-    padding: 12px 0 !important;   /* 外卡片已經有 padding，這裡不要太厚 */
+    padding: 6px 0 !important;   /* 外卡片已經有 padding，這裡不要太厚 */
     margin: 0 !important;
   }
 
@@ -1428,7 +1428,7 @@ body {
         <div style="margin-bottom:12px;">
           <label>大隊：</label>
 
-          <select id="adminTeamSelect" style="display:none;">
+          <select id="historyTeamSelect" style="display:none;">
       <option value="全部">全部</option>
       <option value="1">第 1 大隊</option>
       <option value="2">第 2 大隊</option>
@@ -1442,8 +1442,8 @@ body {
       <option value="10">第 10 大隊</option>
     </select>
           
-          <button class="fakeSelectBtn" onclick="openDropdown('team')">
-            <span id="teamText">全部</span>
+          <button class="fakeSelectBtn" onclick="openDropdown('historyTeam')">
+            <span id="historyTeamText">全部</span>
             <span class="arrow">▾</span>
           </button>
         </div>
@@ -1489,15 +1489,15 @@ body {
         <div style="margin-bottom:12px;">
           <label>類型：</label>
 
-          <select id="adminTypeSelect" style="display:none;">
+          <select id="historyTypeSelect" style="display:none;">
       <option value="全部">全部</option>
       <option value="平時">平時</option>
       <option value="災中">災中</option>
       <option value="其他">其他</option>
     </select>
 
-          <button class="fakeSelectBtn" onclick="openDropdown('type')">
-            <span id="typeText">全部</span>
+          <button class="fakeSelectBtn" onclick="openDropdown('historyType')">
+            <span id="historyTypeText">全部</span>
             <span class="arrow">▾</span>
           </button>
         </div>
@@ -2889,6 +2889,37 @@ const dropdownData = {
     {value:"異常", text:"異常"}
   ]
   }
+};
+
+dropdownData.historyTeam = {
+  title: "選擇大隊",
+  target: "historyTeamText",
+  input: "historyTeamSelect",
+  options: [
+    { value: "全部", text: "全部" },
+    { value: "1", text: "第 1 大隊" },
+    { value: "2", text: "第 2 大隊" },
+    { value: "3", text: "第 3 大隊" },
+    { value: "4", text: "第 4 大隊" },
+    { value: "5", text: "第 5 大隊" },
+    { value: "6", text: "第 6 大隊" },
+    { value: "7", text: "第 7 大隊" },
+    { value: "8", text: "第 8 大隊" },
+    { value: "9", text: "第 9 大隊" },
+    { value: "10", text: "第 10 大隊" }
+  ]
+};
+
+dropdownData.historyType = {
+  title: "選擇類型",
+  target: "historyTypeText",
+  input: "historyTypeSelect",
+  options: [
+    { value: "全部", text: "全部" },
+    { value: "平時", text: "平時" },
+    { value: "災中", text: "災中" },
+    { value: "其他", text: "其他" }
+  ]
 };
 
 const mask = document.getElementById("fullDropdownMask");
