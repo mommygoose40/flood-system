@@ -1440,14 +1440,25 @@ body {
 
         <div style="margin-bottom:12px;">
           <label>年度：</label>
+
+          <select id="reportYear" style="display:none;">
+  <option value="2025">2025</option>
+  <option value="2026">2026</option>
+</select>
+
           <button class="fakeSelectBtn" onclick="openDropdown('reportYear')">
-            <span id="reportYearText">2025</span>
-            <span class="arrow">▾</span>
-          </button>
+  <span id="reportYearText">2025</span>
+  <span class="arrow">▾</span>
+</button>
         </div>
 
         <div style="margin-bottom:12px;">
           <label>月份：</label>
+
+          <select id="reportMonth" style="display:none;"></select>
+          <option value="01">1 月</option>
+  <option value="02">2 月</option>
+
           <button class="fakeSelectBtn" onclick="openDropdown('reportMonth')">
             <span id="reportMonthText">01 月</span>
             <span class="arrow">▾</span>
@@ -1464,6 +1475,12 @@ body {
 
         <div style="margin-bottom:12px;">
           <label>狀態：</label>
+
+          <select id="reportStatus" style="display:none;"></select>
+          <option value="全部">全部</option>
+          <option value="正常">正常</option>
+          <option value="異常">異常</option>
+
           <button class="fakeSelectBtn" onclick="openDropdown('reportStatus')">
             <span id="reportStatusText">全部</span>
             <span class="arrow">▾</span>
@@ -2234,7 +2251,7 @@ document.getElementById("btnSelf").onclick = function () {
 
 document.getElementById("btnTeam").onclick = async function () {
   document.getElementById('reportPage').style.display = 'none';
-  
+
   // 大隊長 → 讀自己的大隊
   if (globalRole === "大隊長") {
     viewMode = "team";
@@ -2807,28 +2824,41 @@ const dropdownData = {
   // --- 歷史報表專用欄位 (保持格式一致) ---
   reportYear: {
     title: "選擇年度",
-    target: "reportYearText", // 對應 HTML 的 <span> ID
-    options: Array.from({length: currentYear - 2025 + 1}, (_, i) => {
-      const y = 2025 + i;
-      return { value: String(y), text: String(y) };
-    })
-  },
+  target: "reportYearText",
+  input: "reportYear",
+  options: [
+    { value: "2025", text: "2025" },
+    { value: "2026", text: "2026" }
+  ]
+},
   reportMonth: {
     title: "選擇月份",
-    target: "reportMonthText", // 對應 HTML 的 <span> ID
-    options: Array.from({length: 12}, (_, i) => {
-      const m = String(i + 1).padStart(2, '0');
-      return { value: m, text: m + " 月" };
-    })
+  target: "reportMonthText",
+  input: "reportMonth",
+  options: [
+    {value:"01", text:"1 月"},
+    {value:"02", text:"2 月"},
+    {value:"03", text:"3 月"},
+    {value:"04", text:"4 月"},
+    {value:"05", text:"5 月"},
+    {value:"06", text:"6 月"},
+    {value:"07", text:"7 月"},
+    {value:"08", text:"8 月"},
+    {value:"09", text:"9 月"},
+    {value:"10", text:"10 月"},
+    {value:"11", text:"11 月"},
+    {value:"12", text:"12 月"},
+  ]
   },
   reportStatus: {
     title: "選擇狀態",
-    target: "reportStatusText", // 對應 HTML 的 <span> ID
-    options: [
-      { value: "全部", text: "全部" },
-      { value: "正常", text: "正常" },
-      { value: "異常", text: "異常" }
-    ]
+  target: "reportStatusText",
+  input: "reportStatus",
+  options: [
+    {value:"全部", text:"全部"},
+    {value:"正常", text:"正常"},
+    {value:"異常", text:"異常"}
+  ]
   }
 };
 
