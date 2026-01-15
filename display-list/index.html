@@ -1339,6 +1339,13 @@ body {
 #text-update {
     display: none !important;
 }
+
+    /* 2. 歷史報表的框框寬度補正 */
+  #reportPage .fakeSelectBtn {
+    width: 145px !important; /* 跟大隊紀錄的『大隊』框一樣寬 */
+    min-width: 145px !important;
+    flex: none !important;
+  }
     
 </style>
 
@@ -2952,7 +2959,6 @@ async function fetchHistoryFromGAS(params) {
 
 // 核心下載邏輯
 async function handleUnifiedDownload() {
-    // 獲取篩選條件
     const year = document.getElementById('reportYearText').innerText;
     const month = document.getElementById('reportMonthText').innerText.replace(' 月', '');
     const team = (viewMode === "history") ? document.getElementById('historyTeamText').innerText : document.getElementById('teamText').innerText;
@@ -2961,22 +2967,11 @@ async function handleUnifiedDownload() {
 
     const isMobile = window.innerWidth < 769;
 
-    // 顯示讀取中
     document.getElementById('loadingMask').style.display = 'flex';
 
     try {
-        // --- 核心 A：檢查並載入 XLSX 元件 (防止尚未就緒) ---
-        if (!isMobile && typeof XLSX === 'undefined') {
-            await new Promise((resolve, reject) => {
-                const script = document.createElement('script');
-                script.src = "https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js";
-                script.onload = resolve;
-                script.onerror = reject;
-                document.head.appendChild(script);
-            });
-        }
-
         const params = {
+            action: 'exportExcelBinary',
             year: year,
             month: parseInt(month),
             team: (team === "全部") ? "all" : team,
@@ -2984,25 +2979,34 @@ async function handleUnifiedDownload() {
             status: (status === "全部") ? "all" : status
         };
 
-        // --- 核心 B：抓取 JSON 資料 ---
-        const data = await fetchHistoryFromGAS(params); 
+        const query = new URLSearchParams(params).toString();
+        const response = await fetch(`${REPORT_GAS_URL}?${query}`);
+        const result = await response.json();
 
-        if (!data || data.length === 0) {
-            alert("【查無資料】\n所選條件下沒有任何紀錄。");
-            return; 
+        // ★ 關鍵修正 2：判斷 result 是否為 error
+        if (result.result === "error") {
+            showMessage("尚無符合資料!"));
+            return; // 直接中斷，不執行下載
         }
 
-        if (isMobile) {
-            renderMobileReportOverlay(data);
-        } else {
-            // 直接呼叫下載，此時 XLSX 一定已經加載完成了
-            const fileName = `${year}年${month}月_${team}大隊_巡視報表`;
-            downloadExcelDirectly(data, fileName);
+        // 若成功，執行下載
+        const byteCharacters = atob(result.data);
+        const byteNumbers = new Array(byteCharacters.length);
+        for (let i = 0; i < byteCharacters.length; i++) {
+            byteNumbers[i] = byteCharacters.charCodeAt(i);
         }
+        const byteArray = new Uint8Array(byteNumbers);
+        const blob = new Blob([byteArray], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+        
+        const fileName = result.fileName || `${year}年${month}月_報表.xlsx`;
+        const link = document.createElement('a');
+        link.href = window.URL.createObjectURL(blob);
+        link.download = fileName;
+        link.click();
 
     } catch (err) {
         console.error(err);
-        alert("連線失敗或下載元件載入失敗，請稍後再試。");
+        alert("連線失敗，請稍後再試。");
     } finally {
         document.getElementById('loadingMask').style.display = 'none';
     }
