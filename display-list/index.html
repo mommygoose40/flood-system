@@ -3379,73 +3379,93 @@ document.addEventListener("DOMContentLoaded", () => {
   const old = document.getElementById('historyReportOverlay');
   if (old) old.remove();
 
-  let rows = '';
+  // 隱藏小圓鈕
+    const fb = document.getElementById("floatingButtons");
+    if (fb) fb.style.setProperty("display", "none", "important");
 
-  records.forEach(r => {
-    let time = '';
-    if (r.詳細紀錄) {
-      const m = String(r.詳細紀錄).match(/report_(\d+)/);
-      if (m) {
-        const d = new Date(Number(m[1]));
-        time = `${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
-      }
-    }
+    // 攔截返回鍵
+    history.pushState({ action: "closeReport" }, "");
+    window.onpopstate = function() {
+        if (document.getElementById("reportOverlay")) closeReportLayer();
+    };
 
-    rows += `
-      <tr>
-        <td>${r.日期 || ''}</td>
-        <td>${time}</td>
-        <td>${r.通報類型 || ''}</td>
-        <td>${r.狀態 || ''}</td>
-        <td>${r.異常分類 || ''}</td>
-        <td>${r.回報者 || ''}</td>
-        <td>${r.所屬大隊 || ''}</td>
-      </tr>
-    `;
-  });
+    let tableRows = "";
+    filteredData.forEach(r => {
+        let hh = "--", mm = "--";
+        try {
+            const match = r.詳細紀錄.match(/report_(\d+)/);
+            if (match) {
+                const dateObj = new Date(parseInt(match[1], 10));
+                hh = String(dateObj.getHours()).padStart(2, "0");
+                mm = String(dateObj.getMinutes()).padStart(2, "0");
+            }
+        } catch(e) {}
 
-  const html = `
-    <div id="historyReportOverlay" style="
-      position:fixed; inset:0;
-      background:${isMobile ? '#fff' : 'rgba(0,0,0,0.6)'};
-      z-index:9999;
-      overflow:auto;
-    ">
-      <div style="
-        background:#fff;
-        width:${isMobile ? '100%' : '95%'};
-        margin:${isMobile ? '0' : '30px auto'};
-        padding:16px;
-        box-sizing:border-box;
-      ">
-        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
-          <div style="font-size:20px;font-weight:bold;">歷史報表</div>
-          <button onclick="closeHistoryReportOverlay()">關閉</button>
-        </div>
+        const note = (r.說明 || "").trim();
+        const voice = (r.語音轉文字 || "").trim();
+        let combinedNote = (note && voice) ? `${note} / ${voice}` : (note || voice);
 
-        <table style="width:100%;border-collapse:collapse;font-size:13px;">
-          <thead>
-            <tr style="background:#f2f2f2;">
-              <th>日期</th>
-              <th>時間</th>
-              <th>類型</th>
-              <th>狀態</th>
-              <th>異常分類</th>
-              <th>回報者</th>
-              <th>大隊</th>
+        let reporterInfo = (r.回報者 || "").trim();
+        if (r.同行者 && r.同行者.trim() !== "") {
+            reporterInfo += `,${r.同行者.trim()}`;
+        }
+
+        const detailLink = `<a href="${r.詳細紀錄}" target="_blank" style="color: #0b5ed7; text-decoration: underline;">連結</a>`;
+
+        tableRows += `
+            <tr>
+                <td>${normalizeDate(r.日期)}</td>
+                <td>${hh}:${mm}</td>
+                <td>${r.通報類型 || ''}</td>
+                <td style="color: ${r.狀態 === '異常' ? 'red' : 'black'}; font-weight: ${r.狀態 === '異常' ? 'bold' : 'normal'}">${r.狀態 || ''}</td>
+                <td>${r.異常分類 || ''}</td>
+                <td style="text-align:center;">${detailLink}</td>
+                <td>${combinedNote}</td>
+                <td>${reporterInfo}</td>
+                <td>${r.所屬大隊 || ''}</td>
             </tr>
-          </thead>
-          <tbody>${rows}</tbody>
-        </table>
+        `;
+    });
 
-        <div style="margin-top:12px;text-align:right;">
-          共 ${records.length} 筆
+    const reportHtml = `
+        <div id="reportOverlay" style="position:fixed; top:0; left:0; width:100%; height:100%; background: ${isMobile ? 'white' : 'rgba(0,0,0,0.6)'}; z-index: 9995; display: flex; justify-content: center; align-items: flex-start; font-family:sans-serif;">
+            <div id="reportContent" style="background: white; width: ${isMobile ? '100%' : '95%'}; height: ${isMobile ? 'calc(100% - 70px)' : '90vh'}; margin-top: ${isMobile ? '0' : '3vh'}; padding: ${isMobile ? '15px' : '30px'}; box-sizing: border-box; overflow-y: auto; box-shadow: ${isMobile ? 'none' : '0 10px 40px rgba(0,0,0,0.4)'}; border-radius: ${isMobile ? '0' : '10px'}; position: relative;">
+                
+                <div class="no-print" style="display: ${isMobile ? 'none' : 'flex'}; justify-content: space-between; margin-bottom: 20px;">
+                    <button onclick="downloadExcelWithMsg()" style="padding: 10px 20px; background: #198754; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: bold;">📊 匯出為 Excel 檔</button>
+                    <button onclick="closeReportLayer()" style="padding: 10px 20px; background: #f8f9fa; border: 1px solid #ccc; border-radius: 6px; cursor: pointer; font-weight: bold;">✕ 關閉視窗</button>
+                </div>
+                
+                <h2 style="text-align:center; margin-bottom:10px; font-size: 24px;">巡視紀錄明細報表</h2>
+                
+                <table id="targetTable" style="width:100%; border-collapse:collapse; font-size:13px; line-height: 1.5;">
+                    <thead>
+                        <tr style="background:#f2f2f2;">
+                            <th style="border:1px solid #ccc; padding:10px; text-align: left;">日期</th>
+                            <th style="border:1px solid #ccc; padding:10px; text-align: left;">時間</th>
+                            <th style="border:1px solid #ccc; padding:10px; text-align: left;">通報類型</th>
+                            <th style="border:1px solid #ccc; padding:10px; text-align: left;">狀態</th>
+                            <th style="border:1px solid #ccc; padding:10px; text-align: left;">異常分類</th>
+                            <th style="border:1px solid #ccc; padding:10px; text-align: left;">詳細紀錄</th>
+                            <th style="border:1px solid #ccc; padding:10px; text-align: left;">說明 / 語音轉文字</th>
+                            <th style="border:1px solid #ccc; padding:10px; text-align: left;">回報者</th>
+                            <th style="border:1px solid #ccc; padding:10px; text-align: left;">大隊</th>
+                        </tr>
+                    </thead>
+                    <tbody>${tableRows}</tbody>
+                </table>
+                <div style="margin-top:20px; text-align:right; font-weight:bold; font-size: 15px;">資料總計：${filteredData.length} 筆</div>
+            </div>
+            <style>
+                tr:nth-child(even) { background-color: #fafafa; }
+                td { border:1px solid #ccc; padding:10px; text-align: left; word-break: break-all; }
+            </style>
         </div>
-      </div>
-    </div>
-  `;
+    `;
 
-  document.body.insertAdjacentHTML('beforeend', html);
+    const div = document.createElement('div');
+    div.innerHTML = reportHtml;
+    document.body.appendChild(div.firstElementChild);
 }
 
   function closeHistoryReportOverlay() {
