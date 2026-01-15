@@ -1294,7 +1294,7 @@ body {
     display: flex !important;
     flex-direction: column !important;
     align-items: flex-start !important; /* 絕對靠左 */
-    padding-left: 1% !important;       /* 👈 調整這個數字可左右平移兩頁內容 */
+    padding-left: 0% !important;       /* 👈 調整這個數字可左右平移兩頁內容 */
     width: 100% !important;
     box-sizing: border-box !important;
     margin: 0 !important;
@@ -1314,8 +1314,8 @@ body {
 #adminFilterArea .admin-action-row,
 #reportPage .admin-action-row {
     width: 100% !important;
-    margin-left: -1% !important;  /* 👈 必須跟您的 padding-left: 3% 對稱，按鈕才會正置中 */
-    margin-top: 10px !important;   /* 👈 調小這個數字，按鈕就會往上提（靠近搜尋欄位） */
+    margin-left: 0% !important;  /* 👈 必須跟您的 padding-left: 3% 對稱，按鈕才會正置中 */
+    margin-top: 5px !important;   /* 👈 調小這個數字，按鈕就會往上提（靠近搜尋欄位） */
     padding: 0 !important;         /* 移除可能的內距 */
     display: flex !important;
     justify-content: center !important;
@@ -3094,7 +3094,7 @@ function renderMobileReportOverlay(filteredData) {
                 </div>
                 
                 <div style="overflow-x: auto; -webkit-overflow-scrolling: touch;">
-                    <table id="targetTable" style="width:100%; border-collapse:collapse; font-size:13px; min-width: 650px; border: 1px solid #ccc;">
+                    <table id="targetTable" style="width:100%; border-collapse:collapse; font-size:14px; min-width: 650px; border: 1px solid #ccc;">
                         <thead>
                             <tr>
                                 ${thHtml}
