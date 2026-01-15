@@ -1277,7 +1277,7 @@ body {
   /* 1. 取消歷史報表的置中對齊，改為左對齊 */
   #reportPage .admin-inner-wrapper {
     align-items: flex-start !important; /* 讓內容靠左 */
-    padding-left: 2.5% !important;     /* 👈 關鍵：手動調整此百分比，對齊大隊紀錄的視覺起始點 */
+    padding-left: 20px !important;     /* 👈 關鍵：手動調整此百分比，對齊大隊紀錄的視覺起始點 */
   }
 
   /* 2. 確保每一列不會撐滿，而是維持固定結構 */
@@ -1294,14 +1294,13 @@ body {
     text-align: left !important;
   }
 
-  /* 2. 修正按鈕那一列：強迫脫離父層 padding 限制，實現真正的水平置中 */
+  /* 下方的按鈕列也要同步抵銷這個 px 值，才能達成真正的水平置中 */
   #reportPage .admin-action-row {
-    width: 100vw !important;           /* 強制寬度等於視窗寬 */
-    position: relative;
-    left: -2.5% !important;             /* 👈 關鍵：這裡的數值要跟上面的 padding-left 一樣，但要是負數 */
+    width: 100% !important;
     display: flex !important;
-    justify-content: center !important; /* 實現置中 */
-    margin: 30px 0 10px 0 !important;
+    justify-content: center !important;
+    /* 關鍵：用負的 margin 抵銷上面 padding-left 的偏移量 */
+    margin-left: -20px !important; 
     padding-left: 0 !important;
   }
 
@@ -1376,7 +1375,6 @@ body {
   <div class="spinner"></div>
 
   <div id="text-loading" class="loadingText">載入中…</div>
-  <div id="text-update" class="loadingText">資料更新中，請耐心等候…</div>
   <div id="text-init" class="loadingText">資料初始化中，請耐心等候…</div>
 
   <!-- 錯誤訊息預留（可選） -->
@@ -3029,7 +3027,7 @@ function renderMobileReportOverlay(filteredData) {
             <tr>
                 <td style="text-align:center; white-space:nowrap; line-height:1.4;">
                     ${r.日期 ? normalizeDate(r.日期) : ''}<br/>
-                    <span style="color:#666; font-size:11px;">${hh}:${mm}</span>
+                    ${hh}:${mm}
                 </td>
                 <td style="text-align:center;">${r.通報類型 || ''}</td>
                 <td style="text-align:center; color: ${r.狀態 === '異常' ? 'red' : 'black'}; font-weight: ${r.狀態 === '異常' ? 'bold' : 'normal'}">${r.狀態 || ''}</td>
@@ -3070,8 +3068,8 @@ function renderMobileReportOverlay(filteredData) {
             <div id="reportContent" style="flex: 1; padding: 10px; box-sizing: border-box; overflow-y: auto;">
                 <h2 style="text-align:center; margin-bottom:5px; font-size: 22px; color: #333;">巡視紀錄明細報表</h2>
                 
-                <div style="margin-bottom: 10px; color: #0b5ed7; font-size: 13px; text-align: center; font-weight: bold;">
-                    💡 左右滑動可查看完整內容
+                <div style="margin-bottom: 10px; color: gray font-size: 13px; text-align: center; font-weight: bold;">
+                    ※ 左右滑動可查看完整內容
                 </div>
                 
                 <div style="overflow-x: auto; -webkit-overflow-scrolling: touch;">
