@@ -1294,7 +1294,7 @@ body {
     display: flex !important;
     flex-direction: column !important;
     align-items: flex-start !important; /* 絕對靠左 */
-    padding-left: 0% !important;       /* 👈 調整這個數字可左右平移兩頁內容 */
+    padding-left: 3% !important;       /* 👈 調整這個數字可左右平移兩頁內容 */
     width: 100% !important;
     box-sizing: border-box !important;
     margin: 0 !important;
@@ -1314,7 +1314,7 @@ body {
   #adminFilterArea .admin-action-row,
   #reportPage .admin-action-row {
     width: 100% !important;
-    margin-left: 0% !important; /* 與 padding-left 抵銷 */
+    margin-left: -3% !important; /* 與 padding-left 抵銷 */
     display: flex !important;
     justify-content: center !important;
   }
@@ -1589,15 +1589,6 @@ body {
   <div class="desktopActionCard">
     <div id="adminFilterArea" class="history-filter-area" style="display: block;">
       <div class="admin-inner-wrapper">
-
-        <div class="timeRow" style="display: flex !important; align-items: center; white-space: nowrap;">
-    <label style="min-width: 70px !important;">時間：</label>
-    <div style="display: flex; align-items: center; gap: 10px;">
-      <button class="fakeSelectBtn timeBtn" style="width: 110px !important;">00:00</button>
-      <span class="tilde">～</span>
-      <button class="fakeSelectBtn timeBtn" style="width: 110px !important;">23:59</button>
-    </div>
-  </div>
         
         <div style="margin-bottom:12px;">
           <label>大隊：</label>
