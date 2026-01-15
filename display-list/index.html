@@ -1746,7 +1746,7 @@ body {
 <script>
 
   const VOLUNTEER_API_URL = "https://script.google.com/macros/s/AKfycbxiGSG5hSMO6We-C6cyEJZLgf4Rnbjp-6w9Tmb0qfF9VM6JB4YGEMqj3QRfTzg7Czpc/exec"; 
-const REPORT_GAS_URL = "https://script.google.com/macros/s/AKfycbyjaB1VJBygBO9GqIvA1IQ3oRKysSxyl40CBOISEloyAqTmP-dBK4h6O7M-xDDV7ZxIhQ/exec";
+const REPORT_GAS_URL = "https://script.google.com/macros/s/AKfycby4zY3Zy4k_iyx0fCkkCxwrbT3ndXU3naODNCieqdp0voDvvtzag2g2z0TaVFLgBmISew/exec";
 
 let globalAdminRecords = [];   // 管理員一次抓全部後存在這邊
 let adminViewDays = 3;        // 預設抓最近兩週，可改 30
@@ -3012,7 +3012,7 @@ async function handleUnifiedDownload() {
 }
 
 /**
- * 修正版：日期時間合併，標題直排，提示字移至上方
+ * 修正版：加入編號列、底部提示，並優化標題排列
  */
 function renderMobileReportOverlay(filteredData) {
     const isMobile = window.innerWidth < 769;
@@ -3028,7 +3028,8 @@ function renderMobileReportOverlay(filteredData) {
     };
 
     let tableRows = "";
-    filteredData.forEach(r => {
+    // 使用 forEach 的第二個參數 index 來產生編號 (從 1 開始)
+    filteredData.forEach((r, index) => {
         // 解析時間
         let hh = "--", mm = "--";
         try {
@@ -3053,6 +3054,7 @@ function renderMobileReportOverlay(filteredData) {
 
         tableRows += `
             <tr>
+                <td style="text-align:center; color:#888;">${index + 1}</td>
                 <td style="text-align:center; white-space:nowrap; line-height:1.4;">
                     ${r.日期 ? normalizeDate(r.日期) : ''}<br/>
                     ${hh}:${mm}
@@ -3068,27 +3070,25 @@ function renderMobileReportOverlay(filteredData) {
         `;
     });
 
-    // 定義合併後的標題清單
-    const headers = ["時間", "類型", "狀態", "分類", "紀錄", "說明", "回報者", "大隊"];
+    // 定義標題清單 (在最前面加上 "編號")
+    const headers = ["編號", "時間", "類型", "狀態", "分類", "紀錄", "說明", "回報者", "大隊"];
     
     const thHtml = headers.map(text => {
-    // 將 "時間" 變成 "時<br>間"
-    const verticalText = text.split('').join('<br>');
-
-    return `
-        <th style="
-            border: 1px solid #ccc; 
-            padding: 8px 4px; 
-            text-align: center;
-            vertical-align: middle;
-            background: #f2f2f2;
-            font-size: 14px;
-            line-height: 1.2;      /* 讓字跟字之間緊湊一點 */
-            white-space: normal;   /* 允許換行 */
-            min-width: 1.2em;      /* 確保至少有一個字的寬度 */
-        ">${verticalText}</th>
-    `;
-}).join('');
+        const verticalText = text.split('').join('<br>');
+        return `
+            <th style="
+                border: 1px solid #ccc; 
+                padding: 8px 4px; 
+                text-align: center;
+                vertical-align: middle;
+                background: #f2f2f2;
+                font-size: 14px;
+                line-height: 1.2;
+                white-space: normal;
+                min-width: 1.2em;
+            ">${verticalText}</th>
+        `;
+    }).join('');
 
     const reportHtml = `
         <div id="reportOverlay" style="position:fixed; top:0; left:0; width:100%; height:100%; background: white; z-index: 9999; display: flex; flex-direction: column; font-family:sans-serif;">
@@ -3105,14 +3105,16 @@ function renderMobileReportOverlay(filteredData) {
                 </div>
                 
                 <div style="overflow-x: auto; -webkit-overflow-scrolling: touch;">
-                    <table id="targetTable" style="width:100%; border-collapse:collapse; font-size:14px; min-width: 650px; border: 1px solid #ccc;">
+                    <table id="targetTable" style="width:100%; border-collapse:collapse; font-size:14px; min-width: 700px; border: 1px solid #ccc;">
                         <thead>
-                            <tr>
-                                ${thHtml}
-                            </tr>
+                            <tr>${thHtml}</tr>
                         </thead>
                         <tbody>${tableRows}</tbody>
                     </table>
+                </div>
+
+                <div style="padding: 30px 0; text-align: center; color: #999; font-size: 15px;">
+                    --- 已顯示全部 ${filteredData.length} 筆資料 ---
                 </div>
             </div>
             <style>
@@ -3128,8 +3130,9 @@ function renderMobileReportOverlay(filteredData) {
         </div>
     `;
 
+    // 渲染
     const div = document.createElement('div');
-    div.id = "temp_container";
+    div.id = "report_container_wrapper"; // 給一個明確的 ID 方便管理
     div.innerHTML = reportHtml;
     document.body.appendChild(div);
 }
