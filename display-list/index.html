@@ -1277,7 +1277,7 @@ body {
   /* 1. 取消歷史報表的置中對齊，改為左對齊 */
   #reportPage .admin-inner-wrapper {
     align-items: flex-start !important; /* 讓內容靠左 */
-    padding-left: 20px !important;     /* 👈 關鍵：手動調整此百分比，對齊大隊紀錄的視覺起始點 */
+    padding-left: 15px !important;     /* 👈 關鍵：手動調整此百分比，對齊大隊紀錄的視覺起始點 */
   }
 
   /* 2. 確保每一列不會撐滿，而是維持固定結構 */
@@ -1300,7 +1300,6 @@ body {
     display: flex !important;
     justify-content: center !important;
     /* 關鍵：用負的 margin 抵銷上面 padding-left 的偏移量 */
-    margin-left: -20px !important; 
     padding-left: 0 !important;
   }
 
@@ -3074,8 +3073,8 @@ function renderMobileReportOverlay(filteredData) {
             <div id="reportContent" style="flex: 1; padding: 10px; box-sizing: border-box; overflow-y: auto;">
                 <h2 style="text-align:center; margin-bottom:5px; font-size: 22px; color: #333;">巡視紀錄明細報表</h2>
                 
-                <div style="margin-bottom: 10px; color: gray font-size: 13px; text-align: center; font-weight: bold;">
-                    ※ 左右滑動可查看完整內容
+                <div style="margin-bottom: 10px; color: #666666 font-size: 13px; text-align: center; font-weight: bold;">
+                    ※ 左右滑動以查看完整內容
                 </div>
                 
                 <div style="overflow-x: auto; -webkit-overflow-scrolling: touch;">
