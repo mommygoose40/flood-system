@@ -2973,11 +2973,10 @@ async function handleUnifiedDownload() {
 
     const isMobile = window.innerWidth < 769;
 
-    // 顯示讀取中
     document.getElementById('loadingMask').style.display = 'flex';
 
     try {
-        // --- 核心 A：檢查並載入 XLSX 元件 (防止尚未就緒) ---
+        // --- 核心 A：檢查元件 ---
         if (!isMobile && typeof XLSX === 'undefined') {
             await new Promise((resolve, reject) => {
                 const script = document.createElement('script');
@@ -2999,22 +2998,28 @@ async function handleUnifiedDownload() {
         // --- 核心 B：抓取 JSON 資料 ---
         const data = await fetchHistoryFromGAS(params); 
 
+        // 1. 無資料攔截
         if (!data || data.length === 0) {
-            alert("【查無資料】\n所選條件下沒有任何紀錄。");
+            showMessage("尚無符合資料!");
             return; 
         }
 
         if (isMobile) {
+            // 手機版：維持原本邏輯
             renderMobileReportOverlay(data);
         } else {
-            // 直接呼叫下載，此時 XLSX 一定已經加載完成了
-            const fileName = `${year}年${month}月_${team}大隊_巡視報表`;
-            downloadExcelDirectly(data, fileName);
+            // --- 2. 產出動態檔名 ---
+            let fileName = `${year}${month}_${team}`;
+            if (type !== "全部") fileName += `_${type}`;
+            if (status !== "全部") fileName += `_${status}`;
+            
+            // 3. 呼叫前端產檔 (並確保排除詳細紀錄與處理時間)
+            downloadExcelFrontEnd(data, fileName);
         }
 
     } catch (err) {
         console.error(err);
-        alert("連線失敗或下載元件載入失敗，請稍後再試。");
+        alert("執行失敗，請稍後再試。");
     } finally {
         document.getElementById('loadingMask').style.display = 'none';
     }
