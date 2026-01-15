@@ -1269,44 +1269,34 @@ body {
   display: inline-block;
 }
 
-    /* =========================================
-   🎯 歷史報表：對齊大隊紀錄的起始點 (手機版)
-   ========================================= */
-@media (max-width: 768px) {
-  
-  /* 1. 取消歷史報表的置中對齊，改為左對齊 */
+    @media (max-width: 768px) {
+  /* 歷史報表的主容器：靠左對齊，但寬度現在會被幽靈列撐開 */
   #reportPage .admin-inner-wrapper {
-    align-items: flex-start !important; /* 讓內容靠左 */
-    padding-left: 7px !important;     /* 👈 關鍵：手動調整此百分比，對齊大隊紀錄的視覺起始點 */
-  }
-
-  /* 2. 確保每一列不會撐滿，而是維持固定結構 */
-  #reportPage .admin-inner-wrapper > div {
     display: flex !important;
-    justify-content: flex-start !important;
-    width: auto !important;
-    margin-left: 0 !important;
+    flex-direction: column !important;
+    align-items: flex-start !important; 
+    padding-left: 12px !important; /* 這裡維持跟大隊紀錄一樣的基礎內距即可 */
+    width: 100% !important;
   }
 
-  /* 3. 統一 Label 寬度，確保所有標籤文字後方的框框也是對齊的 */
-  #reportPage label {
-    min-width: 70px !important; 
-    text-align: left !important;
-  }
-
-  /* 下方的按鈕列也要同步抵銷這個 px 值，才能達成真正的水平置中 */
+  /* 確保按鈕列是真正的置中 */
   #reportPage .admin-action-row {
     width: 100% !important;
+    margin-left: 0 !important; /* 移除之前的負值偏移 */
     display: flex !important;
     justify-content: center !important;
-    /* 關鍵：用負的 margin 抵銷上面 padding-left 的偏移量 */
-    /*padding-left: -10px !important;*/
+    padding: 20px 0 !important;
   }
 
-  /* 3. 確保下載按鈕本身寬度固定 */
-  #reportPage #adminExportBtn {
-    width: 140px !important;           /* 維持跟大隊紀錄按鈕一致的寬度 */
-    margin: 0 auto !important;
+  /* 統一所有 Label 和框框 */
+  #reportPage label {
+    min-width: 70px !important;
+    flex-shrink: 0 !important;
+  }
+
+  #reportPage .fakeSelectBtn {
+    width: 145px !important; /* 跟大隊紀錄的框框一樣寬 */
+    flex: none !important;
   }
 }
 
@@ -1579,6 +1569,13 @@ body {
   <div class="desktopActionCard">
     <div id="adminFilterArea" class="history-filter-area" style="display: block;">
       <div class="admin-inner-wrapper">
+
+        <div class="timeRow" style="visibility: hidden; height: 0; margin: 0; overflow: hidden; display: flex !important;">
+          <label>時間：</label>
+          <button class="fakeSelectBtn timeBtn">00:00</button>
+          <span class="tilde">～</span>
+          <button class="fakeSelectBtn timeBtn">23:59</button>
+        </div>
         
         <div style="margin-bottom:12px;">
           <label>大隊：</label>
