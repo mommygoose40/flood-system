@@ -1270,35 +1270,54 @@ body {
 }
 
     @media (max-width: 768px) {
-  /* 統一：不論是大隊紀錄還是歷史報表，全部取消「置中對齊」，改為「靠左對齊」 */
-  #adminFilterArea .admin-inner-wrapper,
-  #reportPage .admin-inner-wrapper {
-    display: flex !important;
-    flex-direction: column !important;
-    align-items: flex-start !important; /* 👈 強制所有內容左對齊 */
-    width: 100% !important;
-    box-sizing: border-box !important;
-  }
-
-  /* 統一：所有標籤與框框的寬度 */
-  #adminFilterArea label, #reportPage label {
+  /* 1. 鎖死所有標籤寬度（確保冒號位置對齊） */
+  #adminFilterArea label,
+  #reportPage label {
     min-width: 70px !important;
+    max-width: 70px !important;
+    display: inline-block !important;
     text-align: left !important;
+    flex-shrink: 0 !important;
   }
 
-  /* 統一：單個框框的寬度 */
-  /* 大隊與範圍原本是 145px，時間框是 110px */
-  #adminFilterArea .fakeSelectBtn, 
+  /* 2. 歷史報表的框框寬度補正 */
   #reportPage .fakeSelectBtn {
-    width: 145px !important; 
+    width: 145px !important; /* 跟大隊紀錄的『大隊』框一樣寬 */
     min-width: 145px !important;
     flex: none !important;
   }
 
-  /* 唯獨大隊紀錄的時間框保持 110px */
-  #adminFilterArea .timeBtn {
-    width: 110px !important;
-    min-width: 110px !important;
+  /* 3. 解決『靠左』的核心：強制左內距 */
+  /* 不管裡面包了什麼，全部強制從左邊 12% 的地方開始排 */
+  #adminFilterArea .admin-inner-wrapper,
+  #reportPage .admin-inner-wrapper {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: flex-start !important; /* 絕對靠左 */
+    padding-left: 5% !important;       /* 👈 調整這個數字可左右平移兩頁內容 */
+    width: 100% !important;
+    box-sizing: border-box !important;
+    margin: 0 !important;
+  }
+
+  /* 4. 移除大隊紀錄中可能干擾的置中設定 */
+  .desktopActionCard {
+    width: 100% !important;
+    max-width: none !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    background: transparent !important;
+    box-shadow: none !important;
+  }
+
+  /* 5. 修正按鈕位置（因為父層推了 12%，按鈕要拉回來才會置中） */
+  #adminFilterArea .admin-action-row,
+  #reportPage .admin-action-row {
+    width: 100% !important;
+    margin-left: -5% !important; /* 與 padding-left 抵銷 */
+    display: flex !important;
+    justify-content: center !important;
+    padding: 20px 0 !important;
   }
 }
 
