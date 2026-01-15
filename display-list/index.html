@@ -1144,17 +1144,6 @@ body {
     background-color: #157347 !important;
 }
 
-/* ===============================
-   歷史報表頁：下載按鈕加寬
-   =============================== */
-
-#reportPage #adminExportBtn {
-  width: 280px !important;
-  max-width: 280px;
-  margin: 10px auto 0 !important;
-  display: block;
-}
-
 /* =========================================
    🎯 歷史報表：垂直對齊最終修正
    只影響歷史報表，不動大隊紀錄
@@ -2966,7 +2955,6 @@ async function handleUnifiedDownload() {
     const year = document.getElementById('reportYearText').innerText;
     const month = document.getElementById('reportMonthText').innerText.replace(' 月', '');
 
-    // ★★★ 關鍵修正：依 viewMode 讀正確欄位 ★★★
     const team = (viewMode === "history")
         ? document.getElementById('historyTeamText').innerText
         : document.getElementById('teamText').innerText;
@@ -2976,13 +2964,12 @@ async function handleUnifiedDownload() {
         : document.getElementById('typeText').innerText;
 
     const status = document.getElementById('reportStatusText').innerText;
-
     const isMobile = window.innerWidth < 769;
 
     // 顯示讀取中
     document.getElementById('loadingMask').style.display = 'flex';
     const textUpdate = document.getElementById('text-update');
-    textUpdate.style.display = 'block';
+    if(textUpdate) textUpdate.style.display = 'block';
 
     try {
         const params = {
@@ -2993,51 +2980,93 @@ async function handleUnifiedDownload() {
             status: (status === "全部") ? "all" : status
         };
 
-        // --- 手機版邏輯：跳出視窗查看 ---
+        // 1. 不論裝置，統一先抓取 JSON 資料
+        const data = await fetchHistoryFromGAS(params); 
+
+        // 2. 判斷是否有資料（解決電腦版下載空檔案問題）
+        if (!data || data.length === 0) {
+            showMessage("尚無符合資料!");
+            return; 
+        }
+
         if (isMobile) {
-            // 這裡假設你有一個與後端溝通獲取 JSON 的 function，或是從全域變數抓取
-            // 如果 fetchHistoryFromGAS(params) 會更新全域變數 historyReportRecords，請使用它
-            const data = await fetchHistoryFromGAS(params); 
-            
-            if (!data || data.length === 0) {
-                showMessage("尚無符合資料!");
-                return;
-            }
-
-            renderMobileReportOverlay(data); // 呼叫下方新寫的繪製函式
-            return;
-        }
-
-        // --- 電腦版下載邏輯 (維持原樣) ---
-        const query = new URLSearchParams({ action: 'exportExcelBinary', ...params }).toString();
-        const response = await fetch(`${REPORT_GAS_URL}?${query}`);
-        const result = await response.json();
-
-        if (result.result === "success") {
-            const byteCharacters = atob(result.data);
-            const byteNumbers = new Array(byteCharacters.length);
-            for (let i = 0; i < byteCharacters.length; i++) {
-                byteNumbers[i] = byteCharacters.charCodeAt(i);
-            }
-            const byteArray = new Uint8Array(byteNumbers);
-            const blob = new Blob([byteArray], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
-            const fileName = `${year}年${month}月_${team}大隊_報表.xlsx`;
-            const link = document.createElement('a');
-            link.href = window.URL.createObjectURL(blob);
-            link.download = fileName;
-            link.click();
+            // --- 手機版：跳出預覽視窗 ---
+            renderMobileReportOverlay(data);
         } else {
-            alert("【查無資料】\n" + (result.message || "所選條件下沒有任何紀錄。"));
+            // --- 電腦版：直接在前端生成 Excel 並下載 ---
+            // 呼叫下方我們準備好的「前端匯出函式」
+            downloadExcelDirectly(data, `${year}年${month}月_${team}大隊_巡視報表`);
         }
+
     } catch (err) {
         console.error(err);
-        alert("連線失敗，請稍後再試。");
+        alert("連線失敗或資料解析錯誤，請稍後再試。");
     } finally {
         document.getElementById('loadingMask').style.display = 'none';
-        textUpdate.style.display = 'none';
+        if(textUpdate) textUpdate.style.display = 'none';
     }
 }
 
+/**
+ * 電腦版專用：將 JSON 直接轉為 Excel 下載
+ * 解決：時間亂掉、移除詳細紀錄、說明語音合併
+ */
+function downloadExcelDirectly(data, fileName) {
+    if (typeof XLSX === 'undefined') {
+        alert("匯出元件尚未就緒，請稍後再試。");
+        return;
+    }
+
+    const excelData = data.map(r => {
+        // 解析時間 (hh:mm)
+        let hh = "--", mm = "--";
+        const match = String(r.詳細紀錄 || "").match(/report_(\d+)/);
+        if (match) {
+            const dateObj = new Date(parseInt(match[1], 10));
+            hh = String(dateObj.getHours()).padStart(2, '0');
+            mm = String(dateObj.getMinutes()).padStart(2, '0');
+        }
+
+        // 合併說明與語音
+        const note = (r.說明 || "").trim();
+        const voice = (r.語音轉文字 || "").trim();
+        let combinedNote = (note && voice) ? `${note} / ${voice}` : (note || voice);
+
+        // --- 核心變更：拆分三欄 ---
+        return {
+            "日期": r.日期 || "",
+            "時間": `${hh}:${mm}`,
+            "類型": r.通報類型 || "",
+            "狀態": r.狀態 || "",
+            "分類": r.異常分類 || "",
+            "說明": combinedNote,
+            "回報者": (r.回報者 || "").trim(),
+            "回報者ID": (r.回報者ID || "").trim(),
+            "同行者": (r.同行者 || "").trim(),
+            "大隊": r.所屬大隊 || ""
+        };
+    });
+
+    const worksheet = XLSX.utils.json_to_sheet(excelData);
+    
+    // 設定欄寬 (針對新欄位微調)
+    worksheet['!cols'] = [
+        { wch: 12 }, { wch: 8 }, { wch: 12 }, { wch: 8 }, 
+        { wch: 15 }, { wch: 40 }, { wch: 12 }, { wch: 15 }, { wch: 15 }, { wch: 10 }
+    ];
+
+    // 強制字串格式
+    Object.keys(worksheet).forEach(key => {
+        if (key[0] === '!') return;
+        worksheet[key].t = 's';
+        worksheet[key].z = '@';
+    });
+
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "巡視紀錄");
+    XLSX.writeFile(workbook, `${fileName}.xlsx`);
+}
+  
 /**
  * 修正版：加入編號列、底部提示，並優化標題排列
  */
