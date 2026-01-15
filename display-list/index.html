@@ -2563,44 +2563,47 @@ function exportReport() {
         });
 
         const reportHtml = `
-            <div id="reportOverlay" style="position:fixed; top:0; left:0; width:100%; height:100%; background: rgba(0,0,0,0.6); z-index: 9995; display: flex; justify-content: center; align-items: flex-start; font-family:sans-serif;">
-                <div id="reportContent" style="background: white; width: 95%; max-height: 90vh; margin-top: 3vh; padding: 30px; box-sizing: border-box; overflow-y: auto; border-radius: 10px; position: relative; box-shadow: 0 10px 40px rgba(0,0,0,0.4);">
-                    
-                    <div class="no-print" style="display: flex; justify-content: space-between; margin-bottom: 20px; position: sticky; top: -30px; background: white; padding: 10px 0; z-index: 10;">
-                        <button onclick="downloadExcelWithMsg()" style="padding: 10px 20px; background: #198754; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: bold;">📊 匯出為 Excel 檔</button>
-                        <button onclick="closeReportLayer()" style="padding: 10px 20px; background: #f8f9fa; border: 1px solid #ccc; border-radius: 6px; cursor: pointer; font-weight: bold;">✕ 關閉視窗</button>
-                    </div>
-                    
-                    <h2 style="text-align:center; margin-bottom:20px; font-size: 28px;">巡視紀錄明細報表</h2>
-                    
-                    <table id="targetTable" style="width:100%; border-collapse:collapse; font-size:14px; line-height: 1.5;">
-                        <thead>
-                            <tr style="background:#f2f2f2; position: sticky; top: 40px; z-index: 5;">
-                                <th style="border:1px solid #ccc; padding:12px; width:50px;">編號</th>
-                                <th style="border:1px solid #ccc; padding:12px; width:100px;">時間</th>
-                                <th style="border:1px solid #ccc; padding:12px; width:100px;">通報類型</th>
-                                <th style="border:1px solid #ccc; padding:12px; width:80px;">狀態</th>
-                                <th style="border:1px solid #ccc; padding:12px; width:120px;">異常分類</th>
-                                <th style="border:1px solid #ccc; padding:12px; width:80px;">詳細紀錄</th>
-                                <th style="border:1px solid #ccc; padding:12px;">說明 / 語音轉文字</th>
-                                <th style="border:1px solid #ccc; padding:12px; width:120px;">回報者</th>
-                                <th style="border:1px solid #ccc; padding:12px; width:100px;">大隊</th>
-                            </tr>
-                        </thead>
-                        <tbody>${tableRows}</tbody>
-                    </table>
-
-                    <div style="margin-top:30px; padding: 20px; text-align:center; color: #888; border-top: 1px dashed #ccc;">
-                        --- 已顯示全部 ${filteredData.length} 筆資料 ---
-                    </div>
+    <div id="reportOverlay" style="position:fixed; top:0; left:0; width:100%; height:100%; background: rgba(0,0,0,0.6); z-index: 9995; display: flex; justify-content: center; align-items: flex-start; font-family:sans-serif;">
+        <div id="reportContent" style="background: white; width: 95%; max-height: 90vh; margin-top: 3vh; padding: 20px 30px; box-sizing: border-box; overflow-y: auto; border-radius: 10px; position: relative; box-shadow: 0 10px 40px rgba(0,0,0,0.4);">
+            
+            <div class="no-print" style="display: flex; justify-content: space-between; align-items: center; position: sticky; top: -20px; background: white; padding: 15px 0; z-index: 20; border-bottom: 1px solid #eee;">
+                <div style="font-weight: bold; font-size: 18px;">報表預覽 (共 ${filteredData.length} 筆)</div>
+                <div>
+                    <button onclick="downloadExcelWithMsg()" style="padding: 10px 20px; background: #198754; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; margin-right: 10px;">📊 匯出為 Excel 檔</button>
+                    <button onclick="closeReportLayer()" style="padding: 10px 20px; background: #f8f9fa; border: 1px solid #ccc; border-radius: 6px; cursor: pointer; font-weight: bold;">✕ 關閉視窗</button>
                 </div>
-                <style>
-                    #targetTable tr:nth-child(even) { background-color: #fafafa; }
-                    #targetTable td { border:1px solid #ccc; padding:12px; text-align: left; word-break: break-all; }
-                    #targetTable th { border:1px solid #ccc; }
-                </style>
             </div>
-        `;
+            
+            <h2 style="text-align:center; margin: 20px 0; font-size: 28px;">巡視紀錄明細報表</h2>
+            
+            <table id="targetTable" style="width:100%; border-collapse:collapse; font-size:14px; line-height: 1.5;">
+                <thead>
+                    <tr style="background:#f2f2f2; position: sticky; top: 45px; z-index: 15; box-shadow: 0 2px 2px rgba(0,0,0,0.1);">
+                        <th style="border:1px solid #ccc; padding:12px; width:50px;">編號</th>
+                        <th style="border:1px solid #ccc; padding:12px; width:110px;">時間</th>
+                        <th style="border:1px solid #ccc; padding:12px; width:100px;">通報類型</th>
+                        <th style="border:1px solid #ccc; padding:12px; width:80px;">狀態</th>
+                        <th style="border:1px solid #ccc; padding:12px; width:120px;">異常分類</th>
+                        <th style="border:1px solid #ccc; padding:12px; width:80px;">詳細紀錄</th>
+                        <th style="border:1px solid #ccc; padding:12px;">說明 / 語音轉文字</th>
+                        <th style="border:1px solid #ccc; padding:12px; width:130px;">回報者</th>
+                        <th style="border:1px solid #ccc; padding:12px; width:100px;">大隊</th>
+                    </tr>
+                </thead>
+                <tbody>${tableRows}</tbody>
+            </table>
+
+            <div style="margin-top:30px; padding: 40px 0; text-align:center; color: #999; border-top: 1px dashed #ccc; font-size: 16px;">
+                --- 已顯示全部 ${filteredData.length} 筆資料 ---
+            </div>
+        </div>
+        <style>
+            #targetTable tr:nth-child(even) { background-color: #fafafa; }
+            #targetTable td { border:1px solid #ccc; padding:12px; text-align: left; word-break: break-all; }
+            #targetTable th { border:1px solid #ccc; vertical-align: middle; }
+        </style>
+    </div>
+`;
 
         const div = document.createElement('div');
         div.innerHTML = reportHtml;
@@ -3159,17 +3162,6 @@ function renderMobileReportOverlay(filteredData) {
     div.id = "report_container_wrapper"; // 給一個明確的 ID 方便管理
     div.innerHTML = reportHtml;
     document.body.appendChild(div);
-}
-
-// 關閉視窗函式
-function closeReportLayer() {
-    const el = document.getElementById("reportOverlay");
-    if (el) {
-        el.parentElement.remove();
-        // 顯示回小圓鈕
-        const fb = document.getElementById("floatingButtons");
-        if (fb) fb.style.display = "flex";
-    }
 }
 
 function showLoadingMask() {
