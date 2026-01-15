@@ -1277,7 +1277,7 @@ body {
   /* 1. 取消歷史報表的置中對齊，改為左對齊 */
   #reportPage .admin-inner-wrapper {
     align-items: flex-start !important; /* 讓內容靠左 */
-    padding-left: 2% !important;     /* 👈 關鍵：手動調整此百分比，對齊大隊紀錄的視覺起始點 */
+    padding-left: 2.5% !important;     /* 👈 關鍵：手動調整此百分比，對齊大隊紀錄的視覺起始點 */
   }
 
   /* 2. 確保每一列不會撐滿，而是維持固定結構 */
@@ -1298,7 +1298,7 @@ body {
   #reportPage .admin-action-row {
     width: 100vw !important;           /* 強制寬度等於視窗寬 */
     position: relative;
-    left: -2% !important;             /* 👈 關鍵：這裡的數值要跟上面的 padding-left 一樣，但要是負數 */
+    left: -2.5% !important;             /* 👈 關鍵：這裡的數值要跟上面的 padding-left 一樣，但要是負數 */
     display: flex !important;
     justify-content: center !important; /* 實現置中 */
     margin: 30px 0 10px 0 !important;
@@ -2986,8 +2986,7 @@ async function handleUnifiedDownload() {
 }
 
 /**
- * 修正版：負責生成手機版 Overlay 的函式
- * 標題列固定直向排列，內容維持橫排
+ * 修正版：日期時間合併，標題直排，提示字移至上方
  */
 function renderMobileReportOverlay(filteredData) {
     const isMobile = window.innerWidth < 769;
@@ -3028,8 +3027,10 @@ function renderMobileReportOverlay(filteredData) {
 
         tableRows += `
             <tr>
-                <td style="text-align:center; white-space:nowrap;">${r.日期 ? normalizeDate(r.日期) : ''}</td>
-                <td style="text-align:center;">${hh}:${mm}</td>
+                <td style="text-align:center; white-space:nowrap; line-height:1.4;">
+                    ${r.日期 ? normalizeDate(r.日期) : ''}<br/>
+                    <span style="color:#666; font-size:11px;">${hh}:${mm}</span>
+                </td>
                 <td style="text-align:center;">${r.通報類型 || ''}</td>
                 <td style="text-align:center; color: ${r.狀態 === '異常' ? 'red' : 'black'}; font-weight: ${r.狀態 === '異常' ? 'bold' : 'normal'}">${r.狀態 || ''}</td>
                 <td style="text-align:center;">${r.異常分類 || ''}</td>
@@ -3041,17 +3042,16 @@ function renderMobileReportOverlay(filteredData) {
         `;
     });
 
-    // 定義標題清單
-    const headers = ["日期", "時間", "類型", "狀態", "分類", "紀錄", "說明", "回報者", "大隊"];
+    // 定義合併後的標題清單
+    const headers = ["時間", "類型", "狀態", "分類", "紀錄", "說明", "回報者", "大隊"];
     
-    // 生成直排標題的 HTML (加入 writing-mode)
     const thHtml = headers.map(text => `
         <th style="
             border: 1px solid #ccc; 
             padding: 10px 2px; 
-            writing-mode: vertical-rl;   /* 文字轉直向 */
-            text-orientation: upright;  /* 確保中文字正立 */
-            height: 85px;               /* 標題高度 */
+            writing-mode: vertical-rl;
+            text-orientation: upright;
+            height: 85px;
             text-align: center;
             vertical-align: middle;
             white-space: nowrap;
@@ -3068,10 +3068,14 @@ function renderMobileReportOverlay(filteredData) {
             </div>
             
             <div id="reportContent" style="flex: 1; padding: 10px; box-sizing: border-box; overflow-y: auto;">
-                <h2 style="text-align:center; margin-bottom:15px; font-size: 22px; color: #333;">巡視紀錄明細報表</h2>
+                <h2 style="text-align:center; margin-bottom:5px; font-size: 22px; color: #333;">巡視紀錄明細報表</h2>
+                
+                <div style="margin-bottom: 10px; color: #0b5ed7; font-size: 13px; text-align: center; font-weight: bold;">
+                    💡 左右滑動可查看完整內容
+                </div>
                 
                 <div style="overflow-x: auto; -webkit-overflow-scrolling: touch;">
-                    <table id="targetTable" style="width:100%; border-collapse:collapse; font-size:13px; min-width: 700px; border: 1px solid #ccc;">
+                    <table id="targetTable" style="width:100%; border-collapse:collapse; font-size:13px; min-width: 650px; border: 1px solid #ccc;">
                         <thead>
                             <tr>
                                 ${thHtml}
@@ -3080,7 +3084,6 @@ function renderMobileReportOverlay(filteredData) {
                         <tbody>${tableRows}</tbody>
                     </table>
                 </div>
-                <div style="margin-top: 15px; color: #666; font-size: 13px;">※ 左右滑動可查看完整內容</div>
             </div>
             <style>
                 #targetTable tr:nth-child(even) { background-color: #fafafa; }
