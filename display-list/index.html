@@ -1261,6 +1261,53 @@ body {
     margin: 10px 0 20px 0 !important;
   }
 }
+
+    /* 統一左側標籤寬度，這是對齊的中軸線 */
+#adminFilterArea label,
+#reportPage label {
+  min-width: 70px !important;
+  display: inline-block;
+}
+
+    /* =====================================================
+   🎯 歷史報表：手機版對齊修正 (置中補強)
+   ===================================================== */
+@media (max-width: 768px) {
+  /* 確保歷史報表容器強制滿寬且內部項目水平置中 */
+  #reportPage .admin-inner-wrapper {
+    width: 100% !important;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important; /* 強制所有子列垂直堆疊後置中 */
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+  }
+
+  /* 針對每一行篩選條件的 div 進行置中處理 */
+  #reportPage .admin-inner-wrapper > div {
+    width: 100% !important;
+    display: flex !important;
+    justify-content: center !important; /* 讓 label 和按鈕這一組水平置中 */
+    align-items: center !important;
+    margin-left: auto !important;
+    margin-right: auto !important;
+  }
+
+  /* 稍微縮小 label 的寬度，讓整體更靠近中心點 */
+  #reportPage label {
+    min-width: 60px !important; /* 從 70px 稍微縮小，減少左側佔位感 */
+    text-align: right !important;
+    margin-right: 8px !important;
+  }
+
+  /* 確保下載報表按鈕列沒有任何 padding 偏移 */
+  #reportPage .admin-action-row {
+    width: 100% !important;
+    justify-content: center !important;
+    padding-left: 0 !important;
+    margin-left: 0 !important;
+  }
+}
     
 </style>
 
