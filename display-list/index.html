@@ -3014,7 +3014,7 @@ async function handleUnifiedDownload() {
             if (status !== "全部") fileName += `_${status}`;
             
             // 3. 呼叫前端產檔 (並確保排除詳細紀錄與處理時間)
-            downloadExcelFrontEnd(data, fileName);
+            downloadExcelDirectly(data, fileName);
         }
 
     } catch (err) {
