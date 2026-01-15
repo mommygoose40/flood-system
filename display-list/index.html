@@ -2504,98 +2504,108 @@ function exportReport() {
 
     const isMobile = window.innerWidth < 769;
 
-  if (isMobile) {
-    renderMobileReportOverlay(filteredData);
-  } else {
-    
-    // 隱藏小圓鈕
-    const fb = document.getElementById("floatingButtons");
-    if (fb) fb.style.setProperty("display", "none", "important");
+    if (isMobile) {
+        renderMobileReportOverlay(filteredData);
+    } else {
+        // --- 電腦版邏輯 ---
+        
+        // 1. 隱藏小圓鈕
+        const fb = document.getElementById("floatingButtons");
+        if (fb) fb.style.setProperty("display", "none", "important");
 
-    // 攔截返回鍵
-    history.pushState({ action: "closeReport" }, "");
-    window.onpopstate = function() {
-        if (document.getElementById("reportOverlay")) closeReportLayer();
-    };
+        // 2. 攔截返回鍵
+        history.pushState({ action: "closeReport" }, "");
+        window.onpopstate = function() {
+            if (document.getElementById("reportOverlay")) closeReportLayer();
+        };
 
-    let tableRows = "";
-    filteredData.forEach(r => {
-        let hh = "--", mm = "--";
-        try {
-            const match = r.詳細紀錄.match(/report_(\d+)/);
-            if (match) {
-                const dateObj = new Date(parseInt(match[1], 10));
-                hh = String(dateObj.getHours()).padStart(2, "0");
-                mm = String(dateObj.getMinutes()).padStart(2, "0");
+        let tableRows = "";
+        filteredData.forEach((r, index) => {
+            let hh = "--", mm = "--";
+            try {
+                const match = (r.詳細紀錄 || "").match(/report_(\d+)/);
+                if (match) {
+                    const dateObj = new Date(parseInt(match[1], 10));
+                    hh = String(dateObj.getHours()).padStart(2, "0");
+                    mm = String(dateObj.getMinutes()).padStart(2, "0");
+                }
+            } catch(e) {}
+
+            const note = (r.說明 || "").trim();
+            const voice = (r.語音轉文字 || "").trim();
+            let combinedNote = (note && voice) ? `${note} / ${voice}` : (note || voice);
+
+            let reporterInfo = (r.回報者 || "").trim();
+            if (r.同行者 && r.同行者.trim() !== "") {
+                reporterInfo += `,${r.同行者.trim()}`;
             }
-        } catch(e) {}
 
-        const note = (r.說明 || "").trim();
-        const voice = (r.語音轉文字 || "").trim();
-        let combinedNote = (note && voice) ? `${note} / ${voice}` : (note || voice);
+            const detailLink = `<a href="${r.詳細紀錄}" target="_blank" style="color: #0b5ed7; text-decoration: underline;">連結</a>`;
 
-        let reporterInfo = (r.回報者 || "").trim();
-        if (r.同行者 && r.同行者.trim() !== "") {
-            reporterInfo += `,${r.同行者.trim()}`;
-        }
+            tableRows += `
+                <tr>
+                    <td style="text-align:center;">${index + 1}</td>
+                    <td style="text-align:center;">
+                        ${r.日期 ? normalizeDate(r.日期) : ''}<br/>
+                        <span style="color:#666; font-size:12px;">${hh}:${mm}</span>
+                    </td>
+                    <td>${r.通報類型 || ''}</td>
+                    <td style="color: ${r.狀態 === '異常' ? 'red' : 'black'}; font-weight: ${r.狀態 === '異常' ? 'bold' : 'normal'}">
+                        ${r.狀態 || ''}
+                    </td>
+                    <td>${r.異常分類 || ''}</td>
+                    <td style="text-align:center;">${detailLink}</td>
+                    <td>${combinedNote}</td>
+                    <td>${reporterInfo}</td>
+                    <td>${r.所屬大隊 || ''}</td>
+                </tr>
+            `;
+        });
 
-        const detailLink = `<a href="${r.詳細紀錄}" target="_blank" style="color: #0b5ed7; text-decoration: underline;">連結</a>`;
+        const reportHtml = `
+            <div id="reportOverlay" style="position:fixed; top:0; left:0; width:100%; height:100%; background: rgba(0,0,0,0.6); z-index: 9995; display: flex; justify-content: center; align-items: flex-start; font-family:sans-serif;">
+                <div id="reportContent" style="background: white; width: 95%; max-height: 90vh; margin-top: 3vh; padding: 30px; box-sizing: border-box; overflow-y: auto; border-radius: 10px; position: relative; box-shadow: 0 10px 40px rgba(0,0,0,0.4);">
+                    
+                    <div class="no-print" style="display: flex; justify-content: space-between; margin-bottom: 20px; position: sticky; top: -30px; background: white; padding: 10px 0; z-index: 10;">
+                        <button onclick="downloadExcelWithMsg()" style="padding: 10px 20px; background: #198754; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: bold;">📊 匯出為 Excel 檔</button>
+                        <button onclick="closeReportLayer()" style="padding: 10px 20px; background: #f8f9fa; border: 1px solid #ccc; border-radius: 6px; cursor: pointer; font-weight: bold;">✕ 關閉視窗</button>
+                    </div>
+                    
+                    <h2 style="text-align:center; margin-bottom:20px; font-size: 28px;">巡視紀錄明細報表</h2>
+                    
+                    <table id="targetTable" style="width:100%; border-collapse:collapse; font-size:14px; line-height: 1.5;">
+                        <thead>
+                            <tr style="background:#f2f2f2; position: sticky; top: 40px; z-index: 5;">
+                                <th style="border:1px solid #ccc; padding:12px; width:50px;">編號</th>
+                                <th style="border:1px solid #ccc; padding:12px; width:100px;">時間</th>
+                                <th style="border:1px solid #ccc; padding:12px; width:100px;">通報類型</th>
+                                <th style="border:1px solid #ccc; padding:12px; width:80px;">狀態</th>
+                                <th style="border:1px solid #ccc; padding:12px; width:120px;">異常分類</th>
+                                <th style="border:1px solid #ccc; padding:12px; width:80px;">詳細紀錄</th>
+                                <th style="border:1px solid #ccc; padding:12px;">說明 / 語音轉文字</th>
+                                <th style="border:1px solid #ccc; padding:12px; width:120px;">回報者</th>
+                                <th style="border:1px solid #ccc; padding:12px; width:100px;">大隊</th>
+                            </tr>
+                        </thead>
+                        <tbody>${tableRows}</tbody>
+                    </table>
 
-        tableRows += `
-            <tr>
-                <td>${normalizeDate(r.日期)}</td>
-                <td>${hh}:${mm}</td>
-                <td>${r.通報類型 || ''}</td>
-                <td style="color: ${r.狀態 === '異常' ? 'red' : 'black'}; font-weight: ${r.狀態 === '異常' ? 'bold' : 'normal'}">${r.狀態 || ''}</td>
-                <td>${r.異常分類 || ''}</td>
-                <td style="text-align:center;">${detailLink}</td>
-                <td>${combinedNote}</td>
-                <td>${reporterInfo}</td>
-                <td>${r.所屬大隊 || ''}</td>
-            </tr>
-        `;
-    });
-
-    const reportHtml = `
-        <div id="reportOverlay" style="position:fixed; top:0; left:0; width:100%; height:100%; background: ${isMobile ? 'white' : 'rgba(0,0,0,0.6)'}; z-index: 9995; display: flex; justify-content: center; align-items: flex-start; font-family:sans-serif;">
-            <div id="reportContent" style="background: white; width: ${isMobile ? '100%' : '95%'}; height: ${isMobile ? 'calc(100% - 70px)' : '90vh'}; margin-top: ${isMobile ? '0' : '3vh'}; padding: ${isMobile ? '15px' : '30px'}; box-sizing: border-box; overflow-y: auto; box-shadow: ${isMobile ? 'none' : '0 10px 40px rgba(0,0,0,0.4)'}; border-radius: ${isMobile ? '0' : '10px'}; position: relative;">
-                
-                <div class="no-print" style="display: ${isMobile ? 'none' : 'flex'}; justify-content: space-between; margin-bottom: 20px;">
-                    <button onclick="downloadExcelWithMsg()" style="padding: 10px 20px; background: #198754; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: bold;">📊 匯出為 Excel 檔</button>
-                    <button onclick="closeReportLayer()" style="padding: 10px 20px; background: #f8f9fa; border: 1px solid #ccc; border-radius: 6px; cursor: pointer; font-weight: bold;">✕ 關閉視窗</button>
+                    <div style="margin-top:30px; padding: 20px; text-align:center; color: #888; border-top: 1px dashed #ccc;">
+                        --- 已顯示全部 ${filteredData.length} 筆資料 ---
+                    </div>
                 </div>
-                
-                <h2 style="text-align:center; margin-bottom:10px; font-size: 24px;">巡視紀錄明細報表</h2>
-                
-                <table id="targetTable" style="width:100%; border-collapse:collapse; font-size:13px; line-height: 1.5;">
-                    <thead>
-                        <tr style="background:#f2f2f2;">
-                            <th style="border:1px solid #ccc; padding:10px; text-align: left;">日期</th>
-                            <th style="border:1px solid #ccc; padding:10px; text-align: left;">時間</th>
-                            <th style="border:1px solid #ccc; padding:10px; text-align: left;">通報類型</th>
-                            <th style="border:1px solid #ccc; padding:10px; text-align: left;">狀態</th>
-                            <th style="border:1px solid #ccc; padding:10px; text-align: left;">異常分類</th>
-                            <th style="border:1px solid #ccc; padding:10px; text-align: left;">詳細紀錄</th>
-                            <th style="border:1px solid #ccc; padding:10px; text-align: left;">說明 / 語音轉文字</th>
-                            <th style="border:1px solid #ccc; padding:10px; text-align: left;">回報者</th>
-                            <th style="border:1px solid #ccc; padding:10px; text-align: left;">大隊</th>
-                        </tr>
-                    </thead>
-                    <tbody>${tableRows}</tbody>
-                </table>
-                <div style="margin-top:20px; text-align:right; font-weight:bold; font-size: 15px;">資料總計：${filteredData.length} 筆</div>
+                <style>
+                    #targetTable tr:nth-child(even) { background-color: #fafafa; }
+                    #targetTable td { border:1px solid #ccc; padding:12px; text-align: left; word-break: break-all; }
+                    #targetTable th { border:1px solid #ccc; }
+                </style>
             </div>
-            <style>
-                tr:nth-child(even) { background-color: #fafafa; }
-                td { border:1px solid #ccc; padding:10px; text-align: left; word-break: break-all; }
-            </style>
-        </div>
-    `;
+        `;
 
-    const div = document.createElement('div');
-    div.innerHTML = reportHtml;
-    document.body.appendChild(div.firstElementChild);
-  }
+        const div = document.createElement('div');
+        div.innerHTML = reportHtml;
+        document.body.appendChild(div.firstElementChild);
+    }
 }
 
   function downloadExcelWithMsg() {
@@ -2737,18 +2747,32 @@ function showMessage(text, onConfirm) {
   document.body.appendChild(overlay);
 }
 
-// 專屬關閉函式
 function closeReportLayer() {
     const overlay = document.getElementById("reportOverlay");
-    if (overlay) {
-        overlay.remove();
-        const fb = document.getElementById("floatingButtons");
-        if (fb && window.innerWidth >= 769) {
-            fb.style.setProperty("display", "flex", "important");
-        }
-        if (history.state && history.state.action === "closeReport") {
-            history.back();
-        }
+    if (!overlay) return; // 如果已經沒了就直接跳出，防止重複執行
+
+    // 1. 移除 DOM 元素
+    overlay.remove();
+
+    // 2. 恢復顯示小圓鈕 (不分手機電腦，只要有這個 ID 就恢復)
+    const fb = document.getElementById("floatingButtons");
+    if (fb) {
+        fb.style.setProperty("display", "flex", "important");
+    }
+
+    // 3. 處理瀏覽器歷史紀錄 (返回鍵攔截)
+    // 只有當歷史紀錄狀態確實是我們推入的 "closeReport" 時才後退
+    if (history.state && history.state.action === "closeReport") {
+        // 移除監聽器，避免 history.back() 再次觸發此函式造成無窮迴圈
+        const tempPopState = window.onpopstate;
+        window.onpopstate = null; 
+        
+        history.back();
+        
+        // 稍微延遲後把監聽器裝回來，或是交給下一次開啟時重新設定
+        setTimeout(() => {
+            window.onpopstate = tempPopState;
+        }, 100);
     }
 }
 
@@ -2973,7 +2997,7 @@ async function handleUnifiedDownload() {
             const data = await fetchHistoryFromGAS(params); 
             
             if (!data || data.length === 0) {
-                alert("尚無符合資料!");
+                showMessage("尚無符合資料!");
                 return;
             }
 
@@ -3054,7 +3078,7 @@ function renderMobileReportOverlay(filteredData) {
 
         tableRows += `
             <tr>
-                <td style="text-align:center; color:#888;">${index + 1}</td>
+                <td style="text-align:center;">${index + 1}</td>
                 <td style="text-align:center; white-space:nowrap; line-height:1.4;">
                     ${r.日期 ? normalizeDate(r.日期) : ''}<br/>
                     ${hh}:${mm}
