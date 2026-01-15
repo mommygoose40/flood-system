@@ -2967,7 +2967,7 @@ async function handleUnifiedDownload() {
     // 獲取篩選條件
     const year = document.getElementById('reportYearText').innerText;
     const month = document.getElementById('reportMonthText').innerText.replace(' 月', '');
-    const team = (viewMode === "history") ? document.getElementById('historyTeamText').innerText : document.getElementById('teamText').innerText;
+    const rawTeam = (viewMode === "history") ? document.getElementById('historyTeamText').innerText : document.getElementById('teamText').innerText;
     const type = (viewMode === "history") ? document.getElementById('historyTypeText').innerText : document.getElementById('typeText').innerText;
     const status = document.getElementById('reportStatusText').innerText;
 
@@ -2987,10 +2987,14 @@ async function handleUnifiedDownload() {
             });
         }
 
+        // 💡 關鍵修正：將「第一大隊」轉換為數字「1」傳給 GAS
+        // 如果是「全部」則傳 "all"，其餘只提取數字
+        const teamParam = (rawTeam === "全部") ? "all" : rawTeam.replace(/[^0-9]/g, '');
+
         const params = {
             year: year,
             month: parseInt(month),
-            team: (team === "全部") ? "all" : team,
+            team: teamParam, 
             type: type,
             status: (status === "全部") ? "all" : status
         };
@@ -3000,26 +3004,30 @@ async function handleUnifiedDownload() {
 
         // 1. 無資料攔截
         if (!data || data.length === 0) {
-            showMessage("尚無符合資料!");
+            // 注意：確保您的專案有 showMessage 函式，否則改回 alert
+            if (typeof showMessage === 'function') {
+                showMessage("尚無符合資料!");
+            } else {
+                alert("尚無符合資料!");
+            }
             return; 
         }
 
         if (isMobile) {
-            // 手機版：維持原本邏輯
             renderMobileReportOverlay(data);
         } else {
-            // --- 2. 產出動態檔名 ---
-            let fileName = `${year}${month}_${team}`;
+            // --- 2. 產出動態檔名 (這裡維持中文大隊名稱比較好看) ---
+            let fileName = `${year}${month}_${rawTeam}`;
             if (type !== "全部") fileName += `_${type}`;
             if (status !== "全部") fileName += `_${status}`;
             
-            // 3. 呼叫前端產檔 (並確保排除詳細紀錄與處理時間)
+            // 3. 呼叫前端產檔
             downloadExcelDirectly(data, fileName);
         }
 
     } catch (err) {
-        console.error(err);
-        alert("執行失敗，請稍後再試。");
+        console.error("下載錯誤詳情:", err);
+        alert("執行失敗：" + err.message);
     } finally {
         document.getElementById('loadingMask').style.display = 'none';
     }
