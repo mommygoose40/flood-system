@@ -1337,6 +1337,11 @@ body {
   display: none !important;
 }
     
+    /* 強制隱藏「資料更新中」這行字 */
+#text-update {
+    display: none !important;
+}
+    
 </style>
 
   <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
@@ -1375,6 +1380,7 @@ body {
   <div class="spinner"></div>
 
   <div id="text-loading" class="loadingText">載入中…</div>
+  <div id="text-update" class="loadingText">資料更新中，請耐心等候…</div>
   <div id="text-init" class="loadingText">資料初始化中，請耐心等候…</div>
 
   <!-- 錯誤訊息預留（可選） -->
