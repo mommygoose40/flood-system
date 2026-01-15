@@ -1746,7 +1746,7 @@ body {
 <script>
 
   const VOLUNTEER_API_URL = "https://script.google.com/macros/s/AKfycbxiGSG5hSMO6We-C6cyEJZLgf4Rnbjp-6w9Tmb0qfF9VM6JB4YGEMqj3QRfTzg7Czpc/exec"; 
-const REPORT_GAS_URL = "https://script.google.com/macros/s/AKfycbym7X-sXPx_Ip1O73p1_ju36QEtcZ3rvDQpBKXHMaTWZVbWTfVL00nXh55nhkjaFIhGQg/exec";
+const REPORT_GAS_URL = "https://script.google.com/macros/s/AKfycbyjaB1VJBygBO9GqIvA1IQ3oRKysSxyl40CBOISEloyAqTmP-dBK4h6O7M-xDDV7ZxIhQ/exec";
 
 let globalAdminRecords = [];   // 管理員一次抓全部後存在這邊
 let adminViewDays = 3;        // 預設抓最近兩週，可改 30
@@ -2503,6 +2503,10 @@ function exportReport() {
     }
 
     const isMobile = window.innerWidth < 769;
+
+  if (isMobile) {
+    renderMobileReportOverlay(filteredData);
+  } else {
     
     // 隱藏小圓鈕
     const fb = document.getElementById("floatingButtons");
@@ -2591,6 +2595,7 @@ function exportReport() {
     const div = document.createElement('div');
     div.innerHTML = reportHtml;
     document.body.appendChild(div.firstElementChild);
+  }
 }
 
   function downloadExcelWithMsg() {
@@ -2933,8 +2938,16 @@ async function fetchHistoryFromGAS(params) {
 async function handleUnifiedDownload() {
     const year = document.getElementById('reportYearText').innerText;
     const month = document.getElementById('reportMonthText').innerText.replace(' 月', '');
-    const team = document.getElementById('teamText').innerText;
-    const type = document.getElementById('typeText').innerText;
+
+    // ★★★ 關鍵修正：依 viewMode 讀正確欄位 ★★★
+    const team = (viewMode === "history")
+        ? document.getElementById('historyTeamText').innerText
+        : document.getElementById('teamText').innerText;
+
+    const type = (viewMode === "history")
+        ? document.getElementById('historyTypeText').innerText
+        : document.getElementById('typeText').innerText;
+
     const status = document.getElementById('reportStatusText').innerText;
 
     const isMobile = window.innerWidth < 769;
