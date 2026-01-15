@@ -1742,7 +1742,7 @@ body {
 <script>
 
   const VOLUNTEER_API_URL = "https://script.google.com/macros/s/AKfycbxiGSG5hSMO6We-C6cyEJZLgf4Rnbjp-6w9Tmb0qfF9VM6JB4YGEMqj3QRfTzg7Czpc/exec"; 
-const REPORT_GAS_URL = "https://script.google.com/macros/s/AKfycby4zY3Zy4k_iyx0fCkkCxwrbT3ndXU3naODNCieqdp0voDvvtzag2g2z0TaVFLgBmISew/exec";
+const REPORT_GAS_URL = "https://script.google.com/macros/s/AKfycbyzP9qbLc1X36Q3QYKZhMQiRthB5tbzdDOrmmxYvF2rTMmLhtlUIu9wi5M0TZWce3M6dg/exec";
 
 let globalAdminRecords = [];   // 管理員一次抓全部後存在這邊
 let adminViewDays = 3;        // 預設抓最近兩週，可改 30
@@ -2964,14 +2964,12 @@ async function handleUnifiedDownload() {
     const team = (viewMode === "history") ? document.getElementById('historyTeamText').innerText : document.getElementById('teamText').innerText;
     const type = (viewMode === "history") ? document.getElementById('historyTypeText').innerText : document.getElementById('typeText').innerText;
     const status = document.getElementById('reportStatusText').innerText;
-
     const isMobile = window.innerWidth < 769;
 
     document.getElementById('loadingMask').style.display = 'flex';
 
     try {
         const params = {
-            action: 'exportExcelBinary',
             year: year,
             month: parseInt(month),
             team: (team === "全部") ? "all" : team,
@@ -2979,31 +2977,44 @@ async function handleUnifiedDownload() {
             status: (status === "全部") ? "all" : status
         };
 
-        const query = new URLSearchParams(params).toString();
-        const response = await fetch(`${REPORT_GAS_URL}?${query}`);
-        const result = await response.json();
+        // --- 1. 先抓取 JSON 資料 (維持您原本手機版的資料獲取方式) ---
+        const dataResult = await fetchHistoryFromGAS(params); 
 
-        // ★ 關鍵修正 2：判斷 result 是否為 error
-        if (result.result === "error") {
-            showMessage("尚無符合資料!");
-            return; // 直接中斷，不執行下載
+        // --- 2. 統一攔截無資料 (解決電腦下載空檔問題) ---
+        if (!dataResult || dataResult.length === 0) {
+            alert("【查無資料】\n所選條件下沒有任何紀錄，將不會執行下載。");
+            return; 
         }
 
-        // 若成功，執行下載
-        const byteCharacters = atob(result.data);
-        const byteNumbers = new Array(byteCharacters.length);
-        for (let i = 0; i < byteCharacters.length; i++) {
-            byteNumbers[i] = byteCharacters.charCodeAt(i);
-        }
-        const byteArray = new Uint8Array(byteNumbers);
-        const blob = new Blob([byteArray], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
-        
-        const fileName = result.fileName || `${year}年${month}月_報表.xlsx`;
-        const link = document.createElement('a');
-        link.href = window.URL.createObjectURL(blob);
-        link.download = fileName;
-        link.click();
+        if (isMobile) {
+            // --- 3. 手機版：邏輯完全不變，直接呼叫您原有的預覽函式 ---
+            renderMobileReportOverlay(dataResult);
+        } else {
+            // --- 4. 電腦版：發送下載請求 (已知必有資料，所以 GAS 一定會回傳檔案) ---
+            const downloadParams = {
+                action: 'exportExcelBinary',
+                ...params
+            };
+            const query = new URLSearchParams(downloadParams).toString();
+            const response = await fetch(`${REPORT_GAS_URL}?${query}`);
+            const result = await response.json();
 
+            if (result.result === "success") {
+                const byteCharacters = atob(result.data);
+                const byteNumbers = new Array(byteCharacters.length);
+                for (let i = 0; i < byteCharacters.length; i++) {
+                    byteNumbers[i] = byteCharacters.charCodeAt(i);
+                }
+                const byteArray = new Uint8Array(byteNumbers);
+                const blob = new Blob([byteArray], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+                
+                const fileName = `${year}年${month}月_${team}大隊_報表.xlsx`;
+                const link = document.createElement('a');
+                link.href = window.URL.createObjectURL(blob);
+                link.download = fileName;
+                link.click();
+            }
+        }
     } catch (err) {
         console.error(err);
         alert("連線失敗，請稍後再試。");
