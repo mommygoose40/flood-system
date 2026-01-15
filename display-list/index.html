@@ -1277,7 +1277,7 @@ body {
   /* 1. 取消歷史報表的置中對齊，改為左對齊 */
   #reportPage .admin-inner-wrapper {
     align-items: flex-start !important; /* 讓內容靠左 */
-    padding-left: 0% !important;     /* 👈 關鍵：手動調整此百分比，對齊大隊紀錄的視覺起始點 */
+    padding-left: 3% !important;     /* 👈 關鍵：手動調整此百分比，對齊大隊紀錄的視覺起始點 */
   }
 
   /* 2. 確保每一列不會撐滿，而是維持固定結構 */
@@ -1298,7 +1298,7 @@ body {
   #reportPage .admin-action-row {
     width: 100vw !important;           /* 強制寬度等於視窗寬 */
     position: relative;
-    left: 0% !important;             /* 👈 關鍵：這裡的數值要跟上面的 padding-left 一樣，但要是負數 */
+    left: -3% !important;             /* 👈 關鍵：這裡的數值要跟上面的 padding-left 一樣，但要是負數 */
     display: flex !important;
     justify-content: center !important; /* 實現置中 */
     margin: 30px 0 10px 0 !important;
@@ -1310,6 +1310,32 @@ body {
     width: 140px !important;           /* 維持跟大隊紀錄按鈕一致的寬度 */
     margin: 0 auto !important;
   }
+}
+
+    /* =========================================
+   🚫 修正：關閉報表後左上角的空白框框
+   ========================================= */
+
+/* 1. 確保手機版絕對不顯示電腦版的浮動圓鈕 */
+@media (max-width: 768px) {
+  #floatingButtons {
+    display: none !important;
+  }
+}
+
+/* 2. 強制隱藏所有作為備份用的原生 select */
+#adminFilterArea select, 
+#reportPage select {
+  display: none !important;
+  visibility: hidden !important;
+  opacity: 0 !important;
+  position: absolute !important; /* 讓它不佔空間 */
+  pointer-events: none !important;
+}
+
+/* 3. 檢查是否有空的按鈕或容器被誤顯示 */
+.circle-btn:empty {
+  display: none !important;
 }
     
 </style>
