@@ -2952,26 +2952,30 @@ async function fetchHistoryFromGAS(params) {
 
 // 核心下載邏輯
 async function handleUnifiedDownload() {
+    // 獲取篩選條件
     const year = document.getElementById('reportYearText').innerText;
     const month = document.getElementById('reportMonthText').innerText.replace(' 月', '');
-
-    const team = (viewMode === "history")
-        ? document.getElementById('historyTeamText').innerText
-        : document.getElementById('teamText').innerText;
-
-    const type = (viewMode === "history")
-        ? document.getElementById('historyTypeText').innerText
-        : document.getElementById('typeText').innerText;
-
+    const team = (viewMode === "history") ? document.getElementById('historyTeamText').innerText : document.getElementById('teamText').innerText;
+    const type = (viewMode === "history") ? document.getElementById('historyTypeText').innerText : document.getElementById('typeText').innerText;
     const status = document.getElementById('reportStatusText').innerText;
+
     const isMobile = window.innerWidth < 769;
 
     // 顯示讀取中
     document.getElementById('loadingMask').style.display = 'flex';
-    const textUpdate = document.getElementById('text-update');
-    if(textUpdate) textUpdate.style.display = 'block';
 
     try {
+        // --- 核心 A：檢查並載入 XLSX 元件 (防止尚未就緒) ---
+        if (!isMobile && typeof XLSX === 'undefined') {
+            await new Promise((resolve, reject) => {
+                const script = document.createElement('script');
+                script.src = "https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js";
+                script.onload = resolve;
+                script.onerror = reject;
+                document.head.appendChild(script);
+            });
+        }
+
         const params = {
             year: year,
             month: parseInt(month),
@@ -2980,30 +2984,27 @@ async function handleUnifiedDownload() {
             status: (status === "全部") ? "all" : status
         };
 
-        // 1. 不論裝置，統一先抓取 JSON 資料
+        // --- 核心 B：抓取 JSON 資料 ---
         const data = await fetchHistoryFromGAS(params); 
 
-        // 2. 判斷是否有資料（解決電腦版下載空檔案問題）
         if (!data || data.length === 0) {
-            showMessage("尚無符合資料!");
+            alert("【查無資料】\n所選條件下沒有任何紀錄。");
             return; 
         }
 
         if (isMobile) {
-            // --- 手機版：跳出預覽視窗 ---
             renderMobileReportOverlay(data);
         } else {
-            // --- 電腦版：直接在前端生成 Excel 並下載 ---
-            // 呼叫下方我們準備好的「前端匯出函式」
-            downloadExcelDirectly(data, `${year}年${month}月_${team}大隊_巡視報表`);
+            // 直接呼叫下載，此時 XLSX 一定已經加載完成了
+            const fileName = `${year}年${month}月_${team}大隊_巡視報表`;
+            downloadExcelDirectly(data, fileName);
         }
 
     } catch (err) {
         console.error(err);
-        alert("連線失敗或資料解析錯誤，請稍後再試。");
+        alert("連線失敗或下載元件載入失敗，請稍後再試。");
     } finally {
         document.getElementById('loadingMask').style.display = 'none';
-        if(textUpdate) textUpdate.style.display = 'none';
     }
 }
 
