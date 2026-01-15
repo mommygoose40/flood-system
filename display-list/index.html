@@ -1300,6 +1300,37 @@ body {
   }
 }
 
+    @media (max-width: 768px) {
+  /* 1. 大隊紀錄的時間框寬度（基準） */
+  .timeBtn {
+    width: 110px !important;
+    min-width: 110px !important;
+  }
+
+  /* 2. 歷史報表的框框（大隊、年度、月份、類型、狀態） */
+  /* 計算方式：110px (起) + 110px (迄) + 20px (波浪號與間距) = 240px */
+  #reportPage .fakeSelectBtn {
+    width: 240px !important; 
+    min-width: 240px !important;
+    max-width: 240px !important;
+    flex: none !important;
+  }
+
+  /* 3. 確保所有標籤寬度鎖死在 70px */
+  #adminFilterArea label,
+  #reportPage label {
+    min-width: 70px !important;
+    max-width: 70px !important;
+    display: inline-block !important;
+  }
+
+  /* 4. 歷史報表的主容器對齊設定 */
+  #reportPage .admin-inner-wrapper {
+    align-items: flex-start !important;
+    padding-left: 15px !important; /* 調整此數值可集體左右移動 */
+  }
+}
+
     /* =========================================
    🚫 修正：關閉報表後左上角的空白框框
    ========================================= */
