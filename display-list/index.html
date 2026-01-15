@@ -2547,7 +2547,7 @@ function exportReport() {
                     <td style="text-align:center;">${index + 1}</td>
                     <td style="text-align:center;">
                         ${r.日期 ? normalizeDate(r.日期) : ''}<br/>
-                        <span style="color:#666; font-size:12px;">${hh}:${mm}</span>
+                        ${hh}:${mm}
                     </td>
                     <td>${r.通報類型 || ''}</td>
                     <td style="color: ${r.狀態 === '異常' ? 'red' : 'black'}; font-weight: ${r.狀態 === '異常' ? 'bold' : 'normal'}">
@@ -2570,7 +2570,7 @@ function exportReport() {
                 <div style="font-weight: bold; font-size: 18px;">報表預覽 (共 ${filteredData.length} 筆)</div>
                 <div>
                     <button onclick="downloadExcelWithMsg()" style="padding: 10px 20px; background: #198754; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; margin-right: 10px;">📊 匯出為 Excel 檔</button>
-                    <button onclick="closeReportLayer()" style="padding: 10px 20px; background: #f8f9fa; border: 1px solid #ccc; border-radius: 6px; cursor: pointer; font-weight: bold;">✕ 關閉視窗</button>
+                    <button onclick="closeReportLayer()" style="padding: 10px 20px; background: #dc3545; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: bold;">✕ 關閉視窗</button>
                 </div>
             </div>
             
@@ -2630,69 +2630,69 @@ function downloadExcelFinal() {
     if (!table) return;
 
     const rows = Array.from(table.querySelectorAll("tr"));
-    const allHeaders = Array.from(rows[0].querySelectorAll("th")).map(th => th.innerText.trim());
     
-    // 排除「詳細紀錄」
-    const targetHeaderIndices = [];
-    const finalHeaders = [];
-    allHeaders.forEach((h, idx) => {
-      if (h !== "詳細紀錄") {
-        targetHeaderIndices.push(idx);
-        finalHeaders.push(h);
-      }
-    });
+    // 取得所有原始 Header 文字
+    const allHeaders = Array.from(rows[0].querySelectorAll("th")).map(th => th.innerText.trim());
 
+    /**
+     * 1. 找出需要匯出的欄位索引 (排除 "編號", "紀錄", "詳細紀錄")
+     * 並在遇到 "時間" 時，準備將其拆分為 "日期" 與 "時間"
+     */
     const excelData = [];
+    
     for (let i = 1; i < rows.length; i++) {
       const cells = Array.from(rows[i].querySelectorAll("td"));
       const rowData = {};
-      targetHeaderIndices.forEach((colIdx, headerIdx) => {
-        const headerName = finalHeaders[headerIdx];
-        rowData[headerName] = cells[colIdx] ? cells[colIdx].innerText.trim() : "";
+
+      allHeaders.forEach((headerText, colIdx) => {
+        // 排除編號、紀錄、詳細紀錄
+        if (headerText === "編號" || headerText.includes("紀錄")) return;
+
+        // 處理時間欄位拆分 (因為 UI 上是 日期<br>hh:mm)
+        if (headerText === "時間") {
+          const rawTimeText = cells[colIdx] ? cells[colIdx].innerText.trim() : "";
+          const parts = rawTimeText.split("\n"); // 根據換行拆分
+          rowData["日期"] = parts[0] || "";
+          rowData["時間"] = parts[1] || "";
+        } else {
+          // 其他欄位正常寫入
+          rowData[headerText] = cells[colIdx] ? cells[colIdx].innerText.trim() : "";
+        }
       });
       excelData.push(rowData);
     }
 
-    const worksheet = XLSX.utils.json_to_sheet(excelData);
+    // 定義 Excel 欄位的最終順序
+    const finalHeaders = ["日期", "時間", "類型", "狀態", "分類", "說明", "回報者", "大隊"];
+    
+    // 轉換成 worksheet，並指定欄位順序
+    const worksheet = XLSX.utils.json_to_sheet(excelData, { header: finalHeaders });
 
-    // --- [關鍵] 欄寬控制邏輯 ---
+    // 2. 欄寬控制邏輯
     const colWidths = finalHeaders.map(header => {
-      // 1. 需要【自動微調】的欄位
-      if (header === "日期" || header === "通報類型" || header === "異常分類") {
-        const maxLength = excelData.reduce((max, row) => {
-          const val = row[header] ? row[header].toString() : "";
-          // 計算中文字長度 (中文字算 2 單位)
-          const len = val.split('').reduce((acc, char) => acc + (char.charCodeAt(0) > 255 ? 2 : 1), 0);
-          return Math.max(max, len);
-        }, header.length * 2);
-        return { wch: maxLength + 2 }; 
-      } 
-      // 2. 維持【預設欄寬】的欄位 (時間、狀態、說明、回報者、大隊)
-      else {
-        return { wch: 10 }; // Excel 的標準預設寬度約為 8.43 到 10
+      if (header === "日期" || header === "說明" || header === "回報者") {
+        return { wch: 20 }; // 較長的欄位
+      } else if (header === "時間" || header === "狀態") {
+        return { wch: 10 }; // 短欄位
+      } else {
+        return { wch: 15 };
       }
     });
     worksheet['!cols'] = colWidths;
 
-    // --- [關鍵] 格式化與時間鎖定 ---
+    // 3. 格式化與時間鎖定 (避免 Excel 自動轉換格式)
     Object.keys(worksheet).forEach(key => {
       if (key[0] === '!') return;
-      
-      // 強制所有儲存格為字串 (避免時間偏移、避免日期被改格式)
-      worksheet[key].t = 's'; 
+      worksheet[key].t = 's'; // 全部強制存為字串
       worksheet[key].z = '@'; 
-
-      // 嘗試透過屬性美化 (部分 Excel 版本會繼承格式)
-      if (!worksheet[key].s) worksheet[key].s = {};
-      worksheet[key].s = {
-        font: { name: "微軟正黑體", sz: 11 },
-        alignment: { vertical: "center", horizontal: "left" }
-      };
     });
 
     const workbook = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(workbook, worksheet, "巡視紀錄");
-    XLSX.writeFile(workbook, `巡視紀錄_${new Date().toISOString().slice(0, 10)}.xlsx`);
+    
+    // 下載檔案
+    const fileName = `巡視紀錄_${new Date().toISOString().slice(0, 10)}.xlsx`;
+    XLSX.writeFile(workbook, fileName);
   }
 }
   
