@@ -3189,9 +3189,12 @@ function renderMobileReportOverlay(filteredData) {
     }
 
     // 💡 建立連結：絕對不加 target="_blank"，否則 display 頁面的 history.back 抓不到來源
-    const detailLink = rawUrl 
-        ? `<a href="${finalUrl}" style="color: #0b5ed7; text-decoration: underline; font-weight: bold;">連結</a>`
-        : `<span style="color: #999;">無</span>`;
+    const detailLink = rawUrl
+  ? `<span
+        style="color:#0b5ed7;text-decoration:underline;font-weight:bold;cursor:pointer;"
+        onclick="openDetail('${rawUrl}')"
+     >連結</span>`
+  : `<span style="color:#999;">無</span>`;
 
         tableRows += `
             <tr>
