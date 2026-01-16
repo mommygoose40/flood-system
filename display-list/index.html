@@ -2801,11 +2801,12 @@ function closeReportLayer() {
 
     // 2. 移除 DOM 元素
     if (overlay) overlay.remove();
-    if (wrapper) wrapper.innerHTML = ""; // 清空包裝層內容
 
-  // 💡 正式關閉，所以清除暫存，下次重新進網頁才不會又跳出來
+    // 💡 正式關閉，所以清除暫存，下次重新進網頁才不會又跳出來
     sessionStorage.removeItem('isReportOpen');
     sessionStorage.removeItem('lastReportData');
+  
+    if (wrapper) wrapper.innerHTML = ""; // 清空包裝層內容
 
     // 3. 💡 重要：恢復背景捲動 (解決手機版卡住問題)
     document.body.style.overflow = "auto";
@@ -3142,6 +3143,10 @@ function downloadExcelDirectly(data, fileName) {
  * 修正版：加入編號列、底部提示，並優化標題排列
  */
 function renderMobileReportOverlay(filteredData) {
+    // 💡 記住現在正在看報表，並存下資料
+    sessionStorage.setItem('isReportOpen', 'true');
+    sessionStorage.setItem('lastReportData', JSON.stringify(filteredData));
+  
     const isMobile = window.innerWidth < 769;
     
     const fb = document.getElementById("floatingButtons");
