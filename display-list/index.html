@@ -2627,85 +2627,113 @@ function exportReport() {
 }
 
 function downloadExcelFinal() {
-  if (typeof XLSX === 'undefined') {
-    const script = document.createElement('script');
-    script.src = "https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js";
-    script.onload = () => executeDownload();
-    script.onerror = () => alert("無法載入匯出元件，請檢查網路連線。");
-    document.head.appendChild(script);
-  } else {
-    executeDownload();
-  }
+    // 1. 顯示處理中視窗
+    showMicLoading(0);
 
-  function executeDownload() {
-    const table = document.getElementById("targetTable");
-    if (!table) return;
-
-    // 1. 抓取 UI 上的篩選條件（用於動態檔名）
-    // 假設您的 UI ID 分別是這些，若不同請自行微調
-    const team = document.getElementById('teamText')?.innerText || "";
-    const type = document.getElementById('typeText')?.innerText || "全部";
-    
-    // 計算日期區間 (今天與 14 天前)
-    const endD = new Date();
-    const startD = new Date();
-    startD.setDate(endD.getDate() - 13);
-    const formatDate = (d) => d.toISOString().slice(0, 10).replace(/-/g, '');
-    const dateRange = `${formatDate(startD)}~${formatDate(endD)}`;
-
-    // 2. 處理資料內容 (對應您指定的 10 個標題)
-    const rows = Array.from(table.querySelectorAll("tbody tr")); // 只抓 tbody 避開原標題列
-    const excelData = rows.map(tr => {
-      const cells = tr.querySelectorAll("td");
-      
-      // 處理時間拆分 (假設時間格內容為 "2026/01/16\n18:00")
-      const timeCellText = cells[1] ? cells[1].innerText.trim() : "";
-      const timeParts = timeCellText.split("\n");
-
-      return {
-        "日期": timeParts[0] || "",
-        "時間": timeParts[1] || "",
-        "類型": cells[2] ? cells[2].innerText.trim() : "",
-        "狀態": cells[3] ? cells[3].innerText.trim() : "",
-        "分類": cells[4] ? cells[4].innerText.trim() : "",
-        "說明": cells[6] ? cells[6].innerText.trim() : "", // 跳過第5欄(連結)
-        "回報者": cells[7] ? cells[7].innerText.trim() : "",
-        "回報者ID": "", // 若資料來源有 ID 請在此處對接
-        "同行者": "",   // 若資料來源有同行者請在此處對接
-        "大隊": cells[8] ? cells[8].innerText.trim() : ""
-      };
-    });
-
-    // 3. 設定 Excel 標題與順序
-    const finalHeaders = ["日期", "時間", "類型", "狀態", "分類", "說明", "回報者", "回報者ID", "同行者", "大隊"];
-    const worksheet = XLSX.utils.json_to_sheet(excelData, { header: finalHeaders });
-
-    // 4. 強制欄位格式為字串 (避免日期/時間被 Excel 亂轉)
-    Object.keys(worksheet).forEach(key => {
-      if (key[0] === '!') return;
-      worksheet[key].t = 's';
-      worksheet[key].z = '@';
-    });
-
-    // 5. 設定欄寬
-    worksheet['!cols'] = [
-      { wch: 12 }, { wch: 8 }, { wch: 10 }, { wch: 8 }, { wch: 15 }, 
-      { wch: 40 }, { wch: 12 }, { wch: 15 }, { wch: 15 }, { wch: 10 }
-    ];
-
-    const workbook = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(workbook, worksheet, "巡視紀錄");
-
-    // 6. 產出動態檔名邏輯
-    let fileName = `${dateRange}_${team}`;
-    if (type !== "全部") {
-      fileName += `_${type}`;
+    // 2. 檢查 XLSX 載入狀態
+    if (typeof XLSX === 'undefined') {
+        const script = document.createElement('script');
+        script.src = "https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js";
+        script.onload = () => {
+            // 腳本載入後稍微延遲，確保 UI 已顯示
+            setTimeout(executeDownload, 100);
+        };
+        script.onerror = () => {
+            hideMicLoading();
+            alert("匯出元件載入失敗，請檢查網路連線。");
+        };
+        document.head.appendChild(script);
+    } else {
+        setTimeout(executeDownload, 100);
     }
-    fileName += ".xlsx";
 
-    // 下載檔案
-    XLSX.writeFile(workbook, fileName);
-  }
+    function executeDownload() {
+        try {
+            const table = document.getElementById("targetTable");
+            if (!table) {
+                alert("找不到表格資料");
+                return;
+            }
+
+            // --- A. 處理檔名與日期區間 ---
+            const team = document.getElementById('teamText')?.innerText || "全部";
+            const type = document.getElementById('typeText')?.innerText || "全部";
+            
+            // 計算 14 天區間 (含今天共 14 天)
+            const endD = new Date();
+            const startD = new Date();
+            startD.setDate(endD.getDate() - 13);
+            
+            // 格式化日期為 20260102 (補零處理)
+            const f = (d) => {
+                const y = d.getFullYear();
+                const m = String(d.getMonth() + 1).padStart(2, '0');
+                const day = String(d.getDate()).padStart(2, '0');
+                return `${y}${m}${day}`;
+            };
+            const dateRange = `${f(startD)}~${f(endD)}`;
+
+            // --- B. 處理資料內容 ---
+            const rows = Array.from(table.querySelectorAll("tbody tr"));
+            const excelData = rows.map(tr => {
+                const cells = tr.querySelectorAll("td");
+                
+                // 時間格拆分 (日期 \n 時間)
+                const timeCellText = cells[1] ? cells[1].innerText.trim() : "";
+                const timeParts = timeCellText.split("\n");
+
+                return {
+                    "日期": timeParts[0] || "",
+                    "時間": timeParts[1] || "",
+                    "類型": cells[2] ? cells[2].innerText.trim() : "",
+                    "狀態": cells[3] ? cells[3].innerText.trim() : "",
+                    "分類": cells[4] ? cells[4].innerText.trim() : "",
+                    "說明": cells[6] ? cells[6].innerText.trim() : "", // 跳過連結格
+                    "回報者": cells[7] ? cells[7].innerText.trim() : "",
+                    "回報者ID": "", // 預留位置
+                    "同行者": "",   // 預留位置
+                    "大隊": cells[8] ? cells[8].innerText.trim() : ""
+                };
+            });
+
+            // --- C. 設定 Excel 結構 ---
+            const finalHeaders = ["日期", "時間", "類型", "狀態", "分類", "說明", "回報者", "回報者ID", "同行者", "大隊"];
+            const worksheet = XLSX.utils.json_to_sheet(excelData, { header: finalHeaders });
+
+            // 強制格式為字串 (避免 1900/1/0)
+            Object.keys(worksheet).forEach(key => {
+                if (key[0] === '!') return;
+                worksheet[key].t = 's';
+                worksheet[key].z = '@';
+            });
+
+            // 設定欄寬
+            worksheet['!cols'] = [
+                { wch: 12 }, { wch: 8 }, { wch: 10 }, { wch: 8 }, { wch: 15 }, 
+                { wch: 45 }, { wch: 12 }, { wch: 15 }, { wch: 15 }, { wch: 12 }
+            ];
+
+            const workbook = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(workbook, worksheet, "巡視紀錄");
+
+            // --- D. 產出檔名 ---
+            let fileName = `${dateRange}_${team}`;
+            if (type !== "全部") {
+                fileName += `_${type}`;
+            }
+            fileName += ".xlsx";
+
+            // 下載
+            XLSX.writeFile(workbook, fileName);
+
+        } catch (err) {
+            console.error("匯出錯誤:", err);
+            alert("執行失敗：" + err.message);
+        } finally {
+            // ⚠️ 無論成功失敗都必須關閉 Loading
+            hideMicLoading();
+        }
+    }
 }
   
 function showMessage(text, onConfirm) {
@@ -2988,7 +3016,7 @@ async function handleUnifiedDownload() {
     const status = document.getElementById('reportStatusText').innerText;
 
     const isMobile = window.innerWidth < 769;
-    document.getElementById('loadingMask').style.display = 'flex';
+    showMicLoading(0);
 
     try {
         if (!isMobile && typeof XLSX === 'undefined') {
@@ -3014,7 +3042,8 @@ async function handleUnifiedDownload() {
         const data = await fetchHistoryFromGAS(params); 
 
         if (!data || data.length === 0) {
-            alert("尚無符合資料!");
+            hideMicLoading();
+            showMessage("尚無符合資料!");
             return; 
         }
 
@@ -3031,9 +3060,9 @@ async function handleUnifiedDownload() {
 
     } catch (err) {
         console.error(err);
-        alert("執行失敗，請稍後再試。");
+        showMessage("執行失敗，請稍後再試。");
     } finally {
-        document.getElementById('loadingMask').style.display = 'none';
+        hideMicLoading();
     }
 }
 
