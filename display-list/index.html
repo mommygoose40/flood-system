@@ -2791,34 +2791,42 @@ function showMessage(text, onConfirm) {
 }
 
 function closeReportLayer() {
+    // 1. 找到 Overlay 元素
     const overlay = document.getElementById("reportOverlay");
-    if (!overlay) return; // 如果已經沒了就直接跳出，防止重複執行
+    
+    // 如果找不到 overlay，嘗試檢查 wrapper (容器)
+    const wrapper = document.getElementById("report_container_wrapper");
 
-    // 1. 移除 DOM 元素
-    overlay.remove();
+    if (!overlay && !wrapper) return; 
 
-    // 2. 恢復顯示小圓鈕 (不分手機電腦，只要有這個 ID 就恢復)
+    // 2. 移除 DOM 元素
+    if (overlay) overlay.remove();
+    if (wrapper) wrapper.innerHTML = ""; // 清空包裝層內容
+
+    // 3. 💡 重要：恢復背景捲動 (解決手機版卡住問題)
+    document.body.style.overflow = "auto";
+
+    // 4. 恢復顯示小圓鈕
     const fb = document.getElementById("floatingButtons");
     if (fb) {
         fb.style.setProperty("display", "flex", "important");
     }
 
-    // 3. 處理瀏覽器歷史紀錄 (返回鍵攔截)
-    // 只有當歷史紀錄狀態確實是我們推入的 "closeReport" 時才後退
+    // 5. 處理瀏覽器歷史紀錄 (返回鍵攔截)
+    // 檢查目前狀態，如果是開啟狀態則退回一步，確保網址列恢復正常
     if (history.state && history.state.action === "closeReport") {
-        // 移除監聽器，避免 history.back() 再次觸發此函式造成無窮迴圈
-        const tempPopState = window.onpopstate;
-        window.onpopstate = null; 
+        // 先暫停監聽，避免 history.back() 觸發 popstate 導致重複執行此函式
+        const currentPopState = window.onpopstate;
+        window.onpopstate = null;
         
         history.back();
         
-        // 稍微延遲後把監聽器裝回來，或是交給下一次開啟時重新設定
+        // 稍微延遲後恢復監聽，讓下一次開啟報表時功能正常
         setTimeout(() => {
-            window.onpopstate = tempPopState;
-        }, 100);
+            window.onpopstate = currentPopState;
+        }, 300);
     }
 }
-
 // 專用的觸發列印函式
 function triggerPrint() {
     try {
@@ -3132,18 +3140,17 @@ function downloadExcelDirectly(data, fileName) {
 function renderMobileReportOverlay(filteredData) {
     const isMobile = window.innerWidth < 769;
     
-    // 隱藏小圓鈕 (如果有)
+    // 隱藏小圓鈕
     const fb = document.getElementById("floatingButtons");
     if (fb) fb.style.setProperty("display", "none", "important");
 
-    // 攔截返回鍵
+    // 攔截返回鍵 (當使用者按手機實體返回鍵時，執行關閉)
     history.pushState({ action: "closeReport" }, "");
     window.onpopstate = function() {
         if (document.getElementById("reportOverlay")) closeReportLayer();
     };
 
     let tableRows = "";
-    // 使用 forEach 的第二個參數 index 來產生編號 (從 1 開始)
     filteredData.forEach((r, index) => {
         // 解析時間
         let hh = "--", mm = "--";
@@ -3165,7 +3172,14 @@ function renderMobileReportOverlay(filteredData) {
             reporterInfo += `,${r.同行者.trim()}`;
         }
 
-        const detailLink = `<a href="${r.詳細紀錄}" target="_blank" style="color: #0b5ed7; text-decoration: underline;">連結</a>`;
+        // --- 💡 關鍵改動：移除 target="_blank" 並加上 source=list ---
+        // 這樣點擊後會在同視窗開啟，history.back() 才能回到這裡
+        const cleanUrl = (r.詳細紀錄 || "").trim();
+        const detailUrlWithSource = cleanUrl.includes('?') 
+            ? `${cleanUrl}&source=list` 
+            : `${cleanUrl}?source=list`;
+
+        const detailLink = `<a href="${detailUrlWithSource}" style="color: #0b5ed7; text-decoration: underline; font-weight: bold; padding: 5px;">連結</a>`;
 
         tableRows += `
             <tr>
@@ -3185,22 +3199,15 @@ function renderMobileReportOverlay(filteredData) {
         `;
     });
 
-    // 定義標題清單 (在最前面加上 "編號")
     const headers = ["編號", "時間", "類型", "狀態", "分類", "紀錄", "說明", "回報者", "大隊"];
     
     const thHtml = headers.map(text => {
         const verticalText = text.split('').join('<br>');
         return `
             <th style="
-                border: 1px solid #ccc; 
-                padding: 8px 4px; 
-                text-align: center;
-                vertical-align: middle;
-                background: #f2f2f2;
-                font-size: 14px;
-                line-height: 1.2;
-                white-space: normal;
-                min-width: 1.2em;
+                border: 1px solid #ccc; padding: 8px 4px; text-align: center;
+                vertical-align: middle; background: #f2f2f2; font-size: 14px;
+                line-height: 1.2; white-space: normal; min-width: 1.2em;
             ">${verticalText}</th>
         `;
     }).join('');
@@ -3214,42 +3221,34 @@ function renderMobileReportOverlay(filteredData) {
             
             <div id="reportContent" style="flex: 1; padding: 10px; box-sizing: border-box; overflow-y: auto;">
                 <h2 style="text-align:center; margin-bottom:5px; font-size: 22px; color: #333;">巡視紀錄明細報表</h2>
-                
                 <div style="margin-bottom: 10px; color: #666666; font-size: 13px; text-align: center; font-weight: bold;">
                     ※ 左右滑動以查看完整內容
                 </div>
                 
                 <div style="overflow-x: auto; -webkit-overflow-scrolling: touch;">
                     <table id="targetTable" style="width:100%; border-collapse:collapse; font-size:14px; min-width: 700px; border: 1px solid #ccc;">
-                        <thead>
-                            <tr>${thHtml}</tr>
-                        </thead>
+                        <thead><tr>${thHtml}</tr></thead>
                         <tbody>${tableRows}</tbody>
                     </table>
                 </div>
-
                 <div style="padding: 30px 0; text-align: center; color: #999; font-size: 15px;">
                     --- 已顯示全部 ${filteredData.length} 筆資料 ---
                 </div>
             </div>
-            <style>
-                #targetTable tr:nth-child(even) { background-color: #fafafa; }
-                #targetTable td { 
-                    border: 1px solid #ccc; 
-                    padding: 10px 8px; 
-                    text-align: left; 
-                    word-break: break-all; 
-                    writing-mode: horizontal-tb !important; 
-                }
-            </style>
         </div>
     `;
 
-    // 渲染
-    const div = document.createElement('div');
-    div.id = "report_container_wrapper"; // 給一個明確的 ID 方便管理
-    div.innerHTML = reportHtml;
-    document.body.appendChild(div);
+    // 渲染並確保不重複
+    let wrapper = document.getElementById("report_container_wrapper");
+    if (!wrapper) {
+        wrapper = document.createElement('div');
+        wrapper.id = "report_container_wrapper";
+        document.body.appendChild(wrapper);
+    }
+    wrapper.innerHTML = reportHtml;
+
+    // 💡 修正手機版背景滾動問題
+    document.body.style.overflow = "hidden";
 }
 
 function showLoadingMask() {
