@@ -3177,7 +3177,7 @@ function renderMobileReportOverlay(filteredData) {
             reporterInfo += `,${r.同行者.trim()}`;
         }
 
-        / --- 💡 關鍵改動：移除 target="_blank" 並加上 source=list ---
+        // --- 💡 關鍵改動：移除 target="_blank" 並加上 source=list ---
         // 這樣點擊後會在同視窗開啟，history.back() 才能回到這裡
         const cleanUrl = (r.詳細紀錄 || "").trim();
         const detailUrlWithSource = cleanUrl.includes('?') 
