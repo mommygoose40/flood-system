@@ -2659,10 +2659,19 @@ function downloadExcelFinal() {
             const team = document.getElementById('teamText')?.innerText || "全部";
             const type = document.getElementById('typeText')?.innerText || "全部";
             
-            // 計算 14 天區間 (含今天共 14 天)
-            const endD = new Date();
-            const startD = new Date();
-            startD.setDate(endD.getDate() - 13);
+            // 直接抓 select 的 value (例如 3, 7, 14)
+const dayRangeSelect = document.getElementById('adminDayRange');
+const days = parseInt(dayRangeSelect.value, 10) || 3;
+
+const endD = new Date();
+const startD = new Date();
+startD.setDate(endD.getDate() - (days - 1));
+
+// 設定時間為當天的 00:00:00 確保比較準確
+startD.setHours(0, 0, 0, 0);
+endD.setHours(23, 59, 59, 999);
+
+console.log(`查詢區間：${startD.toLocaleDateString()} ~ ${endD.toLocaleDateString()}`);
             
             // 格式化日期為 20260102 (補零處理)
             const f = (d) => {
