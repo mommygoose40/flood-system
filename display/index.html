@@ -836,9 +836,18 @@ h2 {
     const actionBtn = document.getElementById('main-action-btn');
 
     if (actionBtn) {
-      // 只要不是從 report 來的（包含從 list 來的或直接點連結），都顯示回上一頁
-      if (source !== 'report') {
+      // 💡 邏輯修正：預設通通是「回上一頁」
+      // 只有在明確是從表單送出的 'report' 來源時，才改為「繼續回報」
+      if (source === 'report') {
+        actionBtn.innerText = "繼續回報";
+      } else {
         actionBtn.innerText = "回上一頁";
+      }
+      
+      // 💡 額外檢查：確保按鈕外層容器沒有被 CSS 隱藏
+      const container = document.getElementById('footer-back-container');
+      if (container) {
+        container.style.display = 'flex'; 
       }
     }
   })();
