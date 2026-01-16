@@ -3695,6 +3695,26 @@ function hideMicLoading() {
   if (box) box.style.display = 'none';
   hideScreenLock();
 }
+
+  function showScreenLock() {
+  let overlay = document.getElementById('screenLock');
+  if (!overlay) {
+    overlay = document.createElement('div');
+    overlay.id = 'screenLock';
+    Object.assign(overlay.style, {
+      position: 'fixed',
+      inset: '0',
+      background: 'rgba(0,0,0,0.3)',
+      zIndex: '9998'
+    });
+    document.body.appendChild(overlay);
+  } else overlay.style.display = 'block';
+}
+
+function hideScreenLock() {
+  const overlay = document.getElementById('screenLock');
+  if (overlay) overlay.style.display = 'none';
+}
   
 </script>
 
