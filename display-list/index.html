@@ -3142,121 +3142,133 @@ function downloadExcelDirectly(data, fileName) {
  * 修正版：加入編號列、底部提示，並優化標題排列
  */
 function renderMobileReportOverlay(filteredData) {
-    const isMobile = window.innerWidth < 769;
-    
-    // 隱藏小圓鈕
-    const fb = document.getElementById("floatingButtons");
-    if (fb) fb.style.setProperty("display", "none", "important");
+    const isMobile = window.innerWidth < 769;
+    
+    // 隱藏小圓鈕 (如果有)
+    const fb = document.getElementById("floatingButtons");
+    if (fb) fb.style.setProperty("display", "none", "important");
 
-    // 攔截返回鍵 (當使用者按手機實體返回鍵時，執行關閉)
-    history.pushState({ action: "closeReport" }, "");
-    window.onpopstate = function() {
-        if (document.getElementById("reportOverlay")) closeReportLayer();
-    };
+    // 攔截返回鍵
+    history.pushState({ action: "closeReport" }, "");
+    window.onpopstate = function() {
+        if (document.getElementById("reportOverlay")) closeReportLayer();
+    };
 
-    let tableRows = "";
-    filteredData.forEach((r, index) => {
-        // 解析時間
-        let hh = "--", mm = "--";
-        try {
-            const match = (r.詳細紀錄 || "").match(/report_(\d+)/);
-            if (match) {
-                const dateObj = new Date(parseInt(match[1], 10));
-                hh = String(dateObj.getHours()).padStart(2, "0");
-                mm = String(dateObj.getMinutes()).padStart(2, "0");
-            }
-        } catch(e) {}
+    let tableRows = "";
+    // 使用 forEach 的第二個參數 index 來產生編號 (從 1 開始)
+    filteredData.forEach((r, index) => {
+        // 解析時間
+        let hh = "--", mm = "--";
+        try {
+            const match = (r.詳細紀錄 || "").match(/report_(\d+)/);
+            if (match) {
+                const dateObj = new Date(parseInt(match[1], 10));
+                hh = String(dateObj.getHours()).padStart(2, "0");
+                mm = String(dateObj.getMinutes()).padStart(2, "0");
+            }
+        } catch(e) {}
 
-        const note = (r.說明 || "").trim();
-        const voice = (r.語音轉文字 || "").trim();
-        let combinedNote = (note && voice) ? `${note} / ${voice}` : (note || voice);
+        const note = (r.說明 || "").trim();
+        const voice = (r.語音轉文字 || "").trim();
+        let combinedNote = (note && voice) ? `${note} / ${voice}` : (note || voice);
 
-        let reporterInfo = (r.回報者 || "").trim();
-        if (r.同行者 && r.同行者.trim() !== "") {
-            reporterInfo += `,${r.同行者.trim()}`;
-        }
+        let reporterInfo = (r.回報者 || "").trim();
+        if (r.同行者 && r.同行者.trim() !== "") {
+            reporterInfo += `,${r.同行者.trim()}`;
+        }
 
-        // --- 💡 關鍵改動：移除 target="_blank" 並加上 source=list ---
+        / --- 💡 關鍵改動：移除 target="_blank" 並加上 source=list ---
         // 這樣點擊後會在同視窗開啟，history.back() 才能回到這裡
         const cleanUrl = (r.詳細紀錄 || "").trim();
         const detailUrlWithSource = cleanUrl.includes('?') 
             ? `${cleanUrl}&source=list` 
             : `${cleanUrl}?source=list`;
 
-        const detailLink = `<a href="${detailUrlWithSource}" style="color: #0b5ed7; text-decoration: underline; font-weight: bold; padding: 5px;">連結</a>`;
+        const detailLink = `<a href="${r.詳細紀錄}" target="_blank" style="color: #0b5ed7; text-decoration: underline;">連結</a>`;
 
-        tableRows += `
-            <tr>
-                <td style="text-align:center;">${index + 1}</td>
-                <td style="text-align:center; white-space:nowrap; line-height:1.4;">
-                    ${r.日期 ? normalizeDate(r.日期) : ''}<br/>
-                    ${hh}:${mm}
-                </td>
-                <td style="text-align:center;">${r.通報類型 || ''}</td>
-                <td style="text-align:center; color: ${r.狀態 === '異常' ? 'red' : 'black'}; font-weight: ${r.狀態 === '異常' ? 'bold' : 'normal'}">${r.狀態 || ''}</td>
-                <td style="text-align:center;">${r.異常分類 || ''}</td>
-                <td style="text-align:center;">${detailLink}</td>
-                <td>${combinedNote}</td>
-                <td>${reporterInfo}</td>
-                <td>${r.所屬大隊 || ''}</td>
-            </tr>
-        `;
-    });
+        tableRows += `
+            <tr>
+                <td style="text-align:center;">${index + 1}</td>
+                <td style="text-align:center; white-space:nowrap; line-height:1.4;">
+                    ${r.日期 ? normalizeDate(r.日期) : ''}<br/>
+                    ${hh}:${mm}
+                </td>
+                <td style="text-align:center;">${r.通報類型 || ''}</td>
+                <td style="text-align:center; color: ${r.狀態 === '異常' ? 'red' : 'black'}; font-weight: ${r.狀態 === '異常' ? 'bold' : 'normal'}">${r.狀態 || ''}</td>
+                <td style="text-align:center;">${r.異常分類 || ''}</td>
+                <td style="text-align:center;">${detailLink}</td>
+                <td>${combinedNote}</td>
+                <td>${reporterInfo}</td>
+                <td>${r.所屬大隊 || ''}</td>
+            </tr>
+        `;
+    });
 
-    const headers = ["編號", "時間", "類型", "狀態", "分類", "紀錄", "說明", "回報者", "大隊"];
-    
-    const thHtml = headers.map(text => {
-        const verticalText = text.split('').join('<br>');
-        return `
-            <th style="
-                border: 1px solid #ccc; padding: 8px 4px; text-align: center;
-                vertical-align: middle; background: #f2f2f2; font-size: 14px;
-                line-height: 1.2; white-space: normal; min-width: 1.2em;
-            ">${verticalText}</th>
-        `;
-    }).join('');
+    // 定義標題清單 (在最前面加上 "編號")
+    const headers = ["編號", "時間", "類型", "狀態", "分類", "紀錄", "說明", "回報者", "大隊"];
+    
+    const thHtml = headers.map(text => {
+        const verticalText = text.split('').join('<br>');
+        return `
+            <th style="
+                border: 1px solid #ccc; 
+                padding: 8px 4px; 
+                text-align: center;
+                vertical-align: middle;
+                background: #f2f2f2;
+                font-size: 14px;
+                line-height: 1.2;
+                white-space: normal;
+                min-width: 1.2em;
+            ">${verticalText}</th>
+        `;
+    }).join('');
 
-    const reportHtml = `
-        <div id="reportOverlay" style="position:fixed; top:0; left:0; width:100%; height:100%; background: white; z-index: 9999; display: flex; flex-direction: column; font-family:sans-serif;">
-            <div style="padding: 15px; border-bottom: 1px solid #ddd; display: flex; justify-content: space-between; align-items: center; background: #f8f9fa;">
-                <span style="font-weight: bold;">報表預覽 (共 ${filteredData.length} 筆)</span>
-                <button onclick="closeReportLayer()" style="padding: 8px 15px; background: #dc3545; color: white; border: none; border-radius: 4px; font-size:16px;">關閉</button>
-            </div>
-            
-            <div id="reportContent" style="flex: 1; padding: 10px; box-sizing: border-box; overflow-y: auto;">
-                <h2 style="text-align:center; margin-bottom:5px; font-size: 22px; color: #333;">巡視紀錄明細報表</h2>
-                <div style="margin-bottom: 10px; color: #666666; font-size: 13px; text-align: center; font-weight: bold;">
-                    ※ 左右滑動以查看完整內容
-                </div>
-                
-                <div style="overflow-x: auto; -webkit-overflow-scrolling: touch;">
-                    <table id="targetTable" style="width:100%; border-collapse:collapse; font-size:14px; min-width: 700px; border: 1px solid #ccc;">
-                        <thead><tr>${thHtml}</tr></thead>
-                        <tbody>${tableRows}</tbody>
-                    </table>
-                </div>
-                <div style="padding: 30px 0; text-align: center; color: #999; font-size: 15px;">
-                    --- 已顯示全部 ${filteredData.length} 筆資料 ---
-                </div>
-            </div>
-        </div>
-    `;
+    const reportHtml = `
+        <div id="reportOverlay" style="position:fixed; top:0; left:0; width:100%; height:100%; background: white; z-index: 9999; display: flex; flex-direction: column; font-family:sans-serif;">
+            <div style="padding: 15px; border-bottom: 1px solid #ddd; display: flex; justify-content: space-between; align-items: center; background: #f8f9fa;">
+                <span style="font-weight: bold;">報表預覽 (共 ${filteredData.length} 筆)</span>
+                <button onclick="closeReportLayer()" style="padding: 8px 15px; background: #dc3545; color: white; border: none; border-radius: 4px; font-size:16px;">關閉</button>
+            </div>
+            
+            <div id="reportContent" style="flex: 1; padding: 10px; box-sizing: border-box; overflow-y: auto;">
+                <h2 style="text-align:center; margin-bottom:5px; font-size: 22px; color: #333;">巡視紀錄明細報表</h2>
+                
+                <div style="margin-bottom: 10px; color: #666666; font-size: 13px; text-align: center; font-weight: bold;">
+                    ※ 左右滑動以查看完整內容
+                </div>
+                
+                <div style="overflow-x: auto; -webkit-overflow-scrolling: touch;">
+                    <table id="targetTable" style="width:100%; border-collapse:collapse; font-size:14px; min-width: 700px; border: 1px solid #ccc;">
+                        <thead>
+                            <tr>${thHtml}</tr>
+                        </thead>
+                        <tbody>${tableRows}</tbody>
+                    </table>
+                </div>
 
-    // 渲染並確保不重複
-    let wrapper = document.getElementById("report_container_wrapper");
-    if (!wrapper) {
-        wrapper = document.createElement('div');
-        wrapper.id = "report_container_wrapper";
-        document.body.appendChild(wrapper);
-    }
-    wrapper.innerHTML = reportHtml;
+                <div style="padding: 30px 0; text-align: center; color: #999; font-size: 15px;">
+                    --- 已顯示全部 ${filteredData.length} 筆資料 ---
+                </div>
+            </div>
+            <style>
+                #targetTable tr:nth-child(even) { background-color: #fafafa; }
+                #targetTable td { 
+                    border: 1px solid #ccc; 
+                    padding: 10px 8px; 
+                    text-align: left; 
+                    word-break: break-all; 
+                    writing-mode: horizontal-tb !important; 
+                }
+            </style>
+        </div>
+    `;
 
-  // 💡 將目前的資料暫存在 Session 中，這在分頁關閉前都有效
-    sessionStorage.setItem('lastReportData', JSON.stringify(filteredData));
-    sessionStorage.setItem('isReportOpen', 'true');
-
-    // 💡 修正手機版背景滾動問題
-    document.body.style.overflow = "hidden";
+    // 渲染
+    const div = document.createElement('div');
+    div.id = "report_container_wrapper"; // 給一個明確的 ID 方便管理
+    div.innerHTML = reportHtml;
+    document.body.appendChild(div);
 }
 
 function showLoadingMask() {
