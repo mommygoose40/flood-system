@@ -2174,7 +2174,7 @@ function closeWindowSafe() {
      window.addEventListener('load', () => {
   const urlParams = new URLSearchParams(location.search);
   const source = urlParams.get('source');
-  const btnBack = document.getElementById('btn-back-text');
+  const btnBack = document.getElementById('footer-back');
 
   if (btnBack) {
     // 只有在明確標註是從 report 報表過來時才顯示「繼續回報」
