@@ -1832,10 +1832,36 @@ function getLocalReportsCacheMap() {
 
 // === 防止回上一頁重新初始化（BFCache 支援） ===
 window.addEventListener("pageshow", function (event) {
-  if (event.persisted) {
-    console.log("BFCache restore → 不執行 main()");
-    return;
-  }
+    if (event.persisted) return;
+
+    const isReportOpen = sessionStorage.getItem('isReportOpen');
+    const savedData = sessionStorage.getItem('lastReportData');
+    const savedViewMode = sessionStorage.getItem('lastViewMode'); // 'history' 或 'admin'
+
+    if (isReportOpen === 'true' && savedData) {
+        // 1. 恢復正確的分頁顯示
+        const listView = document.getElementById('listView');
+        const reportPage = document.getElementById('reportPage');
+        const pageTitle = document.getElementById('pageTitle');
+
+        if (savedViewMode === 'history') {
+            // 💡 恢復到歷史報表分頁
+            if (listView) listView.style.display = 'none';
+            if (reportPage) reportPage.style.display = 'block';
+            if (pageTitle) pageTitle.innerText = "歷史報表查詢"; // 或是你想要的標題
+        } else {
+            // 💡 恢復到大隊紀錄分頁
+            if (listView) listView.style.display = 'block';
+            if (reportPage) reportPage.style.display = 'none';
+            if (pageTitle) pageTitle.innerText = "回報紀錄";
+        }
+
+        // 2. 重新彈出報表視窗
+        const data = JSON.parse(savedData);
+        setTimeout(() => {
+            renderMobileReportOverlay(data);
+        }, 150);
+    }
 });
 
 main();
