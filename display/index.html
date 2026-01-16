@@ -2121,25 +2121,25 @@ function hideScreenLock() {
   if (overlay) overlay.style.display = 'none';
 }
 
-function closeWindowSafe() {
-  window.location.href = "https://flood-system.vercel.app/home";  // 替換成你的主選單頁
-}
-
 function handleGoBack() {
   const urlParams = new URLSearchParams(location.search);
   const source = urlParams.get('source');
 
-  if (source === 'report') {
-    history.back();
+  // 情況 A：如果有歷史紀錄（使用者是從清單點進來的）
+  if (window.history.length > 1) {
+    history.back(); // 這會回到上一頁，且通常會保留原本展開的視窗狀態
     return;
   }
 
-  if (source === 'list') {
-    history.back();
-    return;
-  }
+  // 情況 B：如果是從 Excel 點開的新分頁（沒有歷史紀錄）
+  // 我們無法「回到」一個不存在的狀態，只能導向主查詢頁面
+  // 如果你希望「點開就直接是展開狀態」，這需要在 index.html 另外實作自動讀取參數
+  window.location.href = "https://flood-system.vercel.app/report_history?autoOpen=true";
+}
 
-  history.back();
+function closeWindowSafe() {
+  // 回主選單邏輯維持不變
+  window.location.href = "https://flood-system.vercel.app/home";
 }
 
 (function() {
@@ -2170,6 +2170,22 @@ function handleGoBack() {
   // 其他情況預設：顯示
   footer.style.display = 'flex';
 })();
+
+     window.addEventListener('load', () => {
+  const urlParams = new URLSearchParams(location.search);
+  const source = urlParams.get('source');
+  const btnBack = document.getElementById('btn-back-text');
+
+  if (btnBack) {
+    // 只有在明確標註是從 report 報表過來時才顯示「繼續回報」
+    // 其他情況（如從 list、Excel 或無來源）一律顯示「回上一頁」
+    if (source === 'report') {
+      btnBack.innerText = "繼續回報";
+    } else {
+      btnBack.innerText = "回上一頁";
+    }
+  }
+});
   </script>
 </body>
 </html>
