@@ -824,10 +824,25 @@ h2 {
     </div>
   </div>
 
-  <div class="footer-actions" id="footer-back">
+  <div class="footer-actions" id="footer-back-container">
   <button id="main-action-btn" class="btn-secondary gray-btn" onclick="handleGoBack()">繼續回報</button>
   <button class="btn-secondary gray-btn" onclick="closeWindowSafe()">回主選單</button>
 </div>
+
+<script>
+  (function() {
+    const urlParams = new URLSearchParams(location.search);
+    const source = urlParams.get('source');
+    const actionBtn = document.getElementById('main-action-btn');
+
+    if (actionBtn) {
+      // 只要不是從 report 來的（包含從 list 來的或直接點連結），都顯示回上一頁
+      if (source !== 'report') {
+        actionBtn.innerText = "回上一頁";
+      }
+    }
+  })();
+</script>
   </div>
 
    <script>
@@ -2171,22 +2186,6 @@ function closeWindowSafe() {
   footer.style.display = 'flex';
 })();
 
-     window.addEventListener('load', () => {
-  const urlParams = new URLSearchParams(location.search);
-  const source = urlParams.get('source');
-  
-  // 💡 改抓按鈕本身，而不是外層 div
-  const actionBtn = document.getElementById('main-action-btn');
-
-  if (actionBtn) {
-    if (source === 'report') {
-      actionBtn.innerText = "繼續回報";
-    } else {
-      // 來自 list、Excel 或無來源時，只改這顆按鈕的文字
-      actionBtn.innerText = "回上一頁";
-    }
-  }
-});
   </script>
 </body>
 </html>
