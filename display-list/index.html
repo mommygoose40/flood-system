@@ -3665,34 +3665,41 @@ document.addEventListener("DOMContentLoaded", () => {
         padding: '18px 26px',
         boxShadow: '0 2px 12px rgba(0,0,0,0.25)',
         display: 'flex',
-        alignItems: 'center',
+        alignItems: 'center',       // 垂直置中
         justifyContent: 'center',
         gap: '10px',
         zIndex: '9999',
         fontSize: '21px',
         color: '#333',
-        boxSizing: 'border-box',
-        whiteSpace: 'nowrap',
-        lineHeight: '1'             // 💡 強制行高為 1，避免文字底部空白撐開
+        // 移除 border-box，回歸原始容器高度感
+        whiteSpace: 'nowrap'
       });
+
       box.innerHTML = `
         <div class="spinner" style="
-          width:22px;height:22px;
-          border:3px solid #ccc;
-          border-top:3px solid #0b5ed7;
-          border-radius:50%;
-          animation:spin 1s linear infinite;
-          box-sizing: border-box;   /* 💡 確保邊框不撐大圓圈 */
+          width: 22px;              /* 回歸原始寬度 */
+          height: 22px;             /* 回歸原始高度 */
+          border: 3px solid #ccc;
+          border-top: 3px solid #0b5ed7;
+          border-radius: 50%;
+          animation: spin 1s linear infinite;
           flex-shrink: 0;
-          display: inline-block;    /* 💡 確保轉圈本身是區塊屬性 */
-          "></div>
-        <span>處理中...</span>
+          margin-top: 1px;          /* 💡 微調 1px 修正視覺偏上的問題 */
+        "></div>
+        <span style="line-height: 1;">處理中...</span>
       `;
-      const style = document.createElement('style');
-      style.textContent = `@keyframes spin { from{transform:rotate(0deg);} to{transform:rotate(360deg);} }`;
-      document.head.appendChild(style);
+
+      if (!document.getElementById('micSpinStyle')) {
+        const style = document.createElement('style');
+        style.id = 'micSpinStyle';
+        style.textContent = `@keyframes spin { from{transform:rotate(0deg);} to{transform:rotate(360deg);} }`;
+        document.head.appendChild(style);
+      }
+      
       document.body.appendChild(box);
-    } else box.style.display = 'flex';
+    } else {
+      box.style.display = 'flex';
+    }
   }, delay);
 }
   
