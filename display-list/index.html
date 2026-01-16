@@ -3662,31 +3662,33 @@ document.addEventListener("DOMContentLoaded", () => {
         transform: 'translate(-50%, -50%)',
         background: 'rgba(255,255,255,0.96)',
         borderRadius: '12px',
-        padding: '18px 26px',
+        // 💡 縮減上下 padding (18px -> 14px)，增加左右比例，讓它變「扁」
+        padding: '14px 26px', 
         boxShadow: '0 2px 12px rgba(0,0,0,0.25)',
         display: 'flex',
-        alignItems: 'center',       // 垂直置中
+        alignItems: 'center',
         justifyContent: 'center',
-        gap: '10px',
+        gap: '12px',
         zIndex: '9999',
         fontSize: '21px',
         color: '#333',
-        // 移除 border-box，回歸原始容器高度感
-        whiteSpace: 'nowrap'
+        whiteSpace: 'nowrap',
+        // 💡 強制設定行高與字體大小一致，消除多餘的垂直空間
+        lineHeight: '21px' 
       });
 
       box.innerHTML = `
         <div class="spinner" style="
-          width: 22px;              /* 回歸原始寬度 */
-          height: 22px;             /* 回歸原始高度 */
+          width: 22px;
+          height: 22px;
           border: 3px solid #ccc;
           border-top: 3px solid #0b5ed7;
           border-radius: 50%;
           animation: spin 1s linear infinite;
           flex-shrink: 0;
-          margin-top: 1px;          /* 💡 微調 1px 修正視覺偏上的問題 */
+          /* 💡 移除 margin-top，改用 flex 自然置中 */
         "></div>
-        <span style="line-height: 1;">處理中...</span>
+        <span style="display: inline-block; height: 21px; line-height: 21px;">處理中...</span>
       `;
 
       if (!document.getElementById('micSpinStyle')) {
