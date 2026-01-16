@@ -2582,11 +2582,11 @@ function exportReport() {
                     <tr style="background:#f2f2f2; position: sticky; top: 45px; z-index: 15; box-shadow: 0 2px 2px rgba(0,0,0,0.1);">
                         <th style="border:1px solid #ccc; padding:12px; width:50px;">編號</th>
                         <th style="border:1px solid #ccc; padding:12px; width:110px;">時間</th>
-                        <th style="border:1px solid #ccc; padding:12px; width:100px;">通報類型</th>
+                        <th style="border:1px solid #ccc; padding:12px; width:100px;">類型</th>
                         <th style="border:1px solid #ccc; padding:12px; width:80px;">狀態</th>
-                        <th style="border:1px solid #ccc; padding:12px; width:120px;">異常分類</th>
-                        <th style="border:1px solid #ccc; padding:12px; width:80px;">詳細紀錄</th>
-                        <th style="border:1px solid #ccc; padding:12px;">說明 / 語音轉文字</th>
+                        <th style="border:1px solid #ccc; padding:12px; width:120px;">分類</th>
+                        <th style="border:1px solid #ccc; padding:12px; width:80px;">紀錄</th>
+                        <th style="border:1px solid #ccc; padding:12px;">說明</th>
                         <th style="border:1px solid #ccc; padding:12px; width:130px;">回報者</th>
                         <th style="border:1px solid #ccc; padding:12px; width:100px;">大隊</th>
                     </tr>
@@ -2621,6 +2621,7 @@ function downloadExcelFinal() {
     const script = document.createElement('script');
     script.src = "https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js";
     script.onload = () => executeDownload();
+    script.onerror = () => alert("無法載入匯出元件，請檢查網路連線。");
     document.head.appendChild(script);
   } else {
     executeDownload();
@@ -2630,69 +2631,69 @@ function downloadExcelFinal() {
     const table = document.getElementById("targetTable");
     if (!table) return;
 
-    const rows = Array.from(table.querySelectorAll("tr"));
+    // 1. 抓取 UI 上的篩選條件（用於動態檔名）
+    // 假設您的 UI ID 分別是這些，若不同請自行微調
+    const team = document.getElementById('teamText')?.innerText || "";
+    const type = document.getElementById('typeText')?.innerText || "全部";
     
-    // 取得所有原始 Header 文字
-    const allHeaders = Array.from(rows[0].querySelectorAll("th")).map(th => th.innerText.trim());
+    // 計算日期區間 (今天與 14 天前)
+    const endD = new Date();
+    const startD = new Date();
+    startD.setDate(endD.getDate() - 14);
+    const formatDate = (d) => d.toISOString().slice(0, 10).replace(/-/g, '');
+    const dateRange = `${formatDate(startD)}~${formatDate(endD)}`;
 
-    /**
-     * 1. 找出需要匯出的欄位索引 (排除 "編號", "紀錄", "詳細紀錄")
-     * 並在遇到 "時間" 時，準備將其拆分為 "日期" 與 "時間"
-     */
-    const excelData = [];
-    
-    for (let i = 1; i < rows.length; i++) {
-      const cells = Array.from(rows[i].querySelectorAll("td"));
-      const rowData = {};
+    // 2. 處理資料內容 (對應您指定的 10 個標題)
+    const rows = Array.from(table.querySelectorAll("tbody tr")); // 只抓 tbody 避開原標題列
+    const excelData = rows.map(tr => {
+      const cells = tr.querySelectorAll("td");
+      
+      // 處理時間拆分 (假設時間格內容為 "2026/01/16\n18:00")
+      const timeCellText = cells[1] ? cells[1].innerText.trim() : "";
+      const timeParts = timeCellText.split("\n");
 
-      allHeaders.forEach((headerText, colIdx) => {
-        // 排除編號、紀錄、詳細紀錄
-        if (headerText === "編號" || headerText.includes("紀錄")) return;
+      return {
+        "日期": timeParts[0] || "",
+        "時間": timeParts[1] || "",
+        "類型": cells[2] ? cells[2].innerText.trim() : "",
+        "狀態": cells[3] ? cells[3].innerText.trim() : "",
+        "分類": cells[4] ? cells[4].innerText.trim() : "",
+        "說明": cells[6] ? cells[6].innerText.trim() : "", // 跳過第5欄(連結)
+        "回報者": cells[7] ? cells[7].innerText.trim() : "",
+        "回報者ID": "", // 若資料來源有 ID 請在此處對接
+        "同行者": "",   // 若資料來源有同行者請在此處對接
+        "大隊": cells[8] ? cells[8].innerText.trim() : ""
+      };
+    });
 
-        // 處理時間欄位拆分 (因為 UI 上是 日期<br>hh:mm)
-        if (headerText === "時間") {
-          const rawTimeText = cells[colIdx] ? cells[colIdx].innerText.trim() : "";
-          const parts = rawTimeText.split("\n"); // 根據換行拆分
-          rowData["日期"] = parts[0] || "";
-          rowData["時間"] = parts[1] || "";
-        } else {
-          // 其他欄位正常寫入
-          rowData[headerText] = cells[colIdx] ? cells[colIdx].innerText.trim() : "";
-        }
-      });
-      excelData.push(rowData);
-    }
-
-    // 定義 Excel 欄位的最終順序
-    const finalHeaders = ["日期", "時間", "類型", "狀態", "分類", "說明", "回報者", "大隊"];
-    
-    // 轉換成 worksheet，並指定欄位順序
+    // 3. 設定 Excel 標題與順序
+    const finalHeaders = ["日期", "時間", "類型", "狀態", "分類", "說明", "回報者", "回報者ID", "同行者", "大隊"];
     const worksheet = XLSX.utils.json_to_sheet(excelData, { header: finalHeaders });
 
-    // 2. 欄寬控制邏輯
-    const colWidths = finalHeaders.map(header => {
-      if (header === "日期" || header === "說明" || header === "回報者") {
-        return { wch: 20 }; // 較長的欄位
-      } else if (header === "時間" || header === "狀態") {
-        return { wch: 10 }; // 短欄位
-      } else {
-        return { wch: 15 };
-      }
-    });
-    worksheet['!cols'] = colWidths;
-
-    // 3. 格式化與時間鎖定 (避免 Excel 自動轉換格式)
+    // 4. 強制欄位格式為字串 (避免日期/時間被 Excel 亂轉)
     Object.keys(worksheet).forEach(key => {
       if (key[0] === '!') return;
-      worksheet[key].t = 's'; // 全部強制存為字串
-      worksheet[key].z = '@'; 
+      worksheet[key].t = 's';
+      worksheet[key].z = '@';
     });
+
+    // 5. 設定欄寬
+    worksheet['!cols'] = [
+      { wch: 12 }, { wch: 8 }, { wch: 10 }, { wch: 8 }, { wch: 15 }, 
+      { wch: 40 }, { wch: 12 }, { wch: 15 }, { wch: 15 }, { wch: 10 }
+    ];
 
     const workbook = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(workbook, worksheet, "巡視紀錄");
-    
+
+    // 6. 產出動態檔名邏輯
+    let fileName = `${dateRange}_${team}`;
+    if (type !== "全部") {
+      fileName += `_${type}`;
+    }
+    fileName += ".xlsx";
+
     // 下載檔案
-    const fileName = `巡視紀錄_${new Date().toISOString().slice(0, 10)}.xlsx`;
     XLSX.writeFile(workbook, fileName);
   }
 }
@@ -2966,29 +2967,30 @@ async function fetchHistoryFromGAS(params) {
 async function handleUnifiedDownload() {
     // 獲取篩選條件
     const year = document.getElementById('reportYearText').innerText;
-    const month = document.getElementById('reportMonthText').innerText.replace(' 月', '');
+    const monthText = document.getElementById('reportMonthText').innerText;
+    const month = monthText.replace(' 月', '').trim();
+    
+    // 💡 補零邏輯：確保 9 -> 09
+    const formattedMonth = String(month).padStart(2, '0');
+    
     const rawTeam = (viewMode === "history") ? document.getElementById('historyTeamText').innerText : document.getElementById('teamText').innerText;
     const type = (viewMode === "history") ? document.getElementById('historyTypeText').innerText : document.getElementById('typeText').innerText;
     const status = document.getElementById('reportStatusText').innerText;
 
     const isMobile = window.innerWidth < 769;
-
     document.getElementById('loadingMask').style.display = 'flex';
 
     try {
-        // --- 核心 A：檢查元件 ---
         if (!isMobile && typeof XLSX === 'undefined') {
             await new Promise((resolve, reject) => {
                 const script = document.createElement('script');
                 script.src = "https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js";
-                script.onload = resolve;
-                script.onerror = reject;
+                script.onload = resolve; script.onerror = reject;
                 document.head.appendChild(script);
             });
         }
 
-        // 💡 關鍵修正：將「第一大隊」轉換為數字「1」傳給 GAS
-        // 如果是「全部」則傳 "all"，其餘只提取數字
+        // 傳給 GAS 的參數 (大隊轉數字)
         const teamParam = (rawTeam === "全部") ? "all" : rawTeam.replace(/[^0-9]/g, '');
 
         const params = {
@@ -2999,35 +3001,27 @@ async function handleUnifiedDownload() {
             status: (status === "全部") ? "all" : status
         };
 
-        // --- 核心 B：抓取 JSON 資料 ---
         const data = await fetchHistoryFromGAS(params); 
 
-        // 1. 無資料攔截
         if (!data || data.length === 0) {
-            // 注意：確保您的專案有 showMessage 函式，否則改回 alert
-            if (typeof showMessage === 'function') {
-                showMessage("尚無符合資料!");
-            } else {
-                alert("尚無符合資料!");
-            }
+            alert("尚無符合資料!");
             return; 
         }
 
         if (isMobile) {
             renderMobileReportOverlay(data);
         } else {
-            // --- 2. 產出動態檔名 (這裡維持中文大隊名稱比較好看) ---
-            let fileName = `${year}${month}_${rawTeam}`;
+            // 💡 使用格式化後的年月作為檔名
+            let fileName = `${year}${formattedMonth}_${rawTeam}`;
             if (type !== "全部") fileName += `_${type}`;
             if (status !== "全部") fileName += `_${status}`;
             
-            // 3. 呼叫前端產檔
             downloadExcelDirectly(data, fileName);
         }
 
     } catch (err) {
-        console.error("下載錯誤詳情:", err);
-        alert("執行失敗：" + err.message);
+        console.error(err);
+        alert("執行失敗，請稍後再試。");
     } finally {
         document.getElementById('loadingMask').style.display = 'none';
     }
