@@ -2802,9 +2802,10 @@ function closeReportLayer() {
     // 2. 移除 DOM 元素
     if (overlay) overlay.remove();
 
-    // 💡 正式關閉，所以清除暫存，下次重新進網頁才不會又跳出來
+    // 💡 清除所有暫存狀態
     sessionStorage.removeItem('isReportOpen');
     sessionStorage.removeItem('lastReportData');
+    sessionStorage.removeItem('lastViewMode');
   
     if (wrapper) wrapper.innerHTML = ""; // 清空包裝層內容
 
@@ -3143,9 +3144,10 @@ function downloadExcelDirectly(data, fileName) {
  * 修正版：加入編號列、底部提示，並優化標題排列
  */
 function renderMobileReportOverlay(filteredData) {
-    // 💡 記住現在正在看報表，並存下資料
+    // 💡 除了存資料，還要存目前的 viewMode (是 history 還是 admin)
     sessionStorage.setItem('isReportOpen', 'true');
     sessionStorage.setItem('lastReportData', JSON.stringify(filteredData));
+    sessionStorage.setItem('lastViewMode', typeof viewMode !== 'undefined' ? viewMode : 'admin');
   
     const isMobile = window.innerWidth < 769;
     
