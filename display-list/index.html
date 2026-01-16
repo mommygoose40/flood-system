@@ -3665,9 +3665,9 @@ document.addEventListener("DOMContentLoaded", () => {
         padding: '18px 26px',
         boxShadow: '0 2px 12px rgba(0,0,0,0.25)',
         display: 'flex',
-        alignItems: 'center',       // 💡 確保垂直置中
+        alignItems: 'center',
         justifyContent: 'center',
-        gap: '10px',                // 💡 間距稍微加大一點點更美觀
+        gap: '10px',
         zIndex: '9999',
         fontSize: '21px',
         color: '#333',
@@ -3675,39 +3675,24 @@ document.addEventListener("DOMContentLoaded", () => {
         whiteSpace: 'nowrap',
         lineHeight: '1'             // 💡 強制行高為 1，避免文字底部空白撐開
       });
-
       box.innerHTML = `
         <div class="spinner" style="
-          width: 22px;
-          height: 22px;
-          border: 3px solid #ccc;
-          border-top: 3px solid #0b5ed7;
-          border-radius: 50%;
-          animation: spin 1s linear infinite;
+          width:22px;height:22px;
+          border:3px solid #ccc;
+          border-top:3px solid #0b5ed7;
+          border-radius:50%;
+          animation:spin 1s linear infinite;
           box-sizing: border-box;   /* 💡 確保邊框不撐大圓圈 */
           flex-shrink: 0;
           display: inline-block;    /* 💡 確保轉圈本身是區塊屬性 */
-        "></div>
-        <span style="
-          display: inline-block; 
-          line-height: 1; 
-          margin: 0; 
-          padding: 0;
-          vertical-align: middle;
-        ">處理中...</span>
+          "></div>
+        <span>處理中...</span>
       `;
-
-      if (!document.getElementById('micSpinStyle')) {
-        const style = document.createElement('style');
-        style.id = 'micSpinStyle';
-        style.textContent = `@keyframes spin { from{transform:rotate(0deg);} to{transform:rotate(360deg);} }`;
-        document.head.appendChild(style);
-      }
-      
+      const style = document.createElement('style');
+      style.textContent = `@keyframes spin { from{transform:rotate(0deg);} to{transform:rotate(360deg);} }`;
+      document.head.appendChild(style);
       document.body.appendChild(box);
-    } else {
-      box.style.display = 'flex';
-    }
+    } else box.style.display = 'flex';
   }, delay);
 }
   
