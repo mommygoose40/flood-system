@@ -825,7 +825,7 @@ h2 {
   </div>
 
   <div class="footer-actions" id="footer-back">
-  <button class="btn-secondary gray-btn" onclick="handleGoBack()">繼續回報</button>
+  <button id="main-action-btn" class="btn-secondary gray-btn" onclick="handleGoBack()">繼續回報</button>
   <button class="btn-secondary gray-btn" onclick="closeWindowSafe()">回主選單</button>
 </div>
   </div>
@@ -2174,15 +2174,16 @@ function closeWindowSafe() {
      window.addEventListener('load', () => {
   const urlParams = new URLSearchParams(location.search);
   const source = urlParams.get('source');
-  const btnBack = document.getElementById('footer-back');
+  
+  // 💡 改抓按鈕本身，而不是外層 div
+  const actionBtn = document.getElementById('main-action-btn');
 
-  if (btnBack) {
-    // 只有在明確標註是從 report 報表過來時才顯示「繼續回報」
-    // 其他情況（如從 list、Excel 或無來源）一律顯示「回上一頁」
+  if (actionBtn) {
     if (source === 'report') {
-      btnBack.innerText = "繼續回報";
+      actionBtn.innerText = "繼續回報";
     } else {
-      btnBack.innerText = "回上一頁";
+      // 來自 list、Excel 或無來源時，只改這顆按鈕的文字
+      actionBtn.innerText = "回上一頁";
     }
   }
 });
