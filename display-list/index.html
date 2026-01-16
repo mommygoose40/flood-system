@@ -3178,23 +3178,18 @@ function renderMobileReportOverlay(filteredData) {
             reporterInfo += `,${r.同行者.trim()}`;
         }
 
-        // 💡 關鍵：確保抓取 URL 的地方能對應到你的資料欄位
-    // 有時候歷史報表的欄位名稱可能與大隊紀錄略有不同，請確保 r.詳細紀錄 有值
-    let rawUrl = (r.詳細紀錄 || "").trim();
-
-    // 💡 關鍵修正：確保 finalUrl 一定有串接 source=list，且移除 target="_blank"
-    let finalUrl = "";
-    if (rawUrl) {
-        finalUrl = rawUrl.includes('?') ? `${rawUrl}&source=list` : `${rawUrl}?source=list`;
-    }
+        // 💡 自動偵測可能的欄位名稱：優先抓「詳細紀錄」，沒有就抓「紀錄」或「連結」
+    const rawUrl = (r.詳細紀錄 || r.紀錄 || r.連結 || "").trim();
+    
+    // 只要有抓到任何網址，就補上 source=list
+    const finalUrl = rawUrl 
+        ? (rawUrl.includes('?') ? `${rawUrl}&source=list` : `${rawUrl}?source=list`)
+        : "";
 
     // 💡 建立連結：絕對不加 target="_blank"，否則 display 頁面的 history.back 抓不到來源
-    const detailLink = rawUrl
-  ? `<span
-        style="color:#0b5ed7;text-decoration:underline;font-weight:bold;cursor:pointer;"
-        onclick="openDetail('${rawUrl}')"
-     >連結</span>`
-  : `<span style="color:#999;">無</span>`;
+    const detailLink = rawUrl 
+        ? `<a href="${finalUrl}" style="color: #0b5ed7; text-decoration: underline; font-weight: bold;">連結</a>`
+        : `<span style="color: #999;">無</span>`;
 
         tableRows += `
             <tr>
