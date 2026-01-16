@@ -3144,20 +3144,16 @@ function downloadExcelDirectly(data, fileName) {
 function renderMobileReportOverlay(filteredData) {
     const isMobile = window.innerWidth < 769;
     
-    // 隱藏小圓鈕 (如果有)
     const fb = document.getElementById("floatingButtons");
     if (fb) fb.style.setProperty("display", "none", "important");
 
-    // 攔截返回鍵
     history.pushState({ action: "closeReport" }, "");
     window.onpopstate = function() {
         if (document.getElementById("reportOverlay")) closeReportLayer();
     };
 
     let tableRows = "";
-    // 使用 forEach 的第二個參數 index 來產生編號 (從 1 開始)
     filteredData.forEach((r, index) => {
-        // 解析時間
         let hh = "--", mm = "--";
         try {
             const match = (r.詳細紀錄 || "").match(/report_(\d+)/);
@@ -3177,7 +3173,10 @@ function renderMobileReportOverlay(filteredData) {
             reporterInfo += `,${r.同行者.trim()}`;
         }
 
-        const detailLink = `<a href="${r.詳細紀錄}" target="_blank" style="color: #0b5ed7; text-decoration: underline;">連結</a>`;
+        // --- 💡 這裡是你原本的格式，我只修改 href 的內容並拿掉 target="_blank" ---
+        const rawUrl = (r.詳細紀錄 || "").trim();
+        const finalUrl = rawUrl.includes('?') ? `${rawUrl}&source=list` : `${rawUrl}?source=list`;
+        const detailLink = `<a href="${finalUrl}" style="color: #0b5ed7; text-decoration: underline;">連結</a>`;
 
         tableRows += `
             <tr>
@@ -3197,7 +3196,6 @@ function renderMobileReportOverlay(filteredData) {
         `;
     });
 
-    // 定義標題清單 (在最前面加上 "編號")
     const headers = ["編號", "時間", "類型", "狀態", "分類", "紀錄", "說明", "回報者", "大隊"];
     
     const thHtml = headers.map(text => {
@@ -3257,11 +3255,14 @@ function renderMobileReportOverlay(filteredData) {
         </div>
     `;
 
-    // 渲染
+    // --- 💡 渲染邏輯維持你原本的 ---
     const div = document.createElement('div');
-    div.id = "report_container_wrapper"; // 給一個明確的 ID 方便管理
+    div.id = "report_container_wrapper";
     div.innerHTML = reportHtml;
     document.body.appendChild(div);
+
+    // 💡 額外加入這行，確保手機打開時背景不會亂捲動，這會讓回上一頁更穩定
+    document.body.style.overflow = "hidden";
 }
 
 function showLoadingMask() {
