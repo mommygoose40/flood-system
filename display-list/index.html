@@ -1322,6 +1322,16 @@ body {
 @media (max-width: 768px) {
   #floatingButtons {
     display: none !important;
+    width: 0 !important;
+    height: 0 !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    border: 0 !important;
+    overflow: hidden !important;
+  }
+
+  .circle-btn {
+    display: none !important;
   }
 }
 
@@ -2639,7 +2649,7 @@ function downloadExcelFinal() {
     // 計算日期區間 (今天與 14 天前)
     const endD = new Date();
     const startD = new Date();
-    startD.setDate(endD.getDate() - 14);
+    startD.setDate(endD.getDate() - 13);
     const formatDate = (d) => d.toISOString().slice(0, 10).replace(/-/g, '');
     const dateRange = `${formatDate(startD)}~${formatDate(endD)}`;
 
