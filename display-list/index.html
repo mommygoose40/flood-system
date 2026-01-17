@@ -1361,6 +1361,11 @@ body {
     min-width: 145px !important;
     flex: none !important;
   }
+
+    .fakeSelectBtn.locked {
+  opacity: 0.5;
+  pointer-events: none;
+}
     
 </style>
 
@@ -1642,6 +1647,7 @@ body {
           <label>月份：</label>
 
           <select id="reportMonth" style="display:none;">
+          <option value="ALL">全部</option>
           <option value="01">1 月</option>
           <option value="02">2 月</option>
           <option value="03">3 月</option>
@@ -1757,7 +1763,7 @@ body {
 <script>
 
   const VOLUNTEER_API_URL = "https://script.google.com/macros/s/AKfycbxiGSG5hSMO6We-C6cyEJZLgf4Rnbjp-6w9Tmb0qfF9VM6JB4YGEMqj3QRfTzg7Czpc/exec"; 
-const REPORT_GAS_URL = "https://script.google.com/macros/s/AKfycby4zY3Zy4k_iyx0fCkkCxwrbT3ndXU3naODNCieqdp0voDvvtzag2g2z0TaVFLgBmISew/exec";
+const REPORT_GAS_URL = "https://script.google.com/macros/s/AKfycbzmKBrKnLJL9yaaDIA1qX4bB2--EbmBxsCUfaR_HO6qNFoGWO2MFMzKQSsitDLS9NgjVg/exec";
 
 let globalAdminRecords = [];   // 管理員一次抓全部後存在這邊
 let adminViewDays = 3;        // 預設抓最近兩週，可改 30
@@ -3028,11 +3034,16 @@ async function fetchHistoryFromGAS(params) {
 async function handleUnifiedDownload() {
     // 獲取篩選條件
     const year = document.getElementById('reportYearText').innerText;
-    const monthText = document.getElementById('reportMonthText').innerText;
-    const month = monthText.replace(' 月', '').trim();
-    
-    // 💡 補零邏輯：確保 9 -> 09
-    const formattedMonth = String(month).padStart(2, '0');
+    const monthText = document.getElementById('reportMonthText').innerText.trim();
+const isAllMonths = (monthText === "全部");
+
+let month = null;
+let formattedMonth = "";
+
+if (!isAllMonths) {
+  month = monthText.replace(' 月', '').trim();
+  formattedMonth = String(month).padStart(2, '0');
+}
     
     const rawTeam = (viewMode === "history") ? document.getElementById('historyTeamText').innerText : document.getElementById('teamText').innerText;
     const type = (viewMode === "history") ? document.getElementById('historyTypeText').innerText : document.getElementById('typeText').innerText;
@@ -3055,12 +3066,18 @@ async function handleUnifiedDownload() {
         const teamParam = (rawTeam === "全部") ? "all" : rawTeam.replace(/[^0-9]/g, '');
 
         const params = {
-            year: year,
-            month: parseInt(month),
-            team: teamParam, 
-            type: type,
-            status: (status === "全部") ? "all" : status
-        };
+    year: year,
+    team: teamParam,
+    type: type,
+    status: (status === "全部") ? "all" : status
+};
+
+// ⭐ 單月才傳 month
+if (!isAllMonths) {
+  params.month = parseInt(month, 10);
+} else {
+  params.month = "ALL"; // 給 GAS 判斷
+}
 
         const data = await fetchHistoryFromGAS(params); 
 
@@ -3074,11 +3091,18 @@ async function handleUnifiedDownload() {
             renderMobileReportOverlay(data);
         } else {
             // 💡 使用格式化後的年月作為檔名
-            let fileName = `${year}${formattedMonth}_${rawTeam}`;
-            if (type !== "全部") fileName += `_${type}`;
-            if (status !== "全部") fileName += `_${status}`;
-            
-            downloadExcelDirectly(data, fileName);
+            let fileName = "";
+
+if (isAllMonths) {
+  fileName = `${year}_年度累計報表`;
+} else {
+  fileName = `${year}${formattedMonth}_${rawTeam}`;
+}
+
+if (type !== "全部") fileName += `_${type}`;
+if (status !== "全部") fileName += `_${status}`;
+
+downloadExcelDirectly(data, fileName);
         }
 
     } catch (err) {
@@ -3379,6 +3403,7 @@ const dropdownData = {
   target: "reportMonthText",
   input: "reportMonth",
   options: [
+    { value: "ALL", text: "全部" },
     {value:"01", text:"1 月"},
     {value:"02", text:"2 月"},
     {value:"03", text:"3 月"},
@@ -3460,14 +3485,23 @@ function openDropdown(type){
     if (opt.value == currentSelected) div.classList.add("selected");
 
     div.onclick = () => {
-      document.getElementById(info.target).textContent = opt.text;
-      document.getElementById(info.input).value = opt.value;
+  document.getElementById(info.target).textContent = opt.text;
+  document.getElementById(info.input).value = opt.value;
 
-      document.querySelectorAll(".option").forEach(o => o.classList.remove("selected"));
-      div.classList.add("selected");
+  document.querySelectorAll(".option").forEach(o => o.classList.remove("selected"));
+  div.classList.add("selected");
 
-      setTimeout(() => closeDropdown(), 180);
-    };
+  // ★★★ 新增：判斷「全部月份」 ★★★
+  if (type === "reportMonth") {
+    if (opt.value === "ALL") {
+      setReportFilterLock(true);   // 鎖定其他條件
+    } else {
+      setReportFilterLock(false);  // 解除鎖定
+    }
+  }
+
+  setTimeout(() => closeDropdown(), 180);
+};
 
     box.appendChild(div);
   });
