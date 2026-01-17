@@ -3007,27 +3007,32 @@ function showHistoryReportOverlay() {
  * @returns {Promise<Array>} 返回資料陣列
  */
 async function fetchHistoryFromGAS(params) {
-    try {
-        // 構建查詢字串
-        const query = new URLSearchParams({
-            action: 'getHistoryData', // 對應 GAS 中的 switch case
-            ...params
-        }).toString();
+  try {
+    const query = new URLSearchParams({
+      action: 'getHistoryData',
+      ...params
+    }).toString();
 
-        const response = await fetch(`${REPORT_GAS_URL}?${query}`);
-        const result = await response.json();
+    const response = await fetch(`${REPORT_GAS_URL}?${query}`);
+    const result = await response.json();
 
-        if (result.status === "success") {
-            // 如果後端有回傳資料，則返回資料陣列；否則回傳空陣列
-            return result.data || [];
-        } else {
-            console.error("GAS 錯誤:", result.message);
-            return [];
-        }
-    } catch (err) {
-        console.error("連線到 GAS 失敗:", err);
-        return [];
+    if (result.status !== "success") {
+      console.error("GAS 錯誤:", result.message);
+      return null;
     }
+
+    // 🔥 關鍵：年度累計 → 回傳整包
+    if (result.summaryType === "yearly") {
+      return result;
+    }
+
+    // 🔥 單月 / 明細 → 只回傳 data（維持你原本邏輯）
+    return result.data || [];
+
+  } catch (err) {
+    console.error("連線到 GAS 失敗:", err);
+    return null;
+  }
 }
 
 // 核心下載邏輯
