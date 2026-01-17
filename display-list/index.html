@@ -3032,85 +3032,131 @@ async function fetchHistoryFromGAS(params) {
 
 // 核心下載邏輯
 async function handleUnifiedDownload() {
-    // 獲取篩選條件
-    const year = document.getElementById('reportYearText').innerText;
-    const monthText = document.getElementById('reportMonthText').innerText.trim();
-const isAllMonths = (monthText === "全部");
+  // === 1. 取得篩選條件 ===
+  const year = document.getElementById('reportYearText').innerText;
+  const monthText = document.getElementById('reportMonthText').innerText.trim();
+  const isAllMonths = (monthText === "全部");
 
-let month = null;
-let formattedMonth = "";
+  let month = null;
+  let formattedMonth = "";
 
-if (!isAllMonths) {
-  month = monthText.replace(' 月', '').trim();
-  formattedMonth = String(month).padStart(2, '0');
-}
-    
-    const rawTeam = (viewMode === "history") ? document.getElementById('historyTeamText').innerText : document.getElementById('teamText').innerText;
-    const type = (viewMode === "history") ? document.getElementById('historyTypeText').innerText : document.getElementById('typeText').innerText;
-    const status = document.getElementById('reportStatusText').innerText;
+  if (!isAllMonths) {
+    month = monthText.replace(' 月', '').trim();
+    formattedMonth = String(month).padStart(2, '0');
+  }
 
-    const isMobile = window.innerWidth < 769;
-    showMicLoading(0);
+  const rawTeam = (viewMode === "history")
+    ? document.getElementById('historyTeamText').innerText
+    : document.getElementById('teamText').innerText;
 
-    try {
-        if (!isMobile && typeof XLSX === 'undefined') {
-            await new Promise((resolve, reject) => {
-                const script = document.createElement('script');
-                script.src = "https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js";
-                script.onload = resolve; script.onerror = reject;
-                document.head.appendChild(script);
-            });
-        }
+  const type = (viewMode === "history")
+    ? document.getElementById('historyTypeText').innerText
+    : document.getElementById('typeText').innerText;
 
-        // 傳給 GAS 的參數 (大隊轉數字)
-        const teamParam = (rawTeam === "全部") ? "all" : rawTeam.replace(/[^0-9]/g, '');
+  const status = document.getElementById('reportStatusText').innerText;
 
-        const params = {
-    year: year,
-    team: teamParam,
-    type: type,
-    status: (status === "全部") ? "all" : status
-};
+  const isMobile = window.innerWidth < 769;
+  showMicLoading(0);
 
-// ⭐ 單月才傳 month
-if (!isAllMonths) {
-  params.month = parseInt(month, 10);
-} else {
-  params.month = "ALL"; // 給 GAS 判斷
-}
-
-        const data = await fetchHistoryFromGAS(params); 
-
-        if (!data || data.length === 0) {
-            hideMicLoading();
-            showMessage("尚無符合資料!");
-            return; 
-        }
-
-        if (isMobile) {
-            renderMobileReportOverlay(data);
-        } else {
-            // 💡 使用格式化後的年月作為檔名
-            let fileName = "";
-
-if (isAllMonths) {
-  fileName = `${year}_年度累計報表`;
-} else {
-  fileName = `${year}${formattedMonth}_${rawTeam}`;
-}
-
-if (type !== "全部") fileName += `_${type}`;
-if (status !== "全部") fileName += `_${status}`;
-
-downloadExcelDirectly(data, fileName);
-        }
-
-    } catch (err) {
-        console.error(err);
-        showMessage("執行失敗，請稍後再試。");
-    } finally {
-        hideMicLoading();
+  try {
+    // === 2. 桌機才載入 XLSX ===
+    if (!isMobile && typeof XLSX === 'undefined') {
+      await new Promise((resolve, reject) => {
+        const script = document.createElement('script');
+        script.src = "https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js";
+        script.onload = resolve;
+        script.onerror = reject;
+        document.head.appendChild(script);
+      });
     }
+
+    // === 3. 組 GAS 參數 ===
+    const teamParam = (rawTeam === "全部")
+      ? "all"
+      : rawTeam.replace(/[^0-9]/g, '');
+
+    const params = {
+      year: year,
+      team: teamParam,
+      type: type,
+      status: (status === "全部") ? "all" : status
+    };
+
+    if (isAllMonths) {
+      params.month = "ALL";
+    } else {
+      params.month = parseInt(month, 10);
+    }
+
+    // === 4. 呼叫 GAS ===
+    const res = await fetchHistoryFromGAS(params);
+
+    if (!res || res.status !== "success") {
+      hideMicLoading();
+      showMessage("尚無符合資料!");
+      return;
+    }
+
+    // ======================================================
+    // === 5. 【年度累計】獨立分支（不影響舊邏輯） ===
+    // ======================================================
+    if (res.summaryType === "yearly") {
+      const summaryData = res.data;
+
+      if (!summaryData || summaryData.length === 0) {
+        hideMicLoading();
+        showMessage("尚無符合資料!");
+        return;
+      }
+
+      if (isMobile) {
+        showMessage("年度累計報表請使用電腦下載");
+      } else {
+        let fileName = `${year}_年度累計報表`;
+        if (type !== "全部") fileName += `_${type}`;
+        if (status !== "全部") fileName += `_${status}`;
+
+        downloadYearlySummaryExcel(summaryData, fileName);
+      }
+
+      return; // ⭐ 關鍵：年度累計不再往下跑
+    }
+
+    // ======================================================
+    // === 6. 【單月】原本既有流程（完全保留） ===
+    // ======================================================
+    const data = res.data;
+
+    if (!data || data.length === 0) {
+      hideMicLoading();
+      showMessage("尚無符合資料!");
+      return;
+    }
+
+    if (isMobile) {
+      renderMobileReportOverlay(data);
+    } else {
+      let fileName = `${year}${formattedMonth}_${rawTeam}`;
+      if (type !== "全部") fileName += `_${type}`;
+      if (status !== "全部") fileName += `_${status}`;
+
+      downloadExcelDirectly(data, fileName);
+    }
+
+  } catch (err) {
+    console.error(err);
+    showMessage("執行失敗，請稍後再試。");
+  } finally {
+    hideMicLoading();
+  }
+}
+
+  function downloadYearlySummaryExcel(data, fileName) {
+  const ws = XLSX.utils.json_to_sheet(data);
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, "年度累計");
+
+  XLSX.writeFile(wb, `${fileName}.xlsx`);
 }
 
 /**
