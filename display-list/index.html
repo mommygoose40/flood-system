@@ -3032,7 +3032,6 @@ async function fetchHistoryFromGAS(params) {
 
 // 核心下載邏輯
 async function handleUnifiedDownload() {
-  // === 1. 取得篩選條件 ===
   const year = document.getElementById('reportYearText').innerText;
   const monthText = document.getElementById('reportMonthText').innerText.trim();
   const isAllMonths = (monthText === "全部");
@@ -3054,12 +3053,11 @@ async function handleUnifiedDownload() {
     : document.getElementById('typeText').innerText;
 
   const status = document.getElementById('reportStatusText').innerText;
-
   const isMobile = window.innerWidth < 769;
+
   showMicLoading(0);
 
   try {
-    // === 2. 桌機才載入 XLSX ===
     if (!isMobile && typeof XLSX === 'undefined') {
       await new Promise((resolve, reject) => {
         const script = document.createElement('script');
@@ -3070,7 +3068,6 @@ async function handleUnifiedDownload() {
       });
     }
 
-    // === 3. 組 GAS 參數 ===
     const teamParam = (rawTeam === "全部")
       ? "all"
       : rawTeam.replace(/[^0-9]/g, '');
@@ -3079,38 +3076,23 @@ async function handleUnifiedDownload() {
       year: year,
       team: teamParam,
       type: type,
-      status: (status === "全部") ? "all" : status
+      status: (status === "全部") ? "all" : status,
+      month: isAllMonths ? "ALL" : parseInt(month, 10)
     };
 
-    if (isAllMonths) {
-      params.month = "ALL";
-    } else {
-      params.month = parseInt(month, 10);
-    }
-
-    // === 4. 呼叫 GAS ===
     const res = await fetchHistoryFromGAS(params);
 
-    if (!res || res.status !== "success") {
-      hideMicLoading();
-      showMessage("尚無符合資料!");
-      return;
-    }
-
-    // ======================================================
-    // === 5. 【年度累計】獨立分支（不影響舊邏輯） ===
-    // ======================================================
-    if (res.summaryType === "yearly") {
+    // === 年度累計（新分支，不影響舊邏輯）===
+    if (res && res.summaryType === "yearly") {
       const summaryData = res.data;
 
       if (!summaryData || summaryData.length === 0) {
-        hideMicLoading();
         showMessage("尚無符合資料!");
         return;
       }
 
       if (isMobile) {
-        showMessage("年度累計報表請使用電腦下載");
+        showMessage("年度累計請使用電腦下載");
       } else {
         let fileName = `${year}_年度累計報表`;
         if (type !== "全部") fileName += `_${type}`;
@@ -3118,17 +3100,13 @@ async function handleUnifiedDownload() {
 
         downloadYearlySummaryExcel(summaryData, fileName);
       }
-
-      return; // ⭐ 關鍵：年度累計不再往下跑
+      return;
     }
 
-    // ======================================================
-    // === 6. 【單月】原本既有流程（完全保留） ===
-    // ======================================================
-    const data = res.data;
+    // === 單月（完全沿用你原本邏輯）===
+    const data = res;
 
     if (!data || data.length === 0) {
-      hideMicLoading();
       showMessage("尚無符合資料!");
       return;
     }
