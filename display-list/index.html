@@ -3134,55 +3134,30 @@ async function handleUnifiedDownload() {
   }
 }
 
-  function downloadYearlySummaryExcel(records, fileName) {
+  function downloadYearlySummaryExcel(summaryData, fileName) {
 
-  // 1️⃣ 決定月份欄位（到目前月份）
-  const latestMonth = new Date().getMonth() + 1;
-  const months = Array.from({ length: latestMonth }, (_, i) => i + 1);
+  if (!Array.isArray(summaryData) || summaryData.length === 0) {
+    showMessage("尚無符合資料!");
+    return;
+  }
 
-  // 2️⃣ 用 Map 統計「月 × 大隊」
-  const summaryMap = {};
+  // 1️⃣ 直接用 GAS 回傳的欄位順序
+  const sample = summaryData[0];
 
-  records.forEach(r => {
-    if (!r.日期 || !r.所屬大隊) return;
+  const headers = Object.keys(sample); 
+  // 例如：["大隊","1月","2月","3月","總件數"]
 
-    const team = r.所屬大隊;
-    const month = new Date(r.日期).getMonth() + 1;
-
-    if (!summaryMap[team]) {
-      summaryMap[team] = {
-        team,
-        months: {},
-        total: 0
-      };
-    }
-
-    summaryMap[team].months[month] = (summaryMap[team].months[month] || 0) + 1;
-    summaryMap[team].total += 1;
+  // 2️⃣ 轉為 Excel
+  const ws = XLSX.utils.json_to_sheet(summaryData, {
+    header: headers
   });
 
-  // 3️⃣ 組成 Excel 橫向資料
-  const excelData = Object.values(summaryMap).map(row => {
-    const obj = {
-      "大隊": `第 ${row.team} 大隊`
-    };
-
-    months.forEach(m => {
-      obj[`${m}月`] = row.months[m] || 0;
-    });
-
-    obj["總件數"] = row.total;
-    return obj;
+  // 3️⃣ 欄寬設定
+  ws['!cols'] = headers.map(h => {
+    if (h === "大隊") return { wch: 14 };
+    if (h === "總件數") return { wch: 12 };
+    return { wch: 8 };
   });
-
-  // 4️⃣ 產生 Excel
-  const ws = XLSX.utils.json_to_sheet(excelData);
-
-  ws['!cols'] = [
-    { wch: 14 },
-    ...months.map(() => ({ wch: 8 })),
-    { wch: 12 }
-  ];
 
   const wb = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb, ws, "年度累計");
