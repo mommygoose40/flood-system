@@ -3590,10 +3590,24 @@ function openDropdown(type){
   const hint = document.getElementById("allMonthHint");
 
   if (opt.value === "ALL") {
-    setReportFilterLock(true);   // 鎖定其他條件
+
+    // 🔁 1. 先強制其他欄位回到「全部」
+    forceSetToAll("historyTeam");
+    forceSetToAll("historyType");
+    forceSetToAll("reportStatus");
+
+    // 🔒 2. 再鎖定欄位
+    setReportFilterLock(true);
+
+    // 📌 3. 顯示提示
     if (hint) hint.style.display = "inline";
+
   } else {
-    setReportFilterLock(false);  // 解除鎖定
+
+    // 🔓 解鎖（不強制改值）
+    setReportFilterLock(false);
+
+    // ❌ 隱藏提示
     if (hint) hint.style.display = "none";
   }
 }
@@ -3611,6 +3625,17 @@ function openDropdown(type){
   document.getElementById("fullDropdownMask").style.display = "flex";
 
   lockBodyScroll();
+}
+
+  function forceSetToAll(type) {
+  const info = dropdownData[type];
+  if (!info) return;
+
+  const allOption = info.options.find(o => o.value === "all" || o.value === "全部");
+  if (!allOption) return;
+
+  document.getElementById(info.input).value = allOption.value;
+  document.getElementById(info.target).textContent = allOption.text;
 }
 
 function setReportFilterLock(isLocked) {
