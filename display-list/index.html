@@ -3171,9 +3171,9 @@ if (isAllMonths) {
   const excelData = summaryData.map(row => {
     const newRow = { ...row };
 
-    if (newRow["大隊"] !== undefined && newRow["大隊"] !== null) {
-      newRow["大隊"] = `第 ${newRow["大隊"]} 大隊`;
-    }
+    if (newRow["大隊"] !== "未分隊") {
+  newRow["大隊"] = `第 ${newRow["大隊"]} 大隊`;
+}
 
     return newRow;
   });
@@ -3548,7 +3548,9 @@ const mask = document.getElementById("fullDropdownMask");
 let maskOriginalParent = null;
 
 function openDropdown(type){
-  //document.getElementById("globalFooter").style.visibility = "hidden";
+  // 🔒 若按鈕被鎖，直接 return
+  const btn = document.querySelector(`[onclick*="${type}"]`);
+  if (btn && btn.classList.contains("locked")) return;
 
   const info = dropdownData[type];
   if (!info) return;
@@ -3583,7 +3585,10 @@ function openDropdown(type){
     }
   }
 
-  setTimeout(() => closeDropdown(), 180);
+  setTimeout(() => {
+  closeDropdown();
+  document.querySelectorAll(".fakeSelectBtn").forEach(b => b.blur());
+}, 120);
 };
 
     box.appendChild(div);
@@ -3595,6 +3600,24 @@ function openDropdown(type){
   lockBodyScroll();
 }
 
+function setReportFilterLock(isLocked) {
+  const lockTargets = [
+    "historyTeamText",
+    "historyTypeText",
+    "reportStatusText"
+  ];
+
+  lockTargets.forEach(id => {
+    const btn = document.getElementById(id)?.closest(".fakeSelectBtn");
+    if (!btn) return;
+
+    if (isLocked) {
+      btn.classList.add("locked");
+    } else {
+      btn.classList.remove("locked");
+    }
+  });
+}
 
 function closeDropdown(){
   document.getElementById("fullDropdownMask").style.display = "none";
