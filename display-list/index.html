@@ -3095,19 +3095,19 @@ async function handleUnifiedDownload() {
       : rawTeam.replace(/[^0-9]/g, '');
 
     // === 年度累計（完全獨立）===
-    if (isAllMonths) {
+if (isAllMonths) {
 
-      const summaryData = await fetchYearlySummaryFromGAS({
-        year: year,
-        team: teamParam,
-        type: type,
-        status: (status === "全部") ? "all" : status
-      });
+  const summaryData = await fetchYearlySummaryFromGAS({
+    year: Number(year),   // ★ 一定轉 number
+    team: teamParam,
+    type: (type === "全部") ? "all" : type,        // ★ 關鍵
+    status: (status === "全部") ? "all" : status   // ★ 關鍵
+  });
 
-      if (!summaryData || summaryData.length === 0) {
-        showMessage("尚無符合資料!");
-        return;
-      }
+  if (!summaryData || summaryData.length === 0) {
+    showMessage("尚無符合資料!");
+    return;
+  }
 
       if (isMobile) {
         showMessage("年度累計請使用電腦下載");
