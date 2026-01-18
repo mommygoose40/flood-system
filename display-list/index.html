@@ -3018,24 +3018,41 @@ async function fetchHistoryFromGAS(params) {
 
     if (result.status !== "success") {
       console.error("GAS 錯誤:", result.message);
-      return null;
+      return [];
     }
 
-    // 🔥 關鍵：年度累計 → 回傳整包
-    if (result.summaryType === "yearly") {
-      return result;
-    }
-
-    // 🔥 單月 / 明細 → 只回傳 data（維持你原本邏輯）
+    // 🚫 不處理年度
     return result.data || [];
 
   } catch (err) {
     console.error("連線到 GAS 失敗:", err);
-    return null;
+    return [];
   }
 }
 
-// 核心下載邏輯
+async function fetchYearlySummaryFromGAS(params) {
+  try {
+    const query = new URLSearchParams({
+      action: 'getYearlySummary', // 或 month=ALL 專用
+      ...params
+    }).toString();
+
+    const response = await fetch(`${REPORT_GAS_URL}?${query}`);
+    const result = await response.json();
+
+    if (result.status !== "success") {
+      throw new Error(result.message || "年度資料取得失敗");
+    }
+
+    // ✅ 永遠是 summary array
+    return result.data;
+
+  } catch (err) {
+    console.error("年度資料錯誤:", err);
+    return [];
+  }
+}
+
 async function handleUnifiedDownload() {
   const year = document.getElementById('reportYearText').innerText;
   const monthText = document.getElementById('reportMonthText').innerText.trim();
@@ -3077,19 +3094,15 @@ async function handleUnifiedDownload() {
       ? "all"
       : rawTeam.replace(/[^0-9]/g, '');
 
-    const params = {
-      year: year,
-      team: teamParam,
-      type: type,
-      status: (status === "全部") ? "all" : status,
-      month: isAllMonths ? "ALL" : parseInt(month, 10)
-    };
+    // === 年度累計（完全獨立）===
+    if (isAllMonths) {
 
-    const res = await fetchHistoryFromGAS(params);
-
-    // === 年度累計（新分支，不影響舊邏輯）===
-    if (res && res.summaryType === "yearly") {
-      const summaryData = res.data;
+      const summaryData = await fetchYearlySummaryFromGAS({
+        year: year,
+        team: teamParam,
+        type: type,
+        status: (status === "全部") ? "all" : status
+      });
 
       if (!summaryData || summaryData.length === 0) {
         showMessage("尚無符合資料!");
@@ -3105,11 +3118,20 @@ async function handleUnifiedDownload() {
 
         downloadYearlySummaryExcel(summaryData, fileName);
       }
+
       return;
     }
 
-    // === 單月（完全沿用你原本邏輯）===
-    const data = res;
+    // === 單月（逐筆資料）===
+    const params = {
+      year: year,
+      team: teamParam,
+      type: type,
+      status: (status === "全部") ? "all" : status,
+      month: parseInt(month, 10)
+    };
+
+    const data = await fetchHistoryFromGAS(params);
 
     if (!data || data.length === 0) {
       showMessage("尚無符合資料!");
@@ -3133,7 +3155,7 @@ async function handleUnifiedDownload() {
     hideMicLoading();
   }
 }
-
+  
   function downloadYearlySummaryExcel(summaryData, fileName) {
 
   if (!Array.isArray(summaryData) || summaryData.length === 0) {
@@ -3141,18 +3163,27 @@ async function handleUnifiedDownload() {
     return;
   }
 
-  // 1️⃣ 直接用 GAS 回傳的欄位順序
-  const sample = summaryData[0];
-
-  const headers = Object.keys(sample); 
+  // 1️⃣ 取得欄位順序（來自 GAS）
+  const headers = Object.keys(summaryData[0]);
   // 例如：["大隊","1月","2月","3月","總件數"]
 
-  // 2️⃣ 轉為 Excel
-  const ws = XLSX.utils.json_to_sheet(summaryData, {
+  // 2️⃣ 轉換資料：只動「大隊顯示格式」
+  const excelData = summaryData.map(row => {
+    const newRow = { ...row };
+
+    if (newRow["大隊"] !== undefined && newRow["大隊"] !== null) {
+      newRow["大隊"] = `第 ${newRow["大隊"]} 大隊`;
+    }
+
+    return newRow;
+  });
+
+  // 3️⃣ 產生工作表
+  const ws = XLSX.utils.json_to_sheet(excelData, {
     header: headers
   });
 
-  // 3️⃣ 欄寬設定
+  // 4️⃣ 欄寬設定
   ws['!cols'] = headers.map(h => {
     if (h === "大隊") return { wch: 14 };
     if (h === "總件數") return { wch: 12 };
