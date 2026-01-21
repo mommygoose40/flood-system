@@ -1368,10 +1368,12 @@ body {
 }
 
     .tap-hint {
-  font-size: 18px;           /* 跟 display-list 字級協調 */
-  color: #666;
+  font-size: 20px;           /* 跟 display-list 字級協調 */
+  font-weight: 700;
+  color: #d32f2f;
   margin: 8px 0 14px;
   text-align: center;
+  display: none;   /* ⭐ 預設隱藏 */
 }
     
 </style>
@@ -2270,7 +2272,7 @@ if (window.innerWidth < 769 && !document.getElementById("tapHint")) {
   const hint = document.createElement("div");
   hint.id = "tapHint";
   hint.className = "tap-hint";
-  hint.textContent = "點擊清單中任一列以查看詳細資訊";
+  hint.textContent = "※ 點擊清單中任一列以查看詳細資訊";
   container.parentElement.insertBefore(hint, container);
 }
 
@@ -2363,6 +2365,7 @@ if (window.innerWidth < 769 && !document.getElementById("tapHint")) {
 
   updateSwitchUI();
   document.getElementById("pageTitle").style.display = "block";
+  updateTapHintVisibility();
 
   // 第一次進入時才恢復捲動位置
   if (!restoredOnce) {
@@ -2375,6 +2378,17 @@ if (window.innerWidth < 769 && !document.getElementById("tapHint")) {
   isInitialLoad = false;
   document.body.classList.remove("loading");
   debug("STEP3 完成：列表渲染成功，已自動展開最近3天資料");
+}
+
+function updateTapHintVisibility() {
+  const hint = document.getElementById("tapHint");
+  if (!hint) return;
+
+  if (window.innerWidth < 769) {
+    hint.style.display = "block";
+  } else {
+    hint.style.display = "none";
+  }
 }
 
 function saveListState() {
