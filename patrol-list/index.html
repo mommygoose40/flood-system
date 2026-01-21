@@ -49,41 +49,67 @@
 /* 紀錄卡片 */
 .record-card {
   background: white;
-  margin: 0 15px 15px 15px;
-  padding: 15px;
-  border-radius: 10px;
-  box-shadow: 0 2px 10px rgba(0,0,0,0.08);
-  border-left: 5px solid #007bff;
+  margin: 15px;
+  padding: 20px; /* 增加內距 */
+  border-radius: 12px;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+  border-left: 8px solid #007bff; /* 邊欄加粗 */
 }
-.card-header {
-  display: flex;
-  justify-content: space-between;
-  margin-bottom: 10px;
+
+.v-name { 
+  font-size: 22px; /* 姓名加大 */
+  font-weight: bold; 
+  color: #333; 
 }
-.v-name { font-size: 18px; font-weight: bold; color: #333; }
-.v-id { color: #888; font-size: 13px; }
+
+.v-id { 
+  color: #666; 
+  font-size: 16px; /* ID 加大 */
+  margin-top: 4px;
+}
+
 .team-tag {
   background: #e7f3ff;
   color: #007bff;
-  padding: 2px 8px;
-  border-radius: 4px;
-  font-size: 12px;
+  padding: 4px 12px;
+  border-radius: 6px;
+  font-size: 16px; /* 大隊字體加大 */
+  font-weight: bold;
 }
 
 /* 數據列 */
 .stats-row {
   display: flex;
   justify-content: space-around;
-  background: #fafafa;
-  padding: 10px;
-  border-radius: 8px;
-  margin: 10px 0;
+  background: #fcfcfc;
+  padding: 15px;
+  border-radius: 10px;
+  margin: 15px 0;
+  border: 1px solid #eee;
 }
-.stat-item label { display: block; font-size: 12px; color: #777; margin-bottom: 4px; }
-.stat-item b { font-size: 18px; color: #222; }
 
-.update-time { font-size: 11px; color: #aaa; text-align: right; }
+.stat-item { text-align: center; }
 
+.stat-item label { 
+  display: block; 
+  font-size: 15px; /* 本月/今年/去年標籤加大 */
+  color: #555; 
+  margin-bottom: 8px; 
+}
+
+.stat-item b { 
+  font-size: 26px; /* 數字特大顯示 */
+  color: #d9534f; /* 數據改成醒目的顏色 */
+}
+
+.update-time { 
+  font-size: 14px; /* 更新時間加大 */
+  color: #888; 
+  text-align: right; 
+  border-top: 1px dashed #ddd;
+  padding-top: 10px;
+}
+    
     #switchArea {
   display: none;
   justify-content: center;
@@ -277,28 +303,38 @@ function setActive(id) {
       subContainer.innerHTML = generateCards(filtered);
     }
 
-    /** 7. 渲染引擎 **/
-    function generateCards(list) {
-      if (!list || list.length === 0) return '<p style="text-align:center; color:#999; padding:50px;">查無紀錄資料</p>';
-      
-      return list.map(row => `
-        <div class="record-card">
-          <div class="card-header">
-            <div>
-              <div class="v-name">${row[1]}</div>
-              <div class="v-id">ID: ${row[0]}</div>
-            </div>
-            <div class="team-tag">${row[3]}</div>
-          </div>
-          <div class="stats-row">
-            <div class="stat-item"><label>本月</label><b>${row[4]}</b></div>
-            <div class="stat-item"><label>今年</label><b>${row[5]}</b></div>
-            <div class="stat-item"><label>去年</label><b>${row[6]}</b></div>
-          </div>
-          <div class="update-time">資料更新：${row[7]}</div>
-        </div>
-      `).join('');
+    /** 6. 共用卡片渲染引擎 **/
+function generateCards(list) {
+  if (!list || list.length === 0) return '<p style="text-align:center; color:#999; padding:50px; font-size:18px;">尚無紀錄資料</p>';
+  
+  return list.map(row => {
+    // 時間格式化邏輯：假設 row[7] 是 "2024/05/20 14:30:22"
+    let displayDate = "無資料";
+    if (row[7]) {
+      // 簡單做法：移除秒數部分
+      const timeStr = String(row[7]);
+      displayDate = timeStr.substring(0, timeStr.lastIndexOf(':')); 
     }
+
+    return `
+      <div class="record-card">
+        <div class="card-header">
+          <div>
+            <div class="v-name">${row[1]}</div>
+            <div class="v-id">ID: ${row[0]}</div>
+          </div>
+          <div class="team-tag">${row[3]}</div>
+        </div>
+        <div class="stats-row">
+          <div class="stat-item"><label>本月次數</label><b>${row[4]}</b></div>
+          <div class="stat-item"><label>今年次數</label><b>${row[5]}</b></div>
+          <div class="stat-item"><label>去年次數</label><b>${row[6]}</b></div>
+        </div>
+        <div class="update-time">資料更新：${displayDate}</div>
+      </div>
+    `;
+  }).join('');
+}
   </script>
   </body>
 </html>
