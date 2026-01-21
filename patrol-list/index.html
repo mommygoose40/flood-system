@@ -46,68 +46,70 @@
   box-shadow: 0 2px 4px rgba(0,0,0,0.1);
 }
 
-/* 紀錄卡片 */
+/* 強化後的卡片樣式 */
 .record-card {
   background: white;
   margin: 15px;
-  padding: 20px; /* 增加內距 */
-  border-radius: 12px;
-  box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-  border-left: 8px solid #007bff; /* 邊欄加粗 */
+  padding: 24px; /* 內距再加大，讓字體有空間 */
+  border-radius: 16px;
+  box-shadow: 0 6px 18px rgba(0,0,0,0.1);
+  border-left: 10px solid #2d6cdf; /* 側邊條加粗 */
 }
 
+/* 姓名與 ID */
 .v-name { 
-  font-size: 22px; /* 姓名加大 */
-  font-weight: bold; 
-  color: #333; 
+  font-size: 28px; /* 顯眼的姓名 */
+  font-weight: 900; 
+  color: #1a1a1a; 
 }
 
 .v-id { 
-  color: #666; 
-  font-size: 16px; /* ID 加大 */
-  margin-top: 4px;
+  color: #777; 
+  font-size: 18px; /* ID 加大 */
+  margin-top: 6px;
 }
 
+/* 大隊標籤 */
 .team-tag {
-  background: #e7f3ff;
-  color: #007bff;
-  padding: 4px 12px;
-  border-radius: 6px;
-  font-size: 16px; /* 大隊字體加大 */
+  background: #eef4ff;
+  color: #2d6cdf;
+  padding: 6px 14px;
+  border-radius: 8px;
+  font-size: 18px; /* 大隊字體加大 */
   font-weight: bold;
 }
 
-/* 數據列 */
+/* 數據列：確保在手機上字體夠大 */
 .stats-row {
   display: flex;
   justify-content: space-around;
-  background: #fcfcfc;
-  padding: 15px;
-  border-radius: 10px;
-  margin: 15px 0;
-  border: 1px solid #eee;
+  background: #f8f9fb;
+  padding: 18px;
+  border-radius: 12px;
+  margin: 20px 0;
+  border: 1px solid #e0e6ed;
 }
-
-.stat-item { text-align: center; }
 
 .stat-item label { 
   display: block; 
-  font-size: 15px; /* 本月/今年/去年標籤加大 */
-  color: #555; 
-  margin-bottom: 8px; 
+  font-size: 18px; /* 標籤：本月、今年、去年 */
+  color: #666; 
+  margin-bottom: 10px; 
 }
 
 .stat-item b { 
-  font-size: 26px; /* 數字特大顯示 */
-  color: #d9534f; /* 數據改成醒目的顏色 */
+  font-size: 32px; /* 數字特大顯示 */
+  color: #1a1a1a;
 }
 
+/* 資料更新時間 */
 .update-time { 
-  font-size: 14px; /* 更新時間加大 */
-  color: #888; 
+  font-size: 16px; /* 增大字體 */
+  color: #999; 
   text-align: right; 
   border-top: 1px dashed #ddd;
-  padding-top: 10px;
+  padding-top: 12px;
+  margin-top: 10px;
 }
     
     #switchArea {
@@ -174,6 +176,46 @@
 }
 }
 
+    /* ===== 載入中遮罩 ===== */
+#loadingMask {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(255, 255, 255, 0.85);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 10000;
+}
+
+/* 內容框 */
+.loading-box {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  font-size: 16px;
+  color: #333;
+}
+
+/* 轉圈圈 */
+.spinner {
+  width: 40px;
+  height: 40px;
+  border: 4px solid #ddd;
+  border-top: 4px solid #0b5ed7;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
   </style>
 </head>
 
@@ -194,6 +236,14 @@
   <button class="gray-btn" onclick="history.back()">回上一頁</button>
   <button class="gray-btn" onclick="location.href='/home'">回主選單</button>
 </div>
+
+      <div id="loadingMask">
+  <div class="loading-box">
+    <div class="spinner"></div>
+    <div class="loading-text">載入中…</div>
+  </div>
+</div>
+
 </div>
 
     <script>
@@ -231,15 +281,28 @@ async function fetchData() {
     const result = await response.json();
 
     if (result.success) {
-      window.cachedServiceData = result.data; // 這是 [ [標題], [列1], [列2]... ]
-      initView();
-    } else {
+  window.cachedServiceData = result.data;
+  initView();
+  hideLoading();
+} else {
       document.getElementById('record-container').innerHTML = `<div class="loading">錯誤: ${result.error}</div>`;
     }
   } catch (error) {
-    console.error("Fetch error:", error);
-    document.getElementById('record-container').innerHTML = `<div class="loading">連線失敗，請檢查網路。</div>`;
-  }
+  console.error("Fetch error:", error);
+  document.getElementById('record-container').innerHTML =
+    `<div class="loading">連線失敗，請檢查網路。</div>`;
+  hideLoading();
+}
+}
+
+      function hideLoading() {
+  const mask = document.getElementById('loadingMask');
+  if (mask) mask.style.display = 'none';
+}
+
+function showLoading() {
+  const mask = document.getElementById('loadingMask');
+  if (mask) mask.style.display = 'flex';
 }
 
     function initView() {
@@ -303,17 +366,34 @@ function setActive(id) {
       subContainer.innerHTML = generateCards(filtered);
     }
 
-    /** 6. 共用卡片渲染引擎 **/
-function generateCards(list) {
-  if (!list || list.length === 0) return '<p style="text-align:center; color:#999; padding:50px; font-size:18px;">尚無紀錄資料</p>';
+    function generateCards(list) {
+  if (!list || list.length === 0) return '<p style="text-align:center; color:#999; padding:50px; font-size:22px;">尚無紀錄資料</p>';
   
   return list.map(row => {
-    // 時間格式化邏輯：假設 row[7] 是 "2024/05/20 14:30:22"
     let displayDate = "無資料";
+    
     if (row[7]) {
-      // 簡單做法：移除秒數部分
-      const timeStr = String(row[7]);
-      displayDate = timeStr.substring(0, timeStr.lastIndexOf(':')); 
+      try {
+        // 將 Google Sheets 的時間字串轉為 JS Date 物件
+        // 如果 row[7] 帶有 T，JS 會自動處理時區
+        const dateObj = new Date(row[7]);
+        
+        // 如果轉換失敗，就退回原始字串處理
+        if (isNaN(dateObj.getTime())) {
+          displayDate = String(row[7]).replace('T', ' ').split('.')[0];
+        } else {
+          // 強制轉換為在地格式 (台灣)
+          const y = dateObj.getFullYear();
+          const m = String(dateObj.getMonth() + 1).padStart(2, '0');
+          const d = String(dateObj.getDate()).padStart(2, '0');
+          const hh = String(dateObj.getHours()).padStart(2, '0');
+          const mm = String(dateObj.getMinutes()).padStart(2, '0');
+          
+          displayDate = `${y}/${m}/${d} ${hh}:${mm}`;
+        }
+      } catch (e) {
+        displayDate = String(row[7]);
+      }
     }
 
     return `
@@ -326,11 +406,11 @@ function generateCards(list) {
           <div class="team-tag">${row[3]}</div>
         </div>
         <div class="stats-row">
-          <div class="stat-item"><label>本月次數</label><b>${row[4]}</b></div>
-          <div class="stat-item"><label>今年次數</label><b>${row[5]}</b></div>
-          <div class="stat-item"><label>去年次數</label><b>${row[6]}</b></div>
+          <div class="stat-item"><label>本月</label><b>${row[4]}</b></div>
+          <div class="stat-item"><label>今年</label><b>${row[5]}</b></div>
+          <div class="stat-item"><label>去年</label><b>${row[6]}</b></div>
         </div>
-        <div class="update-time">資料更新：${displayDate}</div>
+        <div class="update-time">資料更新時間：${displayDate}</div>
       </div>
     `;
   }).join('');
