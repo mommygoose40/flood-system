@@ -113,16 +113,17 @@
   position: fixed;
   bottom: 0;
   left: 0;
-  width: 100%;
+  width: 100vw;              /* 100vw = 視窗寬度本體 */
   height: 70px;
   background: #f8f8f8;
   display: flex;
   gap: 12px;
   justify-content: center;
   align-items: center;
-  padding: 0 16px;
+  padding: 0 12px;           /* 可以留 */
   box-shadow: 0 -2px 6px rgba(0,0,0,0.12);
   z-index: 9999;
+  box-sizing: border-box;    /* box-sizing: border-box = padding 不再外加 */
 }
 
 .gray-btn {
@@ -139,7 +140,12 @@
   #globalFooter {
     display: none;
   }
+ 
+    .page-content {
+  padding-bottom: 90px; /* footer 高度 70 + 緩衝 */
 }
+}
+
   </style>
 </head>
 
