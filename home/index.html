@@ -348,7 +348,7 @@ function goServiceRecord() {
   // 如果你的服務紀錄是寫在另一個 HTML 檔案，這裡應該用 location.href
   
   // 方案 A：如果是跳轉到新頁面 (推薦，因為你其他功能都是跳頁)
-  const target = "/patrol-list"; // 假設你的紀錄頁面路徑
+  const target = "/patrol-list/index.html"; // 假設你的紀錄頁面路徑
   location.href = `${target}?vid=${encodeURIComponent(vid)}&name=${encodeURIComponent(name)}&role=${encodeURIComponent(role)}`;
 
   /* 方案 B：如果是寫在同一個檔案的 div (單頁式)
