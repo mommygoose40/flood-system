@@ -97,6 +97,33 @@
 </div>
 
     <script>
+      // 1. 解析網址參數 (Query Parameters)
+const urlParams = new URLSearchParams(window.location.search);
+
+// 2. 建立目前使用者物件
+window.currentUser = {
+  vid: urlParams.get('vid') || localStorage.getItem("vid"),
+  name: urlParams.get('name') || localStorage.getItem("name"),
+  role: urlParams.get('role') || localStorage.getItem("role"),
+  team: localStorage.getItem("team") // 大隊資訊通常存在 localStorage
+};
+
+// 3. 頁面載入後自動執行抓取
+window.onload = function() {
+  if (!currentUser.name) {
+    alert("登入資訊遺失，請重新登入");
+    // window.location.href = "index.html"; 
+    return;
+  }
+  
+  // 呼叫原本寫好的進入點
+  if (currentUser.role === '大隊長') {
+    renderTeamView(); // 這裡會去執行你之前的 renderTeamView
+  } else {
+    renderPersonalView(); // 這裡會去執行你之前的 renderPersonalView
+  }
+};
+      
       /** 3. 志工個人視圖 **/
 function renderPersonalView() {
   const data = window.cachedServiceData;
