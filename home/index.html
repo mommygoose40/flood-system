@@ -339,14 +339,28 @@ function createCustomAlert(title, message = '', isSuccess = false) {
   }
 });
 
-  function goServiceRecord() {
-  showPage('patrol-list'); // 大家都去同一個頁面 ID
+  /* ============================
+   服務紀錄導向邏輯
+============================ */
+function goServiceRecord() {
+  // 1. 確保 showPage 存在或直接執行跳轉
+  // 由於你目前的架構，records (查看回報) 是跳轉到 "/display-list"
+  // 如果你的服務紀錄是寫在另一個 HTML 檔案，這裡應該用 location.href
   
-  if (currentUser.role === '大隊長') {
-    renderTeamView(); // 大隊長專屬：有 Tab、有全隊清單
+  // 方案 A：如果是跳轉到新頁面 (推薦，因為你其他功能都是跳頁)
+  const target = "/patrol-list"; // 假設你的紀錄頁面路徑
+  location.href = `${target}?vid=${encodeURIComponent(vid)}&name=${encodeURIComponent(name)}&role=${encodeURIComponent(role)}`;
+
+  /* 方案 B：如果是寫在同一個檔案的 div (單頁式)
+  showPage('patrol-list'); 
+  
+  // 注意：這裡要用你上方定義好的變數 role，而不是 currentUser.role
+  if (role === '大隊長') {
+    renderTeamView(); 
   } else {
-    renderPersonalView(); // 志工專屬：無 Tab、只有大字儀表板
+    renderPersonalView();
   }
+  */
 }
 </script>
 
