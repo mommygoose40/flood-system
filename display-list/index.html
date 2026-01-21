@@ -1366,6 +1366,13 @@ body {
   opacity: 0.5;
   pointer-events: none;
 }
+
+    .tap-hint {
+  font-size: 18px;           /* 跟 display-list 字級協調 */
+  color: #666;
+  margin: 8px 0 14px;
+  text-align: center;
+}
     
 </style>
 
@@ -2257,6 +2264,15 @@ if (globalRole === "管理員" && viewMode === "admin") {
 
   globalRecords = records;
   container.innerHTML = "";
+
+  /* ===== 方案 B：只顯示一次的「可點擊提示」 ===== */
+if (window.innerWidth < 769 && !document.getElementById("tapHint")) {
+  const hint = document.createElement("div");
+  hint.id = "tapHint";
+  hint.className = "tap-hint";
+  hint.textContent = "點擊清單中任一列以查看詳細資訊";
+  container.parentElement.insertBefore(hint, container);
+}
 
   // 2. 跨年份分組
   const grouped = {};
