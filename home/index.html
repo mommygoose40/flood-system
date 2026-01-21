@@ -77,7 +77,7 @@
 
   <div class="btn" onclick="go('records')">查看回報</div>
 
-  <div class="btn" id="serviceRecordBtn" onclick="goServiceRecord()">
+  <div class="btn" id="serviceRecordBtn" style="display:none;" onclick="goServiceRecord()">
   服務紀錄
 </div>
   
@@ -156,6 +156,12 @@ function showUserInfo() {
   }
 }
 
+function updateServiceButton() {
+  if (role === "志工" || role === "大隊長") {
+    document.getElementById("serviceRecordBtn").style.display = "block";
+  }
+}
+
 /* 顯示管理員按鈕 */
 function updateAdminButton() {
   if (role === "管理員" || role === "admin") {
@@ -221,6 +227,7 @@ function goPatrol() {
 ============================ */
 window.onload = function () {
   showUserInfo();
+  updateServiceButton);
   updateAdminButton();
   updatePatrolButton();
 
