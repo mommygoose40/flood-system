@@ -77,6 +77,10 @@
 
   <div class="btn" onclick="go('records')">查看回報</div>
 
+  <div class="btn" id="serviceRecordBtn" onclick="goServiceRecord()">
+  服務紀錄
+</div>
+  
   <div class="btn" id="adminBtn" style="display:none;" onclick="go('admin')">
     管理志工
   </div>
@@ -327,6 +331,16 @@ function createCustomAlert(title, message = '', isSuccess = false) {
     });
   }
 });
+
+  function goServiceRecord() {
+  showPage('patrol-list'); // 大家都去同一個頁面 ID
+  
+  if (currentUser.role === '大隊長') {
+    renderTeamView(); // 大隊長專屬：有 Tab、有全隊清單
+  } else {
+    renderPersonalView(); // 志工專屬：無 Tab、只有大字儀表板
+  }
+}
 </script>
 
 </body>
