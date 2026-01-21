@@ -97,98 +97,123 @@
 </div>
 
     <script>
-      // 1. 解析網址參數 (Query Parameters)
-const urlParams = new URLSearchParams(window.location.search);
+      // 1. 解析參數並建立使用者物件
+    const urlParams = new URLSearchParams(window.location.search);
+    window.currentUser = {
+      vid: urlParams.get('vid') || localStorage.getItem("vid"),
+      name: urlParams.get('name') || localStorage.getItem("name"),
+      role: urlParams.get('role') || localStorage.getItem("role"),
+      // 如果網址沒帶 team，就從 localStorage 抓
+      team: urlParams.get('team') || localStorage.getItem("team") 
+    };
 
-// 2. 建立目前使用者物件
-window.currentUser = {
-  vid: urlParams.get('vid') || localStorage.getItem("vid"),
-  name: urlParams.get('name') || localStorage.getItem("name"),
-  role: urlParams.get('role') || localStorage.getItem("role"),
-  team: localStorage.getItem("team") // 大隊資訊通常存在 localStorage
-};
+    // 2. 頁面啟動核心
+    window.onload = function() {
+      if (!currentUser.name) {
+        alert("登入資訊遺失，請從主頁重新進入");
+        location.href = "/";
+        return;
+      }
+      fetchData(); // 呼叫 API 抓取資料
+    };
 
-// 3. 頁面載入後自動執行抓取
-window.onload = function() {
-  if (!currentUser.name) {
-    alert("登入資訊遺失，請重新登入");
-    // window.location.href = "index.html"; 
-    return;
-  }
+    // 3. 抓取資料函式 (這一段是你原本缺少的)
+    // 在 script 區塊中修改 fetchData 函式
+async function fetchData() {
+  const scriptURL = "https://script.google.com/macros/s/AKfycbwoa64z2sGg9W0JdgIAMsWC56BO79EzuOQLbZnVoWACV2CPpIQtHx7larftrK04SPXS/exec"; // 務必換成你部署後的 Web App URL
   
-  // 呼叫原本寫好的進入點
-  if (currentUser.role === '大隊長') {
-    renderTeamView(); // 這裡會去執行你之前的 renderTeamView
-  } else {
-    renderPersonalView(); // 這裡會去執行你之前的 renderPersonalView
+  // 構造 API 請求網址
+  const apiURL = `${scriptURL}?action=getServiceData`;
+
+  try {
+    // 使用 fetch 抓取
+    const response = await fetch(apiURL);
+    const result = await response.json();
+
+    if (result.success) {
+      window.cachedServiceData = result.data; // 這是 [ [標題], [列1], [列2]... ]
+      initView();
+    } else {
+      document.getElementById('record-container').innerHTML = `<div class="loading">錯誤: ${result.error}</div>`;
+    }
+  } catch (error) {
+    console.error("Fetch error:", error);
+    document.getElementById('record-container').innerHTML = `<div class="loading">連線失敗，請檢查網路。</div>`;
   }
-};
+}
+
+    function initView() {
+      if (currentUser.role === '大隊長') {
+        renderTeamView();
+      } else {
+        renderPersonalView();
+      }
+    }
+
+    /** 4. 志工個人視圖 **/
+    function renderPersonalView() {
+      const data = window.cachedServiceData;
+      // 修正篩選邏輯：強制轉字串並去空格
+      const myData = data.slice(1).filter(row => String(row[1]).trim() === String(currentUser.name).trim());
       
-      /** 3. 志工個人視圖 **/
-function renderPersonalView() {
-  const data = window.cachedServiceData;
-  const myData = data.slice(1).filter(row => row[1] === currentUser.name);
-  
-  document.getElementById('record-page-title').innerText = "服務紀錄";
-  document.getElementById('record-container').innerHTML = generateCards(myData);
-}
+      document.getElementById('record-page-title').innerText = "我的服務紀錄";
+      document.getElementById('record-container').innerHTML = generateCards(myData);
+    }
 
-/** 4. 大隊長視圖 (含切換功能) **/
-function renderTeamView() {
-  document.getElementById('record-page-title').innerText = "服務紀錄";
-  
-  let html = `
-    <div class="tab-container">
-      <div class="tab active" id="tab-team" onclick="switchView('team')">大隊紀錄</div>
-      <div class="tab" id="tab-mine" onclick="switchView('mine')">我的紀錄</div>
-    </div>
-    <div id="sub-container"></div>
-  `;
-  document.getElementById('record-container').innerHTML = html;
-  switchView('mine'); // 預設看自己
-}
-
-/** 5. 大隊長切換標籤 **/
-function switchView(mode) {
-  const data = window.cachedServiceData;
-  const subContainer = document.getElementById('sub-container');
-  
-  // 切換 UI 樣式
-  document.getElementById('tab-team').className = (mode === 'team' ? 'tab active' : 'tab');
-  document.getElementById('tab-mine').className = (mode === 'mine' ? 'tab active' : 'tab');
-
-  let filtered;
-  if (mode === 'team') {
-    filtered = data.slice(1).filter(row => row[3] === currentUser.team);
-  } else {
-    filtered = data.slice(1).filter(row => row[1] === currentUser.name);
-  }
-  
-  subContainer.innerHTML = generateCards(filtered);
-}
-
-/** 6. 共用卡片渲染引擎 **/
-function generateCards(list) {
-  if (list.length === 0) return '<p style="text-align:center; color:#999; padding:20px;">尚無紀錄</p>';
-  
-  return list.map(row => `
-    <div class="record-card">
-      <div class="card-header">
-        <div>
-          <div class="v-name">${row[1]}</div>
-          <div class="v-id">ID: ${row[0]}</div>
+    /** 5. 大隊長視圖 **/
+    function renderTeamView() {
+      let html = `
+        <div class="tab-container">
+          <div class="tab active" id="tab-team" onclick="switchView('team')">大隊紀錄</div>
+          <div class="tab" id="tab-mine" onclick="switchView('mine')">我的紀錄</div>
         </div>
-        <div class="team-tag">${row[3]}</div>
-      </div>
-      <div class="stats-row">
-        <div class="stat-item"><label>本月次數</label><b>${row[4]}</b></div>
-        <div class="stat-item"><label>今年次數</label><b>${row[5]}</b></div>
-        <div class="stat-item"><label>去年次數</label><b>${row[6]}</b></div>
-      </div>
-      <div class="update-time">資料更新：${row[7]}</div>
-    </div>
-  `).join('');
-}
-    </script>
+        <div id="sub-container"></div>
+      `;
+      document.getElementById('record-container').innerHTML = html;
+      switchView('team'); // 大隊長通常想先看整隊
+    }
+
+    /** 6. 切換標籤 **/
+    function switchView(mode) {
+      const data = window.cachedServiceData;
+      const subContainer = document.getElementById('sub-container');
+      
+      document.getElementById('tab-team').className = (mode === 'team' ? 'tab active' : 'tab');
+      document.getElementById('tab-mine').className = (mode === 'mine' ? 'tab active' : 'tab');
+
+      let filtered;
+      if (mode === 'team') {
+        // 篩選所屬大隊
+        filtered = data.slice(1).filter(row => String(row[3]).trim() === String(currentUser.team).trim());
+      } else {
+        filtered = data.slice(1).filter(row => String(row[1]).trim() === String(currentUser.name).trim());
+      }
+      
+      subContainer.innerHTML = generateCards(filtered);
+    }
+
+    /** 7. 渲染引擎 **/
+    function generateCards(list) {
+      if (!list || list.length === 0) return '<p style="text-align:center; color:#999; padding:50px;">查無紀錄資料</p>';
+      
+      return list.map(row => `
+        <div class="record-card">
+          <div class="card-header">
+            <div>
+              <div class="v-name">${row[1]}</div>
+              <div class="v-id">ID: ${row[0]}</div>
+            </div>
+            <div class="team-tag">${row[3]}</div>
+          </div>
+          <div class="stats-row">
+            <div class="stat-item"><label>本月</label><b>${row[4]}</b></div>
+            <div class="stat-item"><label>今年</label><b>${row[5]}</b></div>
+            <div class="stat-item"><label>去年</label><b>${row[6]}</b></div>
+          </div>
+          <div class="update-time">資料更新：${row[7]}</div>
+        </div>
+      `).join('');
+    }
+  </script>
   </body>
 </html>
