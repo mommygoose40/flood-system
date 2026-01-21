@@ -83,17 +83,83 @@
 .stat-item b { font-size: 18px; color: #222; }
 
 .update-time { font-size: 11px; color: #aaa; text-align: right; }
+
+    #switchArea {
+  display: none;
+  justify-content: center;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+#btnTeam,
+#btnSelf {
+  width: 140px;
+  height: 46px;
+  font-size: 20px;
+  border-radius: 8px;
+  border: 2px solid #0b5ed7;
+  background: white;
+  color: #0b5ed7;
+  cursor: pointer;
+}
+
+#btnTeam.active,
+#btnSelf.active {
+  background: #0b5ed7;
+  color: white;
+}
+
+    #globalFooter {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 70px;
+  background: #f8f8f8;
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+  align-items: center;
+  padding: 0 16px;
+  box-shadow: 0 -2px 6px rgba(0,0,0,0.12);
+  z-index: 9999;
+}
+
+.gray-btn {
+  flex: 1;
+  height: 48px;
+  font-size: 20px;
+  border-radius: 10px;
+  border: none;
+  background: #e0e0e0;
+  color: #333;
+}
+
+@media (min-width: 769px) {
+  #globalFooter {
+    display: none;
+  }
+}
   </style>
 </head>
 
   <body>
     <div id="patrol-list" class="page-content">
-  <div class="header-bar">
-    <button class="back-btn" onclick="showPage('home-page')">← 返回</button>
-    <h2 id="record-page-title">服務紀錄</h2>
-  </div>
+  <h2 id="pageTitle" style="text-align:center; margin-bottom:24px;">
+  服務紀錄
+</h2>
 
-  <div id="record-container"></div>
+<div id="switchArea" style="display:none; justify-content:center; margin-bottom:20px;">
+  <button id="btnTeam">大隊紀錄</button>
+  <button id="btnSelf">我的紀錄</button>
+</div>
+
+<div id="record-container"></div>
+
+      <div id="globalFooter">
+  <button class="gray-btn" onclick="history.back()">回上一頁</button>
+  <button class="gray-btn" onclick="location.href='/home'">回主選單</button>
+</div>
 </div>
 
     <script>
@@ -143,12 +209,36 @@ async function fetchData() {
 }
 
     function initView() {
-      if (currentUser.role === '大隊長') {
-        renderTeamView();
-      } else {
-        renderPersonalView();
-      }
-    }
+  if (currentUser.role === '大隊長') {
+    document.getElementById('switchArea').style.display = 'flex';
+    switchToTeam();
+  } else {
+    switchToMine();
+  }
+}
+
+      document.getElementById('btnTeam').onclick = switchToTeam;
+document.getElementById('btnSelf').onclick = switchToMine;
+
+function switchToTeam() {
+  setActive('btnTeam');
+  const data = window.cachedServiceData.slice(1)
+    .filter(row => String(row[3]).trim() === String(currentUser.team).trim());
+  document.getElementById('record-container').innerHTML = generateCards(data);
+}
+
+function switchToMine() {
+  setActive('btnSelf');
+  const data = window.cachedServiceData.slice(1)
+    .filter(row => String(row[1]).trim() === String(currentUser.name).trim());
+  document.getElementById('record-container').innerHTML = generateCards(data);
+}
+
+function setActive(id) {
+  document.getElementById('btnTeam').classList.remove('active');
+  document.getElementById('btnSelf').classList.remove('active');
+  document.getElementById(id).classList.add('active');
+}
 
     /** 4. 志工個人視圖 **/
     function renderPersonalView() {
@@ -158,19 +248,6 @@ async function fetchData() {
       
       document.getElementById('record-page-title').innerText = "我的服務紀錄";
       document.getElementById('record-container').innerHTML = generateCards(myData);
-    }
-
-    /** 5. 大隊長視圖 **/
-    function renderTeamView() {
-      let html = `
-        <div class="tab-container">
-          <div class="tab active" id="tab-team" onclick="switchView('team')">大隊紀錄</div>
-          <div class="tab" id="tab-mine" onclick="switchView('mine')">我的紀錄</div>
-        </div>
-        <div id="sub-container"></div>
-      `;
-      document.getElementById('record-container').innerHTML = html;
-      switchView('team'); // 大隊長通常想先看整隊
     }
 
     /** 6. 切換標籤 **/
