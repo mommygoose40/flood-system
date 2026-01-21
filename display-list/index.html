@@ -3449,9 +3449,13 @@ function showLoadingMask() {
 function renderLoadingInList() {
   const container = document.getElementById("listContainer");
   const spinner = document.getElementById("centerSpinner");
+  const hint = document.getElementById("tapHint");
 
   container.style.display = "none";
   spinner.style.display = "flex";
+
+  // 🔥 小載入中時，強制隱藏 hint
+  if (hint) hint.style.display = "none";
 
   // 不要顯示大遮罩
   document.getElementById("loadingMask").style.display = "none";
