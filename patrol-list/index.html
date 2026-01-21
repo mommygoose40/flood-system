@@ -58,7 +58,7 @@
 
 /* 姓名與 ID */
 .v-name { 
-  font-size: 28px; /* 顯眼的姓名 */
+  font-size: 24px; /* 顯眼的姓名 */
   font-weight: 900; 
   color: #1a1a1a; 
 }
@@ -98,14 +98,14 @@
 }
 
 .stat-item b { 
-  font-size: 32px; /* 數字特大顯示 */
+  font-size: 28px; /* 數字特大顯示 */
   color: #1a1a1a;
 }
 
 /* 資料更新時間 */
 .update-time { 
   font-size: 16px; /* 增大字體 */
-  color: #999; 
+  color: #666; 
   text-align: right; 
   border-top: 1px dashed #ddd;
   padding-top: 12px;
@@ -403,14 +403,14 @@ function setActive(id) {
             <div class="v-name">${row[1]}</div>
             <div class="v-id">ID: ${row[0]}</div>
           </div>
-          <div class="team-tag">${row[3]}</div>
+          <div class="team-tag">大隊：${row[3]}</div>
         </div>
         <div class="stats-row">
-          <div class="stat-item"><label>本月</label><b>${row[4]}</b></div>
-          <div class="stat-item"><label>今年</label><b>${row[5]}</b></div>
-          <div class="stat-item"><label>去年</label><b>${row[6]}</b></div>
+          <div class="stat-item"><label>本月次數</label><b>${row[4]}</b></div>
+          <div class="stat-item"><label>今年次數</label><b>${row[5]}</b></div>
+          <div class="stat-item"><label>去年次數</label><b>${row[6]}</b></div>
         </div>
-        <div class="update-time">資料更新時間：${displayDate}</div>
+        <div class="update-time">更新時間：${displayDate}</div>
       </div>
     `;
   }).join('');
