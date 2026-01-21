@@ -2384,6 +2384,13 @@ function updateTapHintVisibility() {
   const hint = document.getElementById("tapHint");
   if (!hint) return;
 
+  // 🔒 管理員模式一律不顯示 hint
+  if (globalRole === "管理員") {
+    hint.style.display = "none";
+    return;
+  }
+
+  // 📱 非管理員：手機顯示，桌機隱藏
   if (window.innerWidth < 769) {
     hint.style.display = "block";
   } else {
