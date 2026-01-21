@@ -58,29 +58,29 @@
 
 /* 姓名與 ID 區塊 */
 .v-name { 
-  font-size: 22px; 
+  font-size: 20px; 
   font-weight: 900; 
   color: #1a1a1a; 
 }
 
 .v-id { 
-  color: #888; 
-  font-size: 16px; 
+  color: #666; 
+  font-size: 18px; 
   margin-top: 2px;
 }
 
 /* 大隊標籤：移除色塊，改為乾淨的右側對齊文字 */
 .team-tag {
   color: #2d6cdf;
-  font-size: 16px; 
+  font-size: 18px; 
   font-weight: bold;
   /* 移除 background, padding, border-radius */
 }
 
-/* 數據列：優化擁擠感 */
+/* 數據列：優化字體大小與間距 */
 .stats-row {
   display: flex;
-  justify-content: space-between; /* 讓三個項目均分空間 */
+  justify-content: space-between;
   background: #fcfcfc;
   padding: 15px 5px;
   border-radius: 12px;
@@ -91,32 +91,34 @@
 .stat-item {
   flex: 1;
   text-align: center;
-  position: relative;
-}
-
-/* 在項目之間加上細微的分隔線（可選，增加秩序感） */
-.stat-item:not(:last-child)::after {
-  content: "";
-  position: absolute;
-  right: 0;
-  top: 20%;
-  height: 60%;
-  width: 1px;
-  background: #eee;
 }
 
 .stat-item label { 
   display: block; 
-  font-size: 14px; /* 標籤稍微縮小一點點 */
-  color: #777; 
-  margin-bottom: 5px; 
+  font-size: 18px; /* 標籤：本月、今年、去年 */
+  color: #666; 
+  margin-bottom: 8px;
+  font-weight: bold;
+}
+
+/* 數字區塊：大數字 + 小單位 */
+.stat-value {
+  display: flex;
+  align-items: baseline; /* 讓數字底線對齊 */
+  justify-content: center;
 }
 
 .stat-item b { 
-  display: block;
-  font-size: 24px; /* 數字適中 */
+  font-size: 20px; /* 大數字 */
   color: #1a1a1a;
   line-height: 1;
+}
+
+.stat-unit {
+  font-size: 18px; /* 小小的 "次" */
+  color: #666;
+  margin-left: 2px;
+  font-weight: normal;
 }
 
 /* 資料更新時間 */
@@ -414,16 +416,22 @@ function setActive(id) {
         
         <div class="stats-row">
           <div class="stat-item">
-            <label>本月次數</label>
-            <b>${row[4]}</b>
+            <label>本月</label>
+            <div class="stat-value">
+              <b>${row[4]}</b><span class="stat-unit">次</span>
+            </div>
           </div>
           <div class="stat-item">
-            <label>今年次數</label>
-            <b>${row[5]}</b>
+            <label>今年</label>
+            <div class="stat-value">
+              <b>${row[5]}</b><span class="stat-unit">次</span>
+            </div>
           </div>
           <div class="stat-item">
-            <label>去年次數</label>
-            <b>${row[6]}</b>
+            <label>去年</label>
+            <div class="stat-value">
+              <b>${row[6]}</b><span class="stat-unit">次</span>
+            </div>
           </div>
         </div>
         
