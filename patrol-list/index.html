@@ -232,6 +232,44 @@
   }
 }
 
+/*今日巡視狀態*/
+    .today-status-box{
+  background:#f8f9fa;
+  border-left:6px solid #0b5ed7;
+  margin:8px 12px 16px;
+  padding:12px;
+  border-radius:10px;
+}
+.today-status-title{
+  font-weight:700;
+  margin-bottom:8px;
+  font-size:18px;
+}
+.today-status-item{
+  font-size:18px;
+  margin:6px 0;
+  display:flex;
+  align-items:center;
+  gap:8px;
+}
+.dot-green{
+  width:10px;
+  height:10px;
+  border-radius:50%;
+  background:#22c55e;
+  display:inline-block;
+}
+.dot-gray{
+  width:10px;
+  height:10px;
+  border-radius:50%;
+  background:#9ca3af;
+  display:inline-block;
+}
+.status-text{
+  font-weight:700;
+}
+
   </style>
 </head>
 
@@ -246,6 +284,7 @@
   <button id="btnSelf">我的紀錄</button>
 </div>
 
+<div id="todayStatusContainer"></div>
 <div id="record-container"></div>
 
       <div id="globalFooter">
@@ -283,32 +322,46 @@
       fetchData(); // 呼叫 API 抓取資料
     };
 
-    // 3. 抓取資料函式 (這一段是你原本缺少的)
     // 在 script 區塊中修改 fetchData 函式
 async function fetchData() {
-  const scriptURL = "https://script.google.com/macros/s/AKfycbzGtk4tPj0-NCtKjUweoTjpaS5VmAA4p7oBej-PsrpZwb0A-sbBoySUcweObGkgzcX-/exec"; // 務必換成你部署後的 Web App URL
-  
-  // 構造 API 請求網址
-  const apiURL = `${scriptURL}?action=getServiceData`;
+  const scriptURL = "https://script.google.com/macros/s/AKfycbzGtk4tPj0-NCtKjUweoTjpaS5VmAA4p7oBej-PsrpZwb0A-sbBoySUcweObGkgzcX-/exec";
+
+  const serviceURL = `${scriptURL}?action=getServiceData`;
+  const todayStatusURL = `${scriptURL}?action=getTodayPatrolStatus`;
 
   try {
-    // 使用 fetch 抓取
-    const response = await fetch(apiURL);
+    // ① 先抓服務次數
+    const response = await fetch(serviceURL);
     const result = await response.json();
 
-    if (result.success) {
-  window.cachedServiceData = result.data;
-  initView();
-  hideLoading();
-} else {
-      document.getElementById('record-container').innerHTML = `<div class="loading">錯誤: ${result.error}</div>`;
+    if (!result.success) {
+      document.getElementById('record-container').innerHTML =
+        `<div class="loading">錯誤: ${result.error}</div>`;
+      hideLoading();
+      return;
     }
+
+    window.cachedServiceData = result.data;
+    initView(); // 原本的卡片初始化
+
+    // ② 再抓「今日巡視狀態」（只影響上方狀態區）
+    try {
+      const statusRes = await fetch(todayStatusURL);
+      const statusJson = await statusRes.json();
+      renderTodayPatrolStatus(statusJson);
+    } catch (e) {
+      console.warn("今日巡視狀態抓取失敗", e);
+      // 這個失敗不影響整頁，不用 alert
+    }
+
+    hideLoading();
+
   } catch (error) {
-  console.error("Fetch error:", error);
-  document.getElementById('record-container').innerHTML =
-    `<div class="loading">連線失敗，請檢查網路。</div>`;
-  hideLoading();
-}
+    console.error("Fetch error:", error);
+    document.getElementById('record-container').innerHTML =
+      `<div class="loading">連線失敗，請檢查網路。</div>`;
+    hideLoading();
+  }
 }
 
       function hideLoading() {
@@ -324,27 +377,61 @@ function showLoading() {
     function initView() {
   if (currentUser.role === '大隊長') {
     document.getElementById('switchArea').style.display = 'flex';
-    switchToTeam();
+    // 預設不跑卡片，先顯示空狀態提示
+    setActive('btnTeam'); // 你想預設亮哪顆就亮哪顆
+    document.getElementById('record-container').innerHTML =
+      '<p style="text-align:center; color:#999; padding:50px; font-size:20px;">請選擇「大隊紀錄」或「我的紀錄」查看</p>';
   } else {
-    switchToMine();
+    // 非大隊長就直接跑我的紀錄（你原本需求通常是這樣）
+    switchToMine(true);
   }
 }
 
       document.getElementById('btnTeam').onclick = switchToTeam;
 document.getElementById('btnSelf').onclick = switchToMine;
 
-function switchToTeam() {
+let renderedCache = { team: null, mine: null };
+
+function switchToTeam(force = false) {
   setActive('btnTeam');
-  const data = window.cachedServiceData.slice(1)
-    .filter(row => String(row[3]).trim() === String(currentUser.team).trim());
-  document.getElementById('record-container').innerHTML = generateCards(data);
+  showLoading();
+
+  setTimeout(() => {
+    if (!force && renderedCache.team) {
+      document.getElementById('record-container').innerHTML = renderedCache.team;
+      hideLoading();
+      return;
+    }
+
+    const data = window.cachedServiceData.slice(1)
+      .filter(row => String(row[3]).trim() === String(currentUser.team).trim());
+
+    const html = generateCards(data);
+    renderedCache.team = html;
+    document.getElementById('record-container').innerHTML = html;
+    hideLoading();
+  }, 0);
 }
 
-function switchToMine() {
+function switchToMine(force = false) {
   setActive('btnSelf');
-  const data = window.cachedServiceData.slice(1)
-    .filter(row => String(row[1]).trim() === String(currentUser.name).trim());
-  document.getElementById('record-container').innerHTML = generateCards(data);
+  showLoading();
+
+  setTimeout(() => {
+    if (!force && renderedCache.mine) {
+      document.getElementById('record-container').innerHTML = renderedCache.mine;
+      hideLoading();
+      return;
+    }
+
+    const data = window.cachedServiceData.slice(1)
+      .filter(row => String(row[1]).trim() === String(currentUser.name).trim());
+
+    const html = generateCards(data);
+    renderedCache.mine = html;
+    document.getElementById('record-container').innerHTML = html;
+    hideLoading();
+  }, 0);
 }
 
 function setActive(id) {
@@ -436,6 +523,67 @@ function setActive(id) {
       </div>
     `;
   }).join('');
+}
+
+      //今日巡視狀態
+      function renderTodayPatrolStatus(res) {
+  const container = document.getElementById("todayStatusContainer");
+  if (!container) return;
+
+  // 只給大隊長看
+  if (currentUser.role !== "大隊長") {
+    container.innerHTML = "";
+    return;
+  }
+
+  if (!res || !res.success) {
+    container.innerHTML = "";
+    return;
+  }
+
+  const patrolling = res.patrolling || [];
+  const finished = res.finished || [];
+
+  // 今天沒任何狀態就不顯示整塊
+  if (patrolling.length === 0 && finished.length === 0) {
+    container.innerHTML = "";
+    return;
+  }
+
+  let html = `
+    <div class="today-status-box">
+      <div class="today-status-title">今日巡視狀態</div>
+  `;
+
+  // ① 巡視中（優先）
+  patrolling.forEach(item => {
+    html += `
+      <div class="today-status-item">
+        <span>
+          ${item.name}：
+          <span class="status-text">巡視中</span>
+          （${item.start} 開始巡視）
+        </span>
+        <span class="dot-green"></span>
+      </div>
+    `;
+  });
+
+  // ② 巡視結束
+  finished.forEach(item => {
+    html += `
+      <div class="today-status-item">
+        <span>
+          ${item.name}：
+          <span class="status-text">巡視結束</span>
+        </span>
+        <span class="dot-gray"></span>
+      </div>
+    `;
+  });
+
+  html += `</div>`;
+  container.innerHTML = html;
 }
   </script>
   </body>
