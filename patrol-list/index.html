@@ -235,11 +235,13 @@
 /*今日巡視狀態*/
     .today-status-box{
   background:#f8f9fa;
-  border-left:6px solid #0b5ed7;
-  margin:8px 12px 16px;
-  padding:12px;
-  border-radius:10px;
+  border-left:10px solid #2d6cdf;   /* 跟卡片一致 */
+  margin:15px;
+  padding:24px;
+  border-radius:16px;
+  box-shadow:0 6px 18px rgba(0,0,0,0.06);
 }
+
 .today-status-title{
   font-weight:700;
   margin-bottom:8px;
@@ -285,6 +287,19 @@
 </div>
 
 <div id="todayStatusContainer"></div>
+      
+<div id="historyToggle" style="display:none; text-align:center; margin:8px 0 16px;">
+  <button id="btnToggleHistory"
+    style="
+      background:none;
+      border:none;
+      font-size:18px;
+      color:#0b5ed7;
+      cursor:pointer;
+    ">
+    歷史紀錄 ▼
+  </button>
+</div>
 <div id="record-container"></div>
 
       <div id="globalFooter">
@@ -302,6 +317,9 @@
 </div>
 
     <script>
+      let historyExpanded = false;
+let currentViewMode = "team"; // team | mine
+
       // 1. 解析參數並建立使用者物件
     const urlParams = new URLSearchParams(window.location.search);
     window.currentUser = {
@@ -375,17 +393,74 @@ function showLoading() {
 }
 
     function initView() {
+  const toggle = document.getElementById("historyToggle");
+
   if (currentUser.role === '大隊長') {
     document.getElementById('switchArea').style.display = 'flex';
-    // 預設不跑卡片，先顯示空狀態提示
-    setActive('btnTeam'); // 你想預設亮哪顆就亮哪顆
-    document.getElementById('record-container').innerHTML =
-      '<p style="text-align:center; color:#999; padding:50px; font-size:20px;">請選擇「大隊紀錄」或「我的紀錄」查看</p>';
+    toggle.style.display = 'block';
+    currentViewMode = "team";
   } else {
-    // 非大隊長就直接跑我的紀錄（你原本需求通常是這樣）
-    switchToMine(true);
+    // 一般志工
+    toggle.style.display = 'block';
+    currentViewMode = "mine";
   }
 }
+
+      document.getElementById("btnToggleHistory").onclick = () => {
+  historyExpanded = !historyExpanded;
+  const btn = document.getElementById("btnToggleHistory");
+
+  if (historyExpanded) {
+    btn.innerText = "歷史紀錄 ▲";
+    showLoading();
+
+    setTimeout(() => {
+      if (currentViewMode === "team") {
+        switchToTeam(true);
+      } else {
+        switchToMine(true);
+      }
+      hideLoading();
+    }, 0);
+
+  } else {
+    btn.innerText = "歷史紀錄 ▼";
+  }
+};
+
+      document.getElementById('btnSelf').onclick = () => {
+  setActive('btnSelf');
+  currentViewMode = "mine";
+
+  // 隱藏「歷史紀錄 ▼」
+  document.getElementById("historyToggle").style.display = "none";
+
+  // 直接顯示自己的歷史紀錄（不收合）
+  showLoading();
+  setTimeout(() => {
+    switchToMine(true);
+    hideLoading();
+  }, 0);
+
+  // 今日巡視狀態 → 自己
+  fetchMyTodayStatus?.(); // 如果你有包這層，沒有就略過
+};
+
+      ddocument.getElementById('btnTeam').onclick = () => {
+  setActive('btnTeam');
+  currentViewMode = "team";
+
+  // 顯示「歷史紀錄 ▼」
+  document.getElementById("historyToggle").style.display = "block";
+
+  historyExpanded = false;
+  document.getElementById("btnToggleHistory").innerText = "歷史紀錄 ▼";
+
+  // 今日巡視狀態 → 全隊
+  fetchTeamTodayStatus?.();
+};
+
+
 
       document.getElementById('btnTeam').onclick = switchToTeam;
 document.getElementById('btnSelf').onclick = switchToMine;
@@ -529,6 +604,14 @@ function setActive(id) {
       function renderTodayPatrolStatus(res) {
   const container = document.getElementById("todayStatusContainer");
   if (!container) return;
+
+  if (currentViewMode === "mine") {
+  res = {
+    ...res,
+    patrolling: res.patrolling.filter(p => p.name === currentUser.name),
+    finished: res.finished.filter(f => f.name === currentUser.name)
+  };
+}
 
   // 只給大隊長看
   if (currentUser.role !== "大隊長") {
