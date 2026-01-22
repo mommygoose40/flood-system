@@ -366,10 +366,18 @@ async function fetchData() {
     window.cachedTodayStatus = statusJson;
 
     // ③ 先畫今日巡視狀態
-    renderTodayPatrolStatus(statusJson);
+    // 先設定 view mode（非常關鍵）
+if (currentUser.role !== "大隊長") {
+  currentViewMode = "mine";
+} else {
+  currentViewMode = "team";
+}
 
-    // ④ 再 initView（⚠️ 這時才畫歷史）
-    initView();
+// 再 render
+renderTodayPatrolStatus(statusJson);
+
+// 最後才處理畫面結構
+initView();
 
     hideLoading();
 
@@ -419,13 +427,13 @@ function showLoading() {
   const btn = document.getElementById("btnToggleHistory");
 
   if (historyExpanded) {
-    btn.innerText = "歷史紀錄 ▲";
+    btn.innerText = "收起歷史紀錄 ▲";
     setTimeout(() => {
       switchToTeam(true);
       hideLoading();
     }, 0);
   } else {
-    btn.innerText = "歷史紀錄 ▼";
+    btn.innerText = "展開歷史紀錄 ▼";
     document.getElementById("record-container").innerHTML = "";
   }
 };
