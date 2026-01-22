@@ -261,21 +261,8 @@
   background:#22c55e;
   display:inline-block;
 }
-.dot-gray{
-  width:10px;
-  height:10px;
-  border-radius:50%;
-  background:#9ca3af;
-  display:inline-block;
-}
 .status-text{
-  font-weight:700;
-}
-
-    .status-time {
-  margin-left: 4px;
-  font-size: 16px;
-  color: #555;
+  font-weight:normal;
 }
   </style>
 </head>
@@ -387,14 +374,17 @@ async function fetchData() {
   }
 }
 
-      function hideLoading() {
-  const mask = document.getElementById('loadingMask');
-  if (mask) mask.style.display = 'none';
-}
+      function hideLoading
 
 function showLoading() {
   const mask = document.getElementById('loadingMask');
   if (mask) mask.style.display = 'flex';
+
+  // ⛔ 遮罩出現時，全部操作區隱藏
+  document.getElementById("switchArea")?.style && (document.getElementById("switchArea").style.display = "none");
+  document.getElementById("historyToggle")?.style && (document.getElementById("historyToggle").style.display = "none");
+  document.getElementById("todayStatusContainer")?.style && (document.getElementById("todayStatusContainer").style.display = "none");
+  document.getElementById("record-container")?.style && (document.getElementById("record-container").style.display = "none");
 }
 
     function initView() {
@@ -423,7 +413,6 @@ function showLoading() {
 
   if (historyExpanded) {
     btn.innerText = "歷史紀錄 ▲";
-    showLoading();
     setTimeout(() => {
       switchToTeam(true);
       hideLoading();
@@ -630,7 +619,7 @@ function setActive(id) {
         <span>
           ${item.name}：
           <span class="status-text">巡視中</span>
-<span class="status-time">（${item.start} 開始巡視）</span>
+<span class="status-time">(${item.start} 開始巡視)</span>
         </span>
         <span class="dot-green"></span>
       </div>
@@ -645,7 +634,6 @@ function setActive(id) {
           ${item.name}：
           <span class="status-text">巡視結束</span>
         </span>
-        <span class="dot-gray"></span>
       </div>
     `;
   });
