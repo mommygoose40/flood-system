@@ -2169,7 +2169,7 @@ function closeWindowSafe() {
 (function() {
   const urlParams = new URLSearchParams(location.search);
   const source = urlParams.get('source');
-  const footer = document.getElementById('footer-back');
+  const footer = document.getElementById('footer-back-container');
 
   const inIframe = window.self !== window.top;
 
