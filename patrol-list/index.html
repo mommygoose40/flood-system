@@ -264,10 +264,18 @@
 .status-text{
   font-weight:normal;
 }
+
+    /* ===== 載入中時，隱藏所有可操作 UI ===== */
+body.loading #switchArea,
+body.loading #historyToggle,
+body.loading #todayStatusContainer,
+body.loading #record-container {
+  display: none !important;
+}
   </style>
 </head>
 
-  <body>
+  <body class="loading">
     <div id="patrol-list" class="page-content">
   <h2 id="pageTitle" style="text-align:center; margin-bottom:24px;">
   服務紀錄
@@ -375,33 +383,17 @@ async function fetchData() {
 }
 
 function hideLoading() {
-  const mask = document.getElementById('loadingMask');
-  if (mask) mask.style.display = 'none';
+  document.body.classList.remove("loading");
 
-  // ✅ 依角色與模式恢復 UI
-  if (currentUser.role === "大隊長") {
-    document.getElementById("switchArea").style.display = "flex";
-    document.getElementById("todayStatusContainer").style.display = "block";
-
-    if (currentViewMode === "team") {
-      document.getElementById("historyToggle").style.display = "block";
-    }
-  } else {
-    document.getElementById("todayStatusContainer").style.display = "block";
-  }
-
-  document.getElementById("record-container").style.display = "block";
+  const mask = document.getElementById("loadingMask");
+  if (mask) mask.style.display = "none";
 }
 
 function showLoading() {
-  const mask = document.getElementById('loadingMask');
-  if (mask) mask.style.display = 'flex';
+  document.body.classList.add("loading");
 
-  // ⛔ 遮罩出現時，全部操作區隱藏
-  document.getElementById("switchArea")?.style && (document.getElementById("switchArea").style.display = "none");
-  document.getElementById("historyToggle")?.style && (document.getElementById("historyToggle").style.display = "none");
-  document.getElementById("todayStatusContainer")?.style && (document.getElementById("todayStatusContainer").style.display = "none");
-  document.getElementById("record-container")?.style && (document.getElementById("record-container").style.display = "none");
+  const mask = document.getElementById("loadingMask");
+  if (mask) mask.style.display = "flex";
 }
 
     function initView() {
