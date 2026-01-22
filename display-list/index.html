@@ -87,7 +87,7 @@
   transform: translateY(-50%);
   font-size: 26px;
   color: #666;
-  /*font-weight: bold;*/
+  font-weight: bold;
 }
 
     .record:last-child {
@@ -2323,14 +2323,21 @@ if (window.innerWidth < 769 && !document.getElementById("tapHint")) {
 
   // 3. 渲染與強制展開
   const years = Object.keys(grouped).sort((a, b) => b - a);
+  const latestYear = years[0];
   years.forEach(twYear => {
     const yearBlock = createBlock(`${twYear} 年`, "year");
     const yearContent = yearBlock.querySelector(".content");
     
-    // ★ 強制展開「年」
-    yearContent.style.display = "block";
-    const yearIcon = yearBlock.querySelector(".toggle-icon");
-    if(yearIcon) yearIcon.innerHTML = `<svg width="40" height="40" viewBox="0 0 24 24"><path fill="#666" d="M5 16l7-8 7 8z"/></svg>`;
+    // ★ 只強制展開最新的年份
+if (twYear === latestYear) {
+  yearContent.style.display = "block";
+  const yearIcon = yearBlock.querySelector(".toggle-icon");
+  if (yearIcon) {
+    yearIcon.innerHTML = `<svg width="40" height="40" viewBox="0 0 24 24">
+      <path fill="#666" d="M5 16l7-8 7 8z"/>
+    </svg>`;
+  }
+}
 
     const months = Object.keys(grouped[twYear]).map(Number).sort((a, b) => b - a);
     months.forEach(month => {
