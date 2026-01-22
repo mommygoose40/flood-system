@@ -61,6 +61,34 @@
   cursor: pointer;
 }
 
+    .record{
+  position: relative;
+  cursor: pointer;
+  transition: transform .12s ease, box-shadow .12s ease, background .12s ease;
+}
+
+.record:hover{
+  background: #f7faff;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+  transform: translateY(-1px);
+}
+
+.record:active{
+  transform: translateY(0);
+  box-shadow: 0 1px 4px rgba(0,0,0,0.10);
+}
+
+/* 右側提示箭頭 */
+.record::after{
+  content: "›";
+  position: absolute;
+  right: 6px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 26px;
+  color: rgba(0,0,0,0.35);
+}
+
     .record:last-child {
       border-bottom: none;
     }
