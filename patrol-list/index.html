@@ -374,7 +374,24 @@ async function fetchData() {
   }
 }
 
-      function hideLoading
+function hideLoading() {
+  const mask = document.getElementById('loadingMask');
+  if (mask) mask.style.display = 'none';
+
+  // ✅ 依角色與模式恢復 UI
+  if (currentUser.role === "大隊長") {
+    document.getElementById("switchArea").style.display = "flex";
+    document.getElementById("todayStatusContainer").style.display = "block";
+
+    if (currentViewMode === "team") {
+      document.getElementById("historyToggle").style.display = "block";
+    }
+  } else {
+    document.getElementById("todayStatusContainer").style.display = "block";
+  }
+
+  document.getElementById("record-container").style.display = "block";
+}
 
 function showLoading() {
   const mask = document.getElementById('loadingMask');
