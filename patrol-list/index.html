@@ -366,7 +366,8 @@ async function fetchData() {
     try {
       const statusRes = await fetch(todayStatusURL);
       const statusJson = await statusRes.json();
-      renderTodayPatrolStatus(statusJson);
+      window.cachedTodayStatus = statusJson;
+renderTodayPatrolStatus(statusJson);
     } catch (e) {
       console.warn("今日巡視狀態抓取失敗", e);
       // 這個失敗不影響整頁，不用 alert
@@ -435,6 +436,7 @@ function showLoading() {
       document.getElementById("btnTeam").onclick = () => {
   setActive("btnTeam");
   currentViewMode = "team";
+renderTodayPatrolStatus(window.cachedTodayStatus);
   historyExpanded = false;
 
   document.getElementById("historyToggle").style.display = "block";
@@ -445,6 +447,7 @@ function showLoading() {
 document.getElementById("btnSelf").onclick = () => {
   setActive("btnSelf");
   currentViewMode = "mine";
+renderTodayPatrolStatus(window.cachedTodayStatus);
 
   document.getElementById("historyToggle").style.display = "none";
   switchToMine(true);
@@ -586,31 +589,21 @@ function setActive(id) {
       //今日巡視狀態
       function renderTodayPatrolStatus(res) {
   const container = document.getElementById("todayStatusContainer");
-  if (!container) return;
+  if (!container || !res || !res.success) {
+    container.innerHTML = "";
+    return;
+  }
 
+  let patrolling = res.patrolling || [];
+  let finished = res.finished || [];
+
+  // ⭐ 依模式過濾
   if (currentViewMode === "mine") {
-  res = {
-    ...res,
-    patrolling: res.patrolling.filter(p => p.name === currentUser.name),
-    finished: res.finished.filter(f => f.name === currentUser.name)
-  };
-}
-
-  // 只給大隊長看
-  if (currentUser.role !== "大隊長") {
-    container.innerHTML = "";
-    return;
+    patrolling = patrolling.filter(p => p.name === currentUser.name);
+    finished = finished.filter(f => f.name === currentUser.name);
   }
 
-  if (!res || !res.success) {
-    container.innerHTML = "";
-    return;
-  }
-
-  const patrolling = res.patrolling || [];
-  const finished = res.finished || [];
-
-  // 今天沒任何狀態就不顯示整塊
+  // 沒資料就不顯示
   if (patrolling.length === 0 && finished.length === 0) {
     container.innerHTML = "";
     return;
@@ -621,21 +614,19 @@ function setActive(id) {
       <div class="today-status-title">今日巡視狀態</div>
   `;
 
-  // ① 巡視中（優先）
   patrolling.forEach(item => {
     html += `
       <div class="today-status-item">
         <span>
           ${item.name}：
           <span class="status-text">巡視中</span>
-<span class="status-time">(${item.start} 開始巡視)</span>
+          <span class="status-time">(${item.start} 開始巡視)</span>
         </span>
         <span class="dot-green"></span>
       </div>
     `;
   });
 
-  // ② 巡視結束
   finished.forEach(item => {
     html += `
       <div class="today-status-item">
