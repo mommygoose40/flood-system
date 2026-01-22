@@ -395,14 +395,20 @@ function showLoading() {
     function initView() {
   const toggle = document.getElementById("historyToggle");
 
-  if (currentUser.role === '大隊長') {
-    document.getElementById('switchArea').style.display = 'flex';
-    toggle.style.display = 'block';
+  if (currentUser.role === "大隊長") {
+    document.getElementById("switchArea").style.display = "flex";
+    setActive("btnTeam");
     currentViewMode = "team";
+
+    toggle.style.display = "block";
+    document.getElementById("record-container").innerHTML = ""; // 預設不顯示歷史
   } else {
     // 一般志工
-    toggle.style.display = 'block';
+    document.getElementById("switchArea").style.display = "none";
+    toggle.style.display = "none";
     currentViewMode = "mine";
+
+    switchToMine(true);
   }
 }
 
@@ -413,54 +419,33 @@ function showLoading() {
   if (historyExpanded) {
     btn.innerText = "歷史紀錄 ▲";
     showLoading();
-
     setTimeout(() => {
-      if (currentViewMode === "team") {
-        switchToTeam(true);
-      } else {
-        switchToMine(true);
-      }
+      switchToTeam(true);
       hideLoading();
     }, 0);
-
   } else {
     btn.innerText = "歷史紀錄 ▼";
+    document.getElementById("record-container").innerHTML = "";
   }
 };
 
-      document.getElementById('btnSelf').onclick = () => {
-  setActive('btnSelf');
+      document.getElementById("btnTeam").onclick = () => {
+  setActive("btnTeam");
+  currentViewMode = "team";
+  historyExpanded = false;
+
+  document.getElementById("historyToggle").style.display = "block";
+  document.getElementById("btnToggleHistory").innerText = "歷史紀錄 ▼";
+  document.getElementById("record-container").innerHTML = "";
+};
+
+document.getElementById("btnSelf").onclick = () => {
+  setActive("btnSelf");
   currentViewMode = "mine";
 
-  // 隱藏「歷史紀錄 ▼」
   document.getElementById("historyToggle").style.display = "none";
-
-  // 直接顯示自己的歷史紀錄（不收合）
-  showLoading();
-  setTimeout(() => {
-    switchToMine(true);
-    hideLoading();
-  }, 0);
-
-  // 今日巡視狀態 → 自己
-  fetchMyTodayStatus?.(); // 如果你有包這層，沒有就略過
+  switchToMine(true);
 };
-
-      ddocument.getElementById('btnTeam').onclick = () => {
-  setActive('btnTeam');
-  currentViewMode = "team";
-
-  // 顯示「歷史紀錄 ▼」
-  document.getElementById("historyToggle").style.display = "block";
-
-  historyExpanded = false;
-  document.getElementById("btnToggleHistory").innerText = "歷史紀錄 ▼";
-
-  // 今日巡視狀態 → 全隊
-  fetchTeamTodayStatus?.();
-};
-
-
 
       document.getElementById('btnTeam').onclick = switchToTeam;
 document.getElementById('btnSelf').onclick = switchToMine;
