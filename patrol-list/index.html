@@ -342,43 +342,39 @@ let currentViewMode = "team"; // team | mine
 
     // 在 script 區塊中修改 fetchData 函式
 async function fetchData() {
-  const scriptURL = "https://script.google.com/macros/s/AKfycbyiPbXb0dXoV_3baoJHg-4KDoTuhAU8RE4BU4s7h1Ii0JLrMtE0zJzkimvPRckNF4Fn/exec";
+  const scriptURL = "...";
 
   const serviceURL = `${scriptURL}?action=getServiceData`;
   const todayStatusURL = `${scriptURL}?action=getTodayPatrolStatus`;
 
   try {
-    // ① 先抓服務次數
-    const response = await fetch(serviceURL);
-    const result = await response.json();
+    // ① 同時抓兩個（而不是一前一後）
+    const [serviceRes, statusRes] = await Promise.all([
+      fetch(serviceURL),
+      fetch(todayStatusURL)
+    ]);
 
-    if (!result.success) {
-      document.getElementById('record-container').innerHTML =
-        `<div class="loading">錯誤: ${result.error}</div>`;
-      hideLoading();
-      return;
+    const serviceJson = await serviceRes.json();
+    const statusJson = await statusRes.json();
+
+    if (!serviceJson.success) {
+      throw new Error(serviceJson.error || "服務資料錯誤");
     }
 
-    window.cachedServiceData = result.data;
-    initView(); // 原本的卡片初始化
+    // ② 存資料
+    window.cachedServiceData = serviceJson.data;
+    window.cachedTodayStatus = statusJson;
 
-    // ② 再抓「今日巡視狀態」（只影響上方狀態區）
-    try {
-      const statusRes = await fetch(todayStatusURL);
-      const statusJson = await statusRes.json();
-      window.cachedTodayStatus = statusJson;
-renderTodayPatrolStatus(statusJson);
-    } catch (e) {
-      console.warn("今日巡視狀態抓取失敗", e);
-      // 這個失敗不影響整頁，不用 alert
-    }
+    // ③ 先畫今日巡視狀態
+    renderTodayPatrolStatus(statusJson);
+
+    // ④ 再 initView（⚠️ 這時才畫歷史）
+    initView();
 
     hideLoading();
 
-  } catch (error) {
-    console.error("Fetch error:", error);
-    document.getElementById('record-container').innerHTML =
-      `<div class="loading">連線失敗，請檢查網路。</div>`;
+  } catch (e) {
+    console.error(e);
     hideLoading();
   }
 }
@@ -408,13 +404,14 @@ function showLoading() {
     toggle.style.display = "block";
     document.getElementById("record-container").innerHTML = ""; // 預設不顯示歷史
   } else {
-    // 一般志工
-    document.getElementById("switchArea").style.display = "none";
-    toggle.style.display = "none";
-    currentViewMode = "mine";
+  // 志工模式
+  document.getElementById("switchArea").style.display = "none";
+  document.getElementById("historyToggle").style.display = "none";
+  currentViewMode = "mine";
 
-    switchToMine(true);
-  }
+  // ⭐ 在這裡直接畫（資料已經 ready）
+  switchToMine(true);
+}
 }
 
       document.getElementById("btnToggleHistory").onclick = () => {
