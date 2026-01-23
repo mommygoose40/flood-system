@@ -1448,7 +1448,7 @@ body {
 /* 按鈕固定寬度 */
 .fakeSelectBtn.timeBtn {
   flex-shrink: 0;
-  max-width: 75px; !important
+  max-width: 75px !important;
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -4076,19 +4076,26 @@ function hideScreenLock() {
   const end   = document.getElementById("dateEnd");
 
   const today = new Date();
-  const max   = today.toISOString().slice(0,10);
+  const max = today.toISOString().slice(0, 10);
 
-  const minDate = new Date();
-  minDate.setDate(today.getDate() - 13); // 含今天共 14 天
-  const min = minDate.toISOString().slice(0,10);
+  // --- 修改這裡：計算 3 天前的日期 ---
+  const threeDaysAgo = new Date();
+  threeDaysAgo.setDate(today.getDate() - 2); // 減 2 天 + 今天 = 3 天
+  const minDefault = threeDaysAgo.toISOString().slice(0, 10);
 
-  start.min = min;
+  // --- 設定可選範圍（維持最多 14 天供切換，但預設顯示 3 天） ---
+  const fourteenDaysAgo = new Date();
+  fourteenDaysAgo.setDate(today.getDate() - 13);
+  const minLimit = fourteenDaysAgo.toISOString().slice(0, 10);
+
+  // 設定 input 的限制
+  start.min = minLimit;
   start.max = max;
-  end.min   = min;
+  end.min   = minLimit;
   end.max   = max;
 
-  // 預設值：最近 3 天（你原本的行為）
-  start.value = min;
+  // 設定「初始預設值」為近三天
+  start.value = minDefault;
   end.value   = max;
 });
   
