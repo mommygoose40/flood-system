@@ -2043,13 +2043,35 @@ function backToList() {
   
 async function loadAdminRecords() {
 
-  const url = `${REPORT_GAS_URL}?action=listAdminFull&days=30`;
+  const dateStart = document.getElementById("dateStart").value;
+  const dateEnd   = document.getElementById("dateEnd").value;
+  const timeStart = document.getElementById("timeStart")?.value || "00:00";
+  const timeEnd   = document.getElementById("timeEnd")?.value || "23:59";
+
+  if (!dateStart || !dateEnd) {
+    document.getElementById("listContainer").innerHTML = "請選擇查詢期間";
+    return;
+  }
+
+  const start = `${dateStart}T${timeStart}`;
+  const end   = `${dateEnd}T${timeEnd}`;
+
+  const team   = document.getElementById("adminTeamSelect")?.value || "all";
+  const type   = document.getElementById("adminTypeSelect")?.value || "all";
+  const status = document.getElementById("adminStatusSelect")?.value || "all";
+
+  const url =
+    `${REPORT_GAS_URL}?action=getAdminRangeData` +
+    `&start=${encodeURIComponent(start)}` +
+    `&end=${encodeURIComponent(end)}` +
+    `&team=${encodeURIComponent(team)}` +
+    `&type=${encodeURIComponent(type)}` +
+    `&status=${encodeURIComponent(status)}`;
 
   let json;
   try {
     const res = await fetch(url);
-    const text = await res.text();
-    json = JSON.parse(text);
+    json = await res.json();
   } catch (e) {
     document.getElementById("listContainer").innerHTML = "管理員資料載入失敗";
     shouldKeepMask = false;
@@ -2057,21 +2079,26 @@ async function loadAdminRecords() {
     return;
   }
 
-  globalAdminRecords = json.records || [];
+  if (json.status !== "success") {
+    document.getElementById("listContainer").innerHTML = json.message || "查詢失敗";
+    return;
+  }
 
-  // ★★★ [新增] 將管理員列表數據存入 Session Storage ★★★
-    saveLocalReportsCache(globalAdminRecords);
+  // 🔥 現在這包資料，已經是 GAS 幫你「切好日期時間」的結果
+  globalAdminRecords = json.data || [];
 
-  const filtered = filterAdminRecords();
-  renderList(filtered);
+  // 本地快取（可留）
+  saveLocalReportsCache(globalAdminRecords);
 
-  // ★ renderList 結束後，關掉大 loading
+  // ⚠️ 注意：這時 filterAdminRecords 應該「只剩 UI 類型的 filter」
+  renderList(globalAdminRecords);
+
   if (shouldKeepMask) {
     shouldKeepMask = false;
     document.getElementById("loadingMask").style.display = "none";
   }
 
-  isInitialLoad = false;   // ★ 第一次載入結束
+  isInitialLoad = false;
 }
 
   /* ------------------------------------------
