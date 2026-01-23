@@ -2147,31 +2147,26 @@ if (targetTeam !== "全部") {
 
   // 2. 日期＋時間區間篩選（最多 14 天）
 const dateStart = document.getElementById("dateStart")?.value;
-const dateEnd   = document.getElementById("dateEnd")?.value;
-const timeStart = document.getElementById("timeStart")?.value || "00:00";
-const timeEnd   = document.getElementById("timeEnd")?.value || "23:59";
+  const dateEnd   = document.getElementById("dateEnd")?.value;
+  
+  // 修正點：按鈕沒有 .value，改抓 span 的內容
+  const timeStart = document.getElementById("timeStartText")?.innerText || "00:00";
+  const timeEnd   = document.getElementById("timeEndText")?.innerText || "23:59";
 
-if (dateStart && dateEnd) {
+  if (dateStart && dateEnd) {
+    const startDateTime = new Date(`${dateStart}T${timeStart}:00`).getTime();
+    const endDateTime   = new Date(`${dateEnd}T${timeEnd}:59`).getTime();
 
-  const startDateTime = new Date(`${dateStart}T${timeStart}:00`);
-  const endDateTime   = new Date(`${dateEnd}T${timeEnd}:59`);
+    records = records.filter(r => {
+      const link = r.詳細紀錄 || "";
+      const match = link.match(/report_(\d+)/);
+      if (!match) return false;
 
-  // 🔒 保險機制：JS 再擋一次 14 天
-  const diffDays = (endDateTime - startDateTime) / (1000 * 60 * 60 * 24);
-  if (diffDays > 14) {
-    showMessage("查詢範圍最多只能 14 天內");
-    return [];
+      const recordTimeMs = parseInt(match[1], 10); // 直接用毫秒比對，避免時區轉換干擾
+      
+      return recordTimeMs >= startDateTime && recordTimeMs <= endDateTime;
+    });
   }
-
-  records = records.filter(r => {
-    const link = r.詳細紀錄 || "";
-    const match = link.match(/report_(\d+)/);
-    if (!match) return false;
-
-    const recordTime = new Date(parseInt(match[1], 10));
-    return recordTime >= startDateTime && recordTime <= endDateTime;
-  });
-}
 
   // 3. 篩選通報類型
   let targetType = document.getElementById("adminTypeSelect")?.value || "全部";
