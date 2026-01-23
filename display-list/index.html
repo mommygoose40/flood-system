@@ -2204,20 +2204,6 @@ if (globalRole === "管理員" && viewMode === "admin") {
   document.getElementById("adminFilterArea").style.display = "none";
 }
 
-  // 管理員前端快篩 (保留您的過濾邏輯)
-  if (globalRole === "管理員" && viewMode === "admin") {
-    if (globalAdminRecords.length > 0) {
-      let targetTeam = document.getElementById("adminTeamSelect")?.value || "全部";
-      if (!targetTeam) targetTeam = document.getElementById("teamText")?.innerText || "全部";
-      if (targetTeam !== "全部") {
-        records = records.filter(r => (r.所屬大隊 + "") === targetTeam);
-      }
-      const now = new Date();
-      const cutoff = new Date(now.getTime() - adminViewDays * 24 * 60 * 60 * 1000);
-      records = records.filter(r => new Date(normalizeDate(r.日期)) >= cutoff);
-    }
-  }
-
   globalRecords = records;
   container.innerHTML = "";
 
