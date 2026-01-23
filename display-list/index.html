@@ -1403,7 +1403,25 @@ body {
   border: 1px solid #888;
   border-radius: 6px;
   font-family: "Microsoft JhengHei", -apple-system, sans-serif;
+  background: #fff;
 }
+
+    @media (min-width: 769px) {
+    .fakeSelectBtn.timeBtn {
+    font-size: 20px;
+  padding: 4px 12px;
+  border: 1px solid #888;
+  border-radius: 4px;
+  background: #fff;
+  color: #333;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: space-between;
+  min-width: 110px;
+  box-sizing: border-box;
+    }
+    }
 
     @media (max-width: 768px) {
 /* 容器：設為 flex 並允許換行 */
@@ -1443,11 +1461,7 @@ body {
   justify-content: space-between;
   align-items: center;
   cursor: pointer;
-  width: 50px !important;
-    min-width: 50px !important;   /* 🔥 關鍵 */
-    max-width: 50px !important;   /* 🔥 關鍵 */
-
-    flex: 0 0 50px !important;    /* 🔥 關鍵：直接告訴 flex */
+  width: 75px !important;
 }
 
 /* 讓波浪號不要被擠到下一行，跟在起始時間後面 */
