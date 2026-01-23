@@ -1404,6 +1404,14 @@ body {
   text-align: center;
   display: none;   /* ⭐ 預設隱藏 */
 }
+
+    .dateInput {
+  height: 42px;
+  font-size: 18px;
+  padding: 0 8px;
+  border: 1px solid #888;
+  border-radius: 6px;
+}
     
 </style>
 
@@ -1500,92 +1508,32 @@ body {
 
   <!-- 範圍 -->
   <div style="margin-bottom:12px;">
-    <label>範圍：</label>
+  <label>期間：</label>
 
-    <select id="adminDayRange" style="display:none;">
-      <option value="3" selected>最近 3 天</option>
-      <option value="7">最近 7 天</option>
-      <option value="14">最近 14 天</option>
-    </select>
+  <div class="timeRow" style="flex-wrap: wrap; gap: 8px;">
 
-    <button class="fakeSelectBtn" onclick="openDropdown('range')">
-  <span id="rangeText">最近 3 天</span>
-  <span class="arrow">▾</span>
-</button>
+    <!-- 起始日期 -->
+    <input type="date" id="dateStart" class="dateInput">
+
+    <!-- 起始時間 -->
+    <button class="fakeSelectBtn timeBtn" onclick="openDropdown('timeStart')">
+      <span id="timeStartText">00:00</span>
+      <span class="arrow">▾</span>
+    </button>
+
+    <span class="tilde">～</span>
+
+    <!-- 結束日期 -->
+    <input type="date" id="dateEnd" class="dateInput">
+
+    <!-- 結束時間 -->
+    <button class="fakeSelectBtn timeBtn" onclick="openDropdown('timeEnd')">
+      <span id="timeEndText">23:59</span>
+      <span class="arrow">▾</span>
+    </button>
+
   </div>
-
-  <!-- 時間 -->
-  <div style="margin-bottom:12px;">
-    <label>時間：</label>
-
-    <select id="timeStart" style="display:none;">
-      <option value="00:00">00:00</option>
-      <option value="01:00">01:00</option>
-      <option value="02:00">02:00</option>
-      <option value="03:00">03:00</option>
-      <option value="04:00">04:00</option>
-      <option value="05:00">05:00</option>
-      <option value="06:00">06:00</option>
-      <option value="07:00">07:00</option>
-      <option value="08:00">08:00</option>
-      <option value="09:00">09:00</option>
-      <option value="10:00">10:00</option>
-      <option value="11:00">11:00</option>
-      <option value="12:00">12:00</option>
-      <option value="13:00">13:00</option>
-      <option value="14:00">14:00</option>
-      <option value="15:00">15:00</option>
-      <option value="16:00">16:00</option>
-      <option value="17:00">17:00</option>
-      <option value="18:00">18:00</option>
-      <option value="19:00">19:00</option>
-      <option value="20:00">20:00</option>
-      <option value="21:00">21:00</option>
-      <option value="22:00">22:00</option>
-      <option value="23:00">23:00</option>
-    </select>
-
-    <select id="timeEnd" style="display:none;">
-      <option value="00:59">00:59</option>
-      <option value="01:59">01:59</option>
-      <option value="02:59">02:59</option>
-      <option value="03:59">03:59</option>
-      <option value="04:59">04:59</option>
-      <option value="05:59">05:59</option>
-      <option value="06:59">06:59</option>
-      <option value="07:59">07:59</option>
-      <option value="08:59">08:59</option>
-      <option value="09:59">09:59</option>
-      <option value="10:59">10:59</option>
-      <option value="11:59">11:59</option>
-      <option value="12:59">12:59</option>
-      <option value="13:59">13:59</option>
-      <option value="14:59">14:59</option>
-      <option value="15:59">15:59</option>
-      <option value="16:59">16:59</option>
-      <option value="17:59">17:59</option>
-      <option value="18:59">18:59</option>
-      <option value="19:59">19:59</option>
-      <option value="20:59">20:59</option>
-      <option value="21:59">21:59</option>
-      <option value="22:59">22:59</option>
-      <option value="23:59" selected>23:59</option>
-    </select>
-
-    <div id="timeWrapper" class="timeRow">
-  <button class="fakeSelectBtn timeBtn" onclick="openDropdown('timeStart')">
-    <span id="timeStartText">00:00</span>
-    <span class="arrow">▾</span>
-  </button>
-
-  <span class="tilde">～</span>
-
-  <button class="fakeSelectBtn timeBtn" onclick="openDropdown('timeEnd')">
-    <span id="timeEndText">23:59</span>
-    <span class="arrow">▾</span>
-  </button>
 </div>
-  </div>
 
   <!-- 類型 -->
   <div style="margin-bottom:12px;">
@@ -2197,22 +2145,33 @@ if (targetTeam !== "全部") {
   records = records.filter(r => (r.所屬大隊 + "") === targetTeam);
 }
 
-  // 2. 範圍篩選（重要：從下拉選單讀取）
-  const dayRangeSelect = document.getElementById("adminDayRange");
-  let selectedDays = dayRangeSelect?.value;
-if (!selectedDays) selectedDays = document.getElementById("rangeText").innerText.replace("最近 ", "").replace(" 天", "");
-  adminViewDays = Number(selectedDays);
-  
-  console.log("篩選天數:", adminViewDays); // 除錯用
-  
-  const now = new Date();
-  const cutoff = new Date(now.getTime() - adminViewDays * 24 * 60 * 60 * 1000);
+  // 2. 日期＋時間區間篩選（最多 14 天）
+const dateStart = document.getElementById("dateStart")?.value;
+const dateEnd   = document.getElementById("dateEnd")?.value;
+const timeStart = document.getElementById("timeStart")?.value || "00:00";
+const timeEnd   = document.getElementById("timeEnd")?.value || "23:59";
+
+if (dateStart && dateEnd) {
+
+  const startDateTime = new Date(`${dateStart}T${timeStart}:00`);
+  const endDateTime   = new Date(`${dateEnd}T${timeEnd}:59`);
+
+  // 🔒 保險機制：JS 再擋一次 14 天
+  const diffDays = (endDateTime - startDateTime) / (1000 * 60 * 60 * 24);
+  if (diffDays > 14) {
+    showMessage("查詢範圍最多只能 14 天內");
+    return [];
+  }
 
   records = records.filter(r => {
-    let ds = normalizeDate(r.日期);
-    const recordDate = new Date(ds);
-    return recordDate >= cutoff;
+    const link = r.詳細紀錄 || "";
+    const match = link.match(/report_(\d+)/);
+    if (!match) return false;
+
+    const recordTime = new Date(parseInt(match[1], 10));
+    return recordTime >= startDateTime && recordTime <= endDateTime;
   });
+}
 
   // 3. 篩選通報類型
   let targetType = document.getElementById("adminTypeSelect")?.value || "全部";
@@ -2222,35 +2181,6 @@ if (!selectedDays) selectedDays = document.getElementById("rangeText").innerText
       return type === targetType;
     });
   }
-
-  // 4. 時間篩選
-  const start = document.getElementById("timeStart")?.value || "00:00";
-const end   = document.getElementById("timeEnd")?.value || "23:59";
-
-const [startHour, startMinute] = start.split(":").map(Number);
-const [endHour, endMinute] = end.split(":").map(Number);
-
-const startTotal = startHour * 60 + startMinute;
-const endTotal = endHour * 60 + endMinute;
-
-records = records.filter(r => {
-  const link = r.詳細紀錄 || "";
-  const match = link.match(/report_(\d+)/);
-  if (!match) return false;
-
-  const t = parseInt(match[1], 10);
-  const d = new Date(t);
-  const h = d.getHours();
-  const m = d.getMinutes();
-  
-  const recordTotal = h * 60 + m;
-
-  if (startTotal <= endTotal) {
-    return recordTotal >= startTotal && recordTotal <= endTotal;
-  } else {
-    return recordTotal >= startTotal || recordTotal <= endTotal;
-  }
-});
 
   console.log("篩選後筆數:", records.length); // 除錯用
   return records;
@@ -4043,6 +3973,28 @@ function hideScreenLock() {
             renderMobileReportOverlay(JSON.parse(savedData));
         }, 500);
     }
+});
+
+  //選擇具體日期時間
+  document.addEventListener("DOMContentLoaded", () => {
+  const start = document.getElementById("dateStart");
+  const end   = document.getElementById("dateEnd");
+
+  const today = new Date();
+  const max   = today.toISOString().slice(0,10);
+
+  const minDate = new Date();
+  minDate.setDate(today.getDate() - 13); // 含今天共 14 天
+  const min = minDate.toISOString().slice(0,10);
+
+  start.min = min;
+  start.max = max;
+  end.min   = min;
+  end.max   = max;
+
+  // 預設值：最近 3 天（你原本的行為）
+  start.value = min;
+  end.value   = max;
 });
   
 </script>
