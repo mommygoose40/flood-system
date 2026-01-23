@@ -1415,10 +1415,6 @@ body {
   width: 100%;
 }
 
-      #adminFilterArea .timeBtn {
-    max-width: 50px !important;
-  }
-
 /* 統一日期框與按鈕的長相 */
 .dateInput, .fakeSelectBtn.timeBtn {
   /* 修正扁平問題：強制固定高度 */
@@ -1447,6 +1443,11 @@ body {
   justify-content: space-between;
   align-items: center;
   cursor: pointer;
+  width: 50px !important;
+    min-width: 50px !important;   /* 🔥 關鍵 */
+    max-width: 50px !important;   /* 🔥 關鍵 */
+
+    flex: 0 0 50px !important;    /* 🔥 關鍵：直接告訴 flex */
 }
 
 /* 讓波浪號不要被擠到下一行，跟在起始時間後面 */
