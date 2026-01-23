@@ -952,13 +952,6 @@ body {
     flex-shrink: 0;
   }
 
-  /* 右邊下拉按鈕 */
-  #adminFilterArea .fakeSelectBtn {
-    min-width: 110px !important;
-    height: 42px !important;
-    font-size: 20px !important;
-  }
-
   /* 時間那一列：不要被手機版 wrap 拆開 */
   #timeWrapper.timeRow {
     flex-wrap: nowrap !important;
@@ -1450,7 +1443,7 @@ body {
 
 /* 日期框彈性寬度 */
 .dateInput {
-  width: 140px; /* 根據你的需求調整數值，讓兩行等寬 */
+  width: 135px; /* 根據你的需求調整數值，讓兩行等寬 */
   flex-shrink: 0; /* 禁止被壓縮 */
 }
 
@@ -1467,7 +1460,7 @@ body {
   align-items: center;
   justify-content: space-between;
   box-sizing: border-box;
-  width: 85px !important;
+  width: 80px !important;
 }
 
 /* 讓波浪號不要被擠到下一行，跟在起始時間後面 */
@@ -1576,7 +1569,7 @@ body {
   <!-- 偽下拉 UI -->
     <button class="fakeSelectBtn" onclick="openDropdown('team')">
   <span id="teamText">全部</span>
-  <span class="arrow">▾</span>
+  <span class="arrow"></span>
 </button>
 </div>
 
@@ -1619,7 +1612,7 @@ body {
     <!-- 起始時間 -->
     <button class="fakeSelectBtn timeBtn" onclick="openDropdown('timeStart')">
       <span id="timeStartText">00:00</span>
-      <span class="arrow">▾</span>
+      <span class="arrow">⌄</span>
     </button>
 
     <span class="tilde">～</span>
@@ -1658,7 +1651,7 @@ body {
     <!-- 結束時間 -->
     <button class="fakeSelectBtn timeBtn" onclick="openDropdown('timeEnd')">
       <span id="timeEndText">23:59</span>
-      <span class="arrow">▾</span>
+      <span class="arrow">⌄</span>
     </button>
 
   </div>
