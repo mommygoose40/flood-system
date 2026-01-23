@@ -223,7 +223,7 @@
 }
 
 /* 偽下拉按鈕 */
-.fakeSelectBtn {
+.fakeSelectBtn:not(.timeBtn) {
   font-size: 20px;
   padding: 4px 12px;
   border: 1px solid #888;
@@ -878,7 +878,7 @@ body {
   }
 
   /* 所有的偽下拉框 (大隊、範圍、類型、及時間的兩個框) 寬度全部統一 */
-  .fakeSelectBtn {
+.fakeSelectBtn:not(.timeBtn) {
     width: 100% !important;     /* 讓框框去撐滿該行剩餘空間 */
     max-width: 100% !important;
     height: 42px !important;
@@ -953,7 +953,7 @@ body {
   }
 
   /* 右邊下拉按鈕 */
-  #adminFilterArea .fakeSelectBtn {
+  #adminFilterArea .fakeSelectBtn:not(.timeBtn) {
     min-width: 110px !important;
     height: 42px !important;
     font-size: 20px !important;
