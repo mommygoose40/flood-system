@@ -2540,17 +2540,11 @@ document.getElementById("btnTeam").onclick = async function () {
   }
 };
 
-document.getElementById("adminSearchBtn").onclick = () => {
+document.getElementById("adminSearchBtn").onclick = async () => {
   if (viewMode !== "admin") return;
 
-  // 顯示載入中
-  renderLoadingInList();
-
-  // 使用現有資料進行前端篩選
-  setTimeout(() => {
-    const filtered = filterAdminRecords();
-    renderList(filtered);
-  }, 100); // 稍微延遲讓載入動畫顯示
+  showLoading();          // 顯示 loadingMask
+  await loadAdminRecords();  // 🔥 重新打 GAS（含日期＋時間）
 };
 
   document.getElementById("adminExportBtn").onclick = () => {
