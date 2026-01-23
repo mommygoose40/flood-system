@@ -986,14 +986,6 @@ body {
    以「時間框」為基準寬度
    ===================================================== */
 
-  /* 1️⃣ 先定義「時間框」寬度（基準） */
-  #adminFilterArea .timeBtn {
-    width: auto !important;
-    min-width: 110px !important;   /* ★ 基準寬度 */
-    max-width: 110px !important;
-    flex: none !important;
-  }
-
   /* 2️⃣ 類型 → 跟時間一樣寬 */
   #adminFilterArea button[onclick*="openDropdown('type')"] {
     width: auto !important;
@@ -1239,8 +1231,7 @@ body {
 
   /* 2. 【歷史報表頁面專用】框框寬度統一 */
   /* 只在父層是 #reportPage 時，強迫裡面的框框跟大隊框框一樣寬 */
-  #reportPage .fakeSelectBtn,
-  #reportPage .timeBtn {
+  #reportPage .fakeSelectBtn {
     width: 145px !important;      /* 以大隊框框為基準寬度 */
     min-width: 145px !important;
     max-width: 145px !important;
