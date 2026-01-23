@@ -2095,6 +2095,9 @@ async function loadAdminRecords() {
   // ⚠️ 注意：這時 filterAdminRecords 應該「只剩 UI 類型的 filter」
   renderList(globalAdminRecords);
 
+  document.getElementById("loadingMask").style.display = "none";
+document.body.classList.remove("loading");
+
   if (shouldKeepMask) {
     shouldKeepMask = false;
     document.getElementById("loadingMask").style.display = "none";
