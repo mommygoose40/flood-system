@@ -1515,7 +1515,6 @@ body {
     <!-- 起始日期 -->
     <input type="date" id="dateStart" class="dateInput">
 
-    <input type="hidden" id="timeStart" value="00:00">
     <!-- 起始時間 -->
     <button class="fakeSelectBtn timeBtn" onclick="openDropdown('timeStart')">
       <span id="timeStartText">00:00</span>
@@ -1527,7 +1526,6 @@ body {
     <!-- 結束日期 -->
     <input type="date" id="dateEnd" class="dateInput">
 
-    <input type="hidden" id="timeEnd"   value="23:59">
     <!-- 結束時間 -->
     <button class="fakeSelectBtn timeBtn" onclick="openDropdown('timeEnd')">
       <span id="timeEndText">23:59</span>
@@ -2045,35 +2043,13 @@ function backToList() {
   
 async function loadAdminRecords() {
 
-  const dateStart = document.getElementById("dateStart").value;
-  const dateEnd   = document.getElementById("dateEnd").value;
-  const timeStart = document.getElementById("timeStart")?.value || "00:00";
-  const timeEnd   = document.getElementById("timeEnd")?.value || "23:59";
-
-  if (!dateStart || !dateEnd) {
-    document.getElementById("listContainer").innerHTML = "請選擇查詢期間";
-    return;
-  }
-
-  const start = `${dateStart}T${timeStart}`;
-  const end   = `${dateEnd}T${timeEnd}`;
-
-  const team   = document.getElementById("adminTeamSelect")?.value || "all";
-  const type   = document.getElementById("adminTypeSelect")?.value || "all";
-  const status = document.getElementById("adminStatusSelect")?.value || "all";
-
-  const url =
-    `${REPORT_GAS_URL}?action=getAdminRangeData` +
-    `&start=${encodeURIComponent(start)}` +
-    `&end=${encodeURIComponent(end)}` +
-    `&team=${encodeURIComponent(team)}` +
-    `&type=${encodeURIComponent(type)}` +
-    `&status=${encodeURIComponent(status)}`;
+  const url = `${REPORT_GAS_URL}?action=listAdminFull&days=30`;
 
   let json;
   try {
     const res = await fetch(url);
-    json = await res.json();
+    const text = await res.text();
+    json = JSON.parse(text);
   } catch (e) {
     document.getElementById("listContainer").innerHTML = "管理員資料載入失敗";
     shouldKeepMask = false;
@@ -2081,29 +2057,21 @@ async function loadAdminRecords() {
     return;
   }
 
-  if (json.status !== "success") {
-    document.getElementById("listContainer").innerHTML = json.message || "查詢失敗";
-    return;
-  }
+  globalAdminRecords = json.records || [];
 
-  // 🔥 現在這包資料，已經是 GAS 幫你「切好日期時間」的結果
-  globalAdminRecords = json.data || [];
+  // ★★★ [新增] 將管理員列表數據存入 Session Storage ★★★
+    saveLocalReportsCache(globalAdminRecords);
 
-  // 本地快取（可留）
-  saveLocalReportsCache(globalAdminRecords);
+  const filtered = filterAdminRecords();
+  renderList(filtered);
 
-  // ⚠️ 注意：這時 filterAdminRecords 應該「只剩 UI 類型的 filter」
-  renderList(globalAdminRecords);
-
-  document.getElementById("loadingMask").style.display = "none";
-document.body.classList.remove("loading");
-
+  // ★ renderList 結束後，關掉大 loading
   if (shouldKeepMask) {
     shouldKeepMask = false;
     document.getElementById("loadingMask").style.display = "none";
   }
 
-  isInitialLoad = false;
+  isInitialLoad = false;   // ★ 第一次載入結束
 }
 
   /* ------------------------------------------
@@ -2165,54 +2133,56 @@ document.body.classList.remove("loading");
 function filterAdminRecords() {
   let records = [...globalAdminRecords];
 
-  // 1. 大隊
-  let targetTeam = document.getElementById("adminTeamSelect")?.value;
-  if (!targetTeam) {
-    targetTeam = document.getElementById("teamText")?.innerText || "全部";
+  // 1. 篩選大隊
+let targetTeam = document.getElementById("adminTeamSelect")?.value;
+
+// iOS hidden select = "" → 必須補救
+if (!targetTeam) {
+  targetTeam = document.getElementById("teamText").innerText || "全部";
+}
+
+if (targetTeam !== "全部") {
+  records = records.filter(r => (r.所屬大隊 + "") === targetTeam);
+}
+
+  // 2. 日期＋時間區間篩選（最多 14 天）
+const dateStart = document.getElementById("dateStart")?.value;
+const dateEnd   = document.getElementById("dateEnd")?.value;
+const timeStart = document.getElementById("timeStart")?.value || "00:00";
+const timeEnd   = document.getElementById("timeEnd")?.value || "23:59";
+
+if (dateStart && dateEnd) {
+
+  const startDateTime = new Date(`${dateStart}T${timeStart}:00`);
+  const endDateTime   = new Date(`${dateEnd}T${timeEnd}:59`);
+
+  // 🔒 保險機制：JS 再擋一次 14 天
+  const diffDays = (endDateTime - startDateTime) / (1000 * 60 * 60 * 24);
+  if (diffDays > 14) {
+    showMessage("查詢範圍最多只能 14 天內");
+    return [];
   }
-  if (targetTeam !== "全部") {
-    records = records.filter(r => (r.所屬大隊 + "") === targetTeam);
-  }
 
-  // 2. 日期＋時間區間
-  const dateStart = document.getElementById("dateStart")?.value;
-  const dateEnd   = document.getElementById("dateEnd")?.value;
-  const timeStart = document.getElementById("timeStart")?.value || "00:00";
-  const timeEnd   = document.getElementById("timeEnd")?.value   || "23:59";
+  records = records.filter(r => {
+    const link = r.詳細紀錄 || "";
+    const match = link.match(/report_(\d+)/);
+    if (!match) return false;
 
-  if (dateStart && dateEnd) {
+    const recordTime = new Date(parseInt(match[1], 10));
+    return recordTime >= startDateTime && recordTime <= endDateTime;
+  });
+}
 
-    const startTs = toTaiwanTimestamp(dateStart, timeStart);
-    const endTs   = toTaiwanTimestamp(dateEnd, timeEnd);
-
-    if (startTs > endTs) {
-      showMessage("起始時間不能晚於結束時間");
-      return [];
-    }
-
-    const diffDays = (endTs - startTs) / (1000 * 60 * 60 * 24);
-    if (diffDays > 14) {
-      showMessage("查詢範圍最多只能 14 天內");
-      return [];
-    }
-
+  // 3. 篩選通報類型
+  let targetType = document.getElementById("adminTypeSelect")?.value || "全部";
+  if (targetType !== "全部") {
     records = records.filter(r => {
-      const link = r.詳細紀錄 || "";
-      const match = link.match(/report_(\d+)/);
-      if (!match) return false;
-
-      const recordTs = Number(match[1]);
-      return recordTs >= startTs && recordTs <= endTs;
+      const type = (r.通報類型 || "").trim();
+      return type === targetType;
     });
   }
 
-  // 3. 類型
-  let targetType = document.getElementById("adminTypeSelect")?.value || "全部";
-  if (targetType !== "全部") {
-    records = records.filter(r => (r.通報類型 || "").trim() === targetType);
-  }
-
-  console.log("篩選後筆數:", records.length);
+  console.log("篩選後筆數:", records.length); // 除錯用
   return records;
 }
 
@@ -2540,11 +2510,17 @@ document.getElementById("btnTeam").onclick = async function () {
   }
 };
 
-document.getElementById("adminSearchBtn").onclick = async () => {
+document.getElementById("adminSearchBtn").onclick = () => {
   if (viewMode !== "admin") return;
 
-  showLoading();          // 顯示 loadingMask
-  await loadAdminRecords();  // 🔥 重新打 GAS（含日期＋時間）
+  // 顯示載入中
+  renderLoadingInList();
+
+  // 使用現有資料進行前端篩選
+  setTimeout(() => {
+    const filtered = filterAdminRecords();
+    renderList(filtered);
+  }, 100); // 稍微延遲讓載入動畫顯示
 };
 
   document.getElementById("adminExportBtn").onclick = () => {
@@ -3007,7 +2983,6 @@ function backToMainList() {
     document.getElementById('pageTitle').innerText = "回報紀錄";
 }
 
-  /*
 // 頁面載入時初始化下拉選單
 document.addEventListener('DOMContentLoaded', function() {
     const currentYear = new Date().getFullYear();
@@ -3035,7 +3010,6 @@ document.addEventListener('DOMContentLoaded', function() {
     const lastMonth = new Date().getMonth(); // getMonth() 是 0-11
     document.getElementById('export-month').value = lastMonth === 0 ? 12 : lastMonth;
 });
-*/
 
   // --- 修改：showHistoryReportOverlay 增加防錯 ---
 function showHistoryReportOverlay() {
@@ -4022,49 +3996,6 @@ function hideScreenLock() {
   start.value = min;
   end.value   = max;
 });
-
-  function toTaiwanTimestamp(dateStr, timeStr) {
-  // dateStr: "2026-01-20"
-  // timeStr: "08:30"
-
-  const [y, m, d] = dateStr.split("-").map(Number);
-  const [hh, mm] = timeStr.split(":").map(Number);
-
-  // 台灣時間 → UTC timestamp
-  return Date.UTC(y, m - 1, d, hh - 8, mm, 0);
-}
-
-  function getRecordTimestamp(record) {
-  const link = record.詳細紀錄 || "";
-  const match = link.match(/report_(\d+)/);
-  if (!match) return null;
-  return Number(match[1]); // 這本來就是 UTC timestamp
-}
-
-  function filterByDateTime(records) {
-  const dateStart = document.getElementById("dateStart")?.value;
-  const dateEnd   = document.getElementById("dateEnd")?.value;
-  const timeStart = document.getElementById("timeStart")?.value || "00:00";
-  const timeEnd   = document.getElementById("timeEnd")?.value   || "23:59";
-
-  // 沒選日期就不篩
-  if (!dateStart || !dateEnd) return records;
-
-  const startTs = toTaiwanTimestamp(dateStart, timeStart);
-  const endTs   = toTaiwanTimestamp(dateEnd, timeEnd);
-
-  // 防呆
-  if (startTs > endTs) {
-    showMessage("起始時間不能晚於結束時間");
-    return [];
-  }
-
-  return records.filter(r => {
-    const recordTs = getRecordTimestamp(r);
-    if (!recordTs) return false;
-    return recordTs >= startTs && recordTs <= endTs;
-  });
-}
   
 </script>
 
