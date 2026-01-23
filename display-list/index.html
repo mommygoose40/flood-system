@@ -1456,12 +1456,18 @@ body {
 
 /* 按鈕固定寬度 */
 .fakeSelectBtn.timeBtn {
-  flex-shrink: 0;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
+  font-size: 20px;
+  padding: 4px 12px;
+  border: 1px solid #888;
+  border-radius: 4px;
+  background: #fff;
+  color: #333;
   cursor: pointer;
-  width: 75px !important;
+  display: inline-flex;
+  align-items: center;
+  justify-content: space-between;
+  box-sizing: border-box;
+  width: 90px !important;
 }
 
 /* 讓波浪號不要被擠到下一行，跟在起始時間後面 */
