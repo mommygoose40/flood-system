@@ -1405,12 +1405,52 @@ body {
   display: none;   /* ⭐ 預設隱藏 */
 }
 
-    .dateInput {
-  height: 42px;
-  font-size: 18px;
-  padding: 0 8px;
-  border: 1px solid #888;
-  border-radius: 6px;
+/* 1. 容器：確保不換行，或是縮小間距 */
+.timeRow {
+  display: flex;
+  align-items: center;
+  flex-wrap: nowrap; /* 強制不換行，若想在極窄手機換行可改 wrap */
+  gap: 4px;          /* 縮小元素間的間距 */
+  width: 100%;
+}
+
+/* 2. 日期輸入框：讓它能自動縮放 */
+.dateInput {
+  flex: 1;           /* 自動分配剩餘空間 */
+  min-width: 0;      /* 允許縮小到比預設更小 */
+  max-width: 130px;  /* 限制最大寬度，避免電腦版太長 */
+  padding: 6px 4px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  
+  /* 3. 統一字體：以時間按鈕的字體為準 */
+  font-family: inherit; /* 繼承父層字體 */
+  font-size: 14px;
+}
+
+/* 4. 時間按鈕：固定寬度，避免擠壓 */
+.fakeSelectBtn.timeBtn {
+  flex-shrink: 0;    /* 禁止被壓縮 */
+  min-width: 75px;   /* 固定一個合適的寬度 */
+  font-family: inherit;
+  font-size: 14px;
+}
+
+/* 5. 波浪符號 */
+.tilde {
+  flex-shrink: 0;
+  margin: 0 2px;
+}
+
+/* 行動版微調：如果螢幕真的很小 (如 iPhone SE) */
+@media (max-width: 360px) {
+  .dateInput {
+    font-size: 12px; /* 稍微縮小字體 */
+  }
+  .fakeSelectBtn.timeBtn {
+    min-width: 65px;
+    font-size: 12px;
+  }
 }
     
 </style>
