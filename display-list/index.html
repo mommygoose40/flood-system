@@ -2818,27 +2818,6 @@ function renderDesktopReportOverlay(data, title, mode) {
     downloadExcelFinal();
 }
 
-function downloadExcelFinal() {
-    // 1. 顯示處理中視窗
-    showMicLoading(0);
-
-    // 2. 檢查 XLSX 載入狀態
-    if (typeof XLSX === 'undefined') {
-        const script = document.createElement('script');
-        script.src = "https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js";
-        script.onload = () => {
-            // 腳本載入後稍微延遲，確保 UI 已顯示
-            setTimeout(executeDownload, 100);
-        };
-        script.onerror = () => {
-            hideMicLoading();
-            alert("匯出元件載入失敗，請檢查網路連線。");
-        };
-        document.head.appendChild(script);
-    } else {
-        setTimeout(executeDownload, 100);
-    }
-
     function executeDownload(mode = 'current') {
     try {
         const table = document.getElementById("targetTable");
