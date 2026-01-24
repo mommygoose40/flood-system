@@ -2633,17 +2633,16 @@ document.getElementById("adminSearchBtn").onclick = () => {
 /**
  * 整合分流報表功能 (電腦版預覽 + 手機版原本邏輯)
  */
+// 加上 async 以支援歷史紀錄的 await fetch
 async function exportReport(mode = 'current') {
-    // 1. 顯示處理中
     showMicLoading(0);
     
     let filteredData = [];
     try {
-        // --- 數據分流：根據 mode 決定資料來源 ---
+        // --- 這裡是唯一的邏輯分流，不影響後面的樣式 ---
         if (mode === 'current') {
-            filteredData = filterAdminRecords(); // 抓取你近期紀錄的篩選
+            filteredData = filterAdminRecords(); 
         } else {
-            // 抓取你歷史紀錄區域的 UI 參數
             const params = {
                 team: document.getElementById("historyTeamText")?.innerText || "全部",
                 year: document.getElementById("reportYearText")?.innerText || "2025",
@@ -2651,7 +2650,6 @@ async function exportReport(mode = 'current') {
                 type: document.getElementById("historyTypeText")?.innerText || "全部",
                 status: document.getElementById("reportStatusText")?.innerText || "全部"
             };
-            // 執行你提供的 GAS 抓取函式
             filteredData = await fetchHistoryFromGAS(params);
         }
 
@@ -2660,85 +2658,115 @@ async function exportReport(mode = 'current') {
             return;
         }
 
-        // 2. 手機版判斷 (保持你原本的邏輯)
         const isMobile = window.innerWidth < 769;
         if (isMobile) {
             renderMobileReportOverlay(filteredData);
             return;
         }
 
-        // 3. --- 電腦版預覽視窗 (請在此處貼回你原本的 HTML 樣板) ---
-        // 以下是我根據你原本邏輯幫你保留的樣板結構，請確認與你原本的一致
-        
+        // --- 以下完全是你提供的原封不動的電腦版樣式 ---
         const fb = document.getElementById("floatingButtons");
         if (fb) fb.style.setProperty("display", "none", "important");
 
         history.pushState({ action: "closeReport" }, "");
-        window.onpopstate = function() { if (document.getElementById("reportOverlay")) closeReportLayer(); };
+        window.onpopstate = function() {
+            if (document.getElementById("reportOverlay")) closeReportLayer();
+        };
 
         let tableRows = "";
         filteredData.forEach((r, index) => {
-            // 這裡保留你原本處理 hh, mm, combinedNote, reporterInfo 的所有邏輯...
             let hh = "--", mm = "--";
             try {
                 const match = (r.詳細紀錄 || "").match(/report_(\d+)/);
                 if (match) {
-                    const d = new Date(parseInt(match[1], 10));
-                    hh = String(d.getHours()).padStart(2, "0");
-                    mm = String(d.getMinutes()).padStart(2, "0");
+                    const dateObj = new Date(parseInt(match[1], 10));
+                    hh = String(dateObj.getHours()).padStart(2, "0");
+                    mm = String(dateObj.getMinutes()).padStart(2, "0");
                 }
             } catch(e) {}
-            
+
             const note = (r.說明 || "").trim();
             const voice = (r.語音轉文字 || "").trim();
-            const combinedNote = (note && voice) ? `${note} / ${voice}` : (note || voice);
-            const reporterInfo = (r.回報者 || "").trim() + (r.同行者 ? `,${r.同行者.trim()}` : "");
+            let combinedNote = (note && voice) ? `${note} / ${voice}` : (note || voice);
+
+            let reporterInfo = (r.回報者 || "").trim();
+            if (r.同行者 && r.同行者.trim() !== "") {
+                reporterInfo += `,${r.同行者.trim()}`;
+            }
+
+            const detailLink = `<a href="${r.詳細紀錄}" target="_blank" style="color: #0b5ed7; text-decoration: underline;">連結</a>`;
 
             tableRows += `
                 <tr>
                     <td style="text-align:center;">${index + 1}</td>
-                    <td style="text-align:center;">${r.日期 ? normalizeDate(r.日期) : ''}<br/>${hh}:${mm}</td>
+                    <td style="text-align:center;">
+                        ${r.日期 ? normalizeDate(r.日期) : ''}<br/>
+                        ${hh}:${mm}
+                    </td>
                     <td>${r.通報類型 || ''}</td>
-                    <td style="${r.狀態 === '異常' ? 'color:red;font-weight:bold;' : ''}">${r.狀態 || ''}</td>
+                    <td style="color: ${r.狀態 === '異常' ? 'red' : 'black'}; font-weight: ${r.狀態 === '異常' ? 'bold' : 'normal'}">
+                        ${r.狀態 || ''}
+                    </td>
                     <td>${r.異常分類 || ''}</td>
-                    <td style="text-align:center;"><a href="${r.詳細紀錄}" target="_blank">連結</a></td>
+                    <td style="text-align:center;">${detailLink}</td>
                     <td>${combinedNote}</td>
                     <td>${reporterInfo}</td>
                     <td>${r.所屬大隊 || ''}</td>
-                </tr>`;
+                </tr>
+            `;
         });
 
-        // 這裡貼回你原本最熟悉的那個 reportHtml 樣式
+        // 恢復你最精確的樣版字串與 Style
         const reportHtml = `
-        <div id="reportOverlay" style="position:fixed; top:0; left:0; width:100%; height:100%; background: rgba(0,0,0,0.6); z-index: 9995; display: flex; justify-content: center; align-items: flex-start; font-family:sans-serif;">
-            <div id="reportContent" style="background: white; width: 95%; max-height: 90vh; margin-top: 3vh; padding: 20px 30px; box-sizing: border-box; overflow-y: auto; border-radius: 10px; position: relative;">
-                <div class="no-print" style="display: flex; justify-content: space-between; align-items: center; position: sticky; top: -20px; background: white; padding: 15px 0; z-index: 20; border-bottom: 1px solid #eee;">
-                    <div style="font-weight: bold; font-size: 18px;">報表預覽 (共 ${filteredData.length} 筆)</div>
-                    <div>
-                        <button onclick="downloadExcelWithMsg()" style="padding: 10px 20px; background: #198754; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; margin-right: 10px;">匯出報表</button>
-                        <button onclick="closeReportLayer()" style="padding: 10px 20px; background: #dc3545; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: bold;">✕ 關閉視窗</button>
-                    </div>
+    <div id="reportOverlay" style="position:fixed; top:0; left:0; width:100%; height:100%; background: rgba(0,0,0,0.6); z-index: 9995; display: flex; justify-content: center; align-items: flex-start; font-family:sans-serif;">
+        <div id="reportContent" style="background: white; width: 95%; max-height: 90vh; margin-top: 3vh; padding: 20px 30px; box-sizing: border-box; overflow-y: auto; border-radius: 10px; position: relative; box-shadow: 0 10px 40px rgba(0,0,0,0.4);">
+            
+            <div class="no-print" style="display: flex; justify-content: space-between; align-items: center; position: sticky; top: -20px; background: white; padding: 15px 0; z-index: 20; border-bottom: 1px solid #eee;">
+                <div style="font-weight: bold; font-size: 18px;">報表預覽 (共 ${filteredData.length} 筆)</div>
+                <div>
+                    <button onclick="downloadExcelWithMsg('${mode}')" style="padding: 10px 20px; background: #198754; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; margin-right: 10px;">📊 匯出為 Excel 檔</button>
+                    <button onclick="closeReportLayer()" style="padding: 10px 20px; background: #dc3545; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: bold;">✕ 關閉視窗</button>
                 </div>
-                <h2 style="text-align:center; margin: 20px 0;">巡視紀錄明細報表</h2>
-                <table id="targetTable" style="width:100%; border-collapse:collapse; font-size:14px;">
-                    <thead>
-                        <tr style="background:#f2f2f2; position: sticky; top: 45px; z-index: 15;">
-                            <th>編號</th><th>時間</th><th>類型</th><th>狀態</th><th>分類</th><th>紀錄</th><th>說明</th><th>回報者</th><th>大隊</th>
-                        </tr>
-                    </thead>
-                    <tbody>${tableRows}</tbody>
-                </table>
             </div>
-        </div>`;
+            
+            <h2 style="text-align:center; margin: 20px 0; font-size: 28px;">巡視紀錄明細報表</h2>
+            
+            <table id="targetTable" style="width:100%; border-collapse:collapse; font-size:14px; line-height: 1.5;">
+                <thead>
+                    <tr style="background:#f2f2f2; position: sticky; top: 45px; z-index: 15; box-shadow: 0 2px 2px rgba(0,0,0,0.1);">
+                        <th style="border:1px solid #ccc; padding:12px; width:50px;">編號</th>
+                        <th style="border:1px solid #ccc; padding:12px; width:110px;">時間</th>
+                        <th style="border:1px solid #ccc; padding:12px; width:100px;">類型</th>
+                        <th style="border:1px solid #ccc; padding:12px; width:80px;">狀態</th>
+                        <th style="border:1px solid #ccc; padding:12px; width:120px;">分類</th>
+                        <th style="border:1px solid #ccc; padding:12px; width:80px;">紀錄</th>
+                        <th style="border:1px solid #ccc; padding:12px;">說明</th>
+                        <th style="border:1px solid #ccc; padding:12px; width:130px;">回報者</th>
+                        <th style="border:1px solid #ccc; padding:12px; width:100px;">大隊</th>
+                    </tr>
+                </thead>
+                <tbody>${tableRows}</tbody>
+            </table>
 
+            <div style="margin-top:30px; padding: 40px 0; text-align:center; color: #999; border-top: 1px dashed #ccc; font-size: 16px;">
+                --- 已顯示全部 ${filteredData.length} 筆資料 ---
+            </div>
+        </div>
+        <style>
+            #targetTable tr:nth-child(even) { background-color: #fafafa; }
+            #targetTable td { border:1px solid #ccc; padding:12px; text-align: left; word-break: break-all; }
+            #targetTable th { border:1px solid #ccc; vertical-align: middle; }
+        </style>
+    </div>
+`;
         const div = document.createElement('div');
         div.innerHTML = reportHtml;
         document.body.appendChild(div.firstElementChild);
 
     } catch (err) {
-        console.error("錯誤:", err);
+        console.error("預覽出錯:", err);
     } finally {
-        hideMicLoading(); // 確保不論成功失敗都會關閉載入圖示
+        hideMicLoading();
     }
 }
 
@@ -2818,6 +2846,27 @@ function renderDesktopReportOverlay(data, title, mode) {
     downloadExcelFinal();
 }
 
+function downloadExcelFinal() {
+    // 1. 顯示處理中視窗
+    showMicLoading(0);
+
+    // 2. 檢查 XLSX 載入狀態
+    if (typeof XLSX === 'undefined') {
+        const script = document.createElement('script');
+        script.src = "https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js";
+        script.onload = () => {
+            // 腳本載入後稍微延遲，確保 UI 已顯示
+            setTimeout(executeDownload, 100);
+        };
+        script.onerror = () => {
+            hideMicLoading();
+            alert("匯出元件載入失敗，請檢查網路連線。");
+        };
+        document.head.appendChild(script);
+    } else {
+        setTimeout(executeDownload, 100);
+    }
+
     function executeDownload(mode = 'current') {
     try {
         const table = document.getElementById("targetTable");
@@ -2881,6 +2930,7 @@ function renderDesktopReportOverlay(data, title, mode) {
     } finally {
         hideMicLoading();
     }
+}
 }
   
 function showMessage(text, onConfirm) {
