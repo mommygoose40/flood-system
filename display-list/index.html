@@ -2691,48 +2691,50 @@ async function exportReport(mode = 'current') {
         };
 
         let tableRows = "";
-        filteredData.forEach((r, index) => {
-            let hh = "--", mm = "--";
-            try {
-                const match = (r.詳細紀錄 || "").match(/report_(\d+)/);
-                if (match) {
-                    const dateObj = new Date(parseInt(match[1], 10));
-                    hh = String(dateObj.getHours()).padStart(2, "0");
-                    mm = String(dateObj.getMinutes()).padStart(2, "0");
-                }
-            } catch(e) {}
+filteredData.forEach((r, index) => {
+    let hh = "--", mm = "--";
+    try {
+        const match = (r.詳細紀錄 || "").match(/report_(\d+)/);
+        if (match) {
+            const dateObj = new Date(parseInt(match[1], 10));
+            hh = String(dateObj.getHours()).padStart(2, "0");
+            mm = String(dateObj.getMinutes()).padStart(2, "0");
+        }
+    } catch(e) {}
 
-            const note = (r.說明 || "").trim();
-            const voice = (r.語音轉文字 || "").trim();
-            let combinedNote = (note && voice) ? `${note} / ${voice}` : (note || voice);
+    const note = (r.說明 || "").trim();
+    const voice = (r.語音轉文字 || "").trim();
+    let combinedNote = (note && voice) ? `${note} / ${voice}` : (note || voice);
 
-            let reporterInfo = (r.回報者 || "").trim();
-            if (r.同行者 && r.同行者.trim() !== "") {
-                reporterInfo += `,${r.同行者.trim()}`;
-            }
+    // 💡 準備三欄資料
+    const rName = (r.回報者 || "").trim();
+    const rID = (r.回報者ID || "").trim(); // 確保 GAS 有回傳此欄位
+    const rComp = (r.同行者 || "").trim();
 
-            const detailLink = `<a href="${r.詳細紀錄}" target="_blank" style="color: #0b5ed7; text-decoration: underline;">連結</a>`;
+    // 畫面顯示依然保持你的合併格式
+    let reporterDisplay = rName + (rComp ? `,${rComp}` : "");
 
-            tableRows += `
-                <tr>
-                    <td style="text-align:center;">${index + 1}</td>
-                    <td style="text-align:center;">
-                        ${r.日期 ? normalizeDate(r.日期) : ''}<br/>
-                        ${hh}:${mm}
-                    </td>
-                    <td>${r.通報類型 || ''}</td>
-                    <td style="color: ${r.狀態 === '異常' ? 'red' : 'black'}; font-weight: ${r.狀態 === '異常' ? 'bold' : 'normal'}">
-                        ${r.狀態 || ''}
-                    </td>
-                    <td>${r.異常分類 || ''}</td>
-                    <td style="text-align:center;">${detailLink}</td>
-                    <td>${combinedNote}</td>
-                    <td>${reporterInfo}</td>
-                    <td>${r.所屬大隊 || ''}</td>
-                </tr>
-            `;
-        });
+    const detailLink = `<a href="${r.詳細紀錄}" target="_blank" style="color: #0b5ed7; text-decoration: underline;">連結</a>`;
 
+    tableRows += `
+        <tr>
+            <td style="text-align:center;">${index + 1}</td>
+            <td style="text-align:center;">
+                ${r.日期 ? normalizeDate(r.日期) : ''}<br/>
+                ${hh}:${mm}
+            </td>
+            <td>${r.通報類型 || ''}</td>
+            <td style="color: ${r.狀態 === '異常' ? 'red' : 'black'}; font-weight: ${r.狀態 === '異常' ? 'bold' : 'normal'}">
+                ${r.狀態 || ''}
+            </td>
+            <td>${r.異常分類 || ''}</td>
+            <td style="text-align:center;">${detailLink}</td>
+            <td>${combinedNote}</td>
+            <td data-name="${rName}" data-rid="${rID}" data-comp="${rComp}">${reporterDisplay}</td>
+            <td>${r.所屬大隊 || ''}</td>
+        </tr>
+    `;
+});
         // 恢復你最精確的樣版字串與 Style
         const reportHtml = `
     <div id="reportOverlay" style="position:fixed; top:0; left:0; width:100%; height:100%; background: rgba(0,0,0,0.6); z-index: 9995; display: flex; justify-content: center; align-items: flex-start; font-family:sans-serif;">
@@ -2921,35 +2923,54 @@ function downloadExcelFinal(mode = 'current') {
                 if (type !== "全部") fileName += `_${type}`;
                 fileName += ".xlsx";
             } else {
-                // 歷史紀錄：採用歷史搜尋條件的檔名
-                const hTeam = document.getElementById("historyTeamText")?.innerText || "全部";
-                const hYear = document.getElementById("reportYearText")?.innerText || "";
-                const hMonth = document.getElementById("reportMonthText")?.innerText || "";
-                fileName = `歷史紀錄_${hTeam}_${hYear}年${hMonth}.xlsx`;
+            // 🛑 歷史紀錄：依照你的新規則「年份月份_大隊_類型_狀態」
+            const hYear = document.getElementById("reportYearText")?.innerText || "";
+            const hMonth = document.getElementById("reportMonthText")?.innerText || "";
+            const hTeam = document.getElementById("historyTeamText")?.innerText || "全部";
+            const hType = document.getElementById("historyTypeText")?.innerText || "全部";
+            const hStatus = document.getElementById("reportStatusText")?.innerText || "全部";
+
+            // 1. 基礎開頭：年份月份_大隊
+            fileName = `${hYear}${hMonth}_${hTeam}`;
+
+            // 2. 若類型不為全部則顯示
+            if (hType !== "全部") {
+                fileName += `_${hType}`;
             }
 
-            // --- B. 處理資料內容 (完全保留你指定的物件格式) ---
-            const rows = Array.from(table.querySelectorAll("tbody tr"));
-            const excelData = rows.map(tr => {
-                const cells = tr.querySelectorAll("td");
-                
-                // 時間格拆分 (日期 \n 時間)
-                const timeCellText = cells[1] ? cells[1].innerText.trim() : "";
-                const timeParts = timeCellText.split("\n");
+            // 3. 若狀態不為全部則顯示
+            if (hStatus !== "全部") {
+                fileName += `_${hStatus}`;
+            }
 
-                return {
-                    "日期": timeParts[0] || "",
-                    "時間": timeParts[1] || "",
-                    "類型": cells[2] ? cells[2].innerText.trim() : "",
-                    "狀態": cells[3] ? cells[3].innerText.trim() : "",
-                    "分類": cells[4] ? cells[4].innerText.trim() : "",
-                    "說明": cells[6] ? cells[6].innerText.trim() : "", 
-                    "回報者": cells[7] ? cells[7].innerText.trim() : "",
-                    "回報者ID": "", // 預留位置 (保留)
-                    "同行者": "",   // 預留位置 (保留)
-                    "大隊": cells[8] ? cells[8].innerText.trim() : ""
-                };
-            });
+            fileName += ".xlsx";
+        }
+
+        // --- B. 處理資料內容 (從 data 屬性抓取拆分的值) ---
+        const rows = Array.from(table.querySelectorAll("tbody tr"));
+        const excelData = rows.map(tr => {
+            const cells = tr.querySelectorAll("td");
+            const timeParts = cells[1].innerText.trim().split("\n");
+            
+            // 抓取在 exportReport 埋好的屬性
+            const reporterTd = cells[7]; 
+            const name = reporterTd.getAttribute("data-name") || "";
+            const rid  = reporterTd.getAttribute("data-rid") || "";
+            const comp = reporterTd.getAttribute("data-comp") || "";
+
+            return {
+                "日期": timeParts[0] || "",
+                "時間": timeParts[1] || "",
+                "類型": cells[2].innerText.trim(),
+                "狀態": cells[3].innerText.trim(),
+                "分類": cells[4].innerText.trim(),
+                "說明": cells[6].innerText.trim(),
+                "回報者": name,
+                "回報者ID": rid,
+                "同行者": comp,
+                "大隊": cells[8].innerText.trim()
+            };
+        });
 
             // --- C. 設定 Excel 結構 (完全保留你指定的 Headers) ---
             const finalHeaders = ["日期", "時間", "類型", "狀態", "分類", "說明", "回報者", "回報者ID", "同行者", "大隊"];
