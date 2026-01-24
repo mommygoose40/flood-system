@@ -2861,8 +2861,9 @@ function renderDesktopReportOverlay(data, title, mode) {
     document.body.appendChild(div.firstElementChild);
 }
 
-  function downloadExcelWithMsg() {
-    downloadExcelFinal();
+  function downloadExcelWithMsg(mode) {
+    // 這裡一定要接收 mode，並傳給 downloadExcelFinal
+    downloadExcelFinal(mode);
 }
 
 function downloadExcelFinal(mode = 'current') {
