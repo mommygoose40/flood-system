@@ -2650,7 +2650,13 @@ async function exportReport(mode = 'current') {
                 type: document.getElementById("historyTypeText")?.innerText || "全部",
                 status: document.getElementById("reportStatusText")?.innerText || "全部"
             };
-            filteredData = await fetchHistoryFromGAS(params);
+            // 💡 加入這行偵錯
+    console.log("🔍 準備傳送給 GAS 的歷史查詢參數:", params);
+    
+    filteredData = await fetchHistoryFromGAS(params);
+    
+    // 💡 加入這行偵錯
+    console.log("📥 GAS 回傳的原始資料:", filteredData);
         }
 
         if (!filteredData || filteredData.length === 0) {
