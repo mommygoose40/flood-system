@@ -2636,27 +2636,38 @@ document.getElementById("adminSearchBtn").onclick = () => {
 // 加上 async 以支援歷史紀錄的 await fetch
 async function exportReport(mode = 'current') {
     showMicLoading(0);
-    
     let filteredData = [];
+
     try {
-        // --- 這裡是唯一的邏輯分流，不影響後面的樣式 ---
         if (mode === 'current') {
             filteredData = filterAdminRecords(); 
         } else {
+            // --- 前端主動配合 GAS 格式 ---
+            
+            // 1. 處理大隊：如果是「全部」則轉為 "all"
+            const teamRaw = document.getElementById("historyTeamText")?.innerText || "全部";
+            const teamParam = (teamRaw === "全部") ? "all" : teamRaw;
+
+            // 2. 處理月份：如果是 "ALL" 保持原樣，否則轉為數字字串 (如 "01")
+            const monthRaw = document.getElementById("reportMonth")?.value || "ALL";
+
+            // 3. 處理類型與狀態
+            const typeRaw = document.getElementById("historyTypeText")?.innerText || "全部";
+            const typeParam = (typeRaw === "全部") ? "all" : typeRaw;
+
+            const statusRaw = document.getElementById("reportStatusText")?.innerText || "全部";
+            const statusParam = (statusRaw === "全部") ? "all" : statusRaw;
+
             const params = {
-                team: document.getElementById("historyTeamText")?.innerText || "全部",
-                year: document.getElementById("reportYearText")?.innerText || "2025",
-                month: document.getElementById("reportMonth")?.value || "ALL",
-                type: document.getElementById("historyTypeText")?.innerText || "全部",
-                status: document.getElementById("reportStatusText")?.innerText || "全部"
+                team: teamParam,
+                year: document.getElementById("reportYearText")?.innerText.replace("年", "").trim() || "2025",
+                month: monthRaw,
+                type: typeParam,
+                status: statusParam
             };
-            // 💡 加入這行偵錯
-    console.log("🔍 準備傳送給 GAS 的歷史查詢參數:", params);
-    
-    filteredData = await fetchHistoryFromGAS(params);
-    
-    // 💡 加入這行偵錯
-    console.log("📥 GAS 回傳的原始資料:", filteredData);
+
+            console.log("🚀 送往 GAS 的正規化參數:", params);
+            filteredData = await fetchHistoryFromGAS(params);
         }
 
         if (!filteredData || filteredData.length === 0) {
