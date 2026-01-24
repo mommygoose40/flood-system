@@ -2642,30 +2642,40 @@ async function exportReport(mode = 'current') {
         if (mode === 'current') {
             filteredData = filterAdminRecords(); 
         } else {
+            // 1. 處理大隊參數：第n大隊 -> n
+            const teamRaw = document.getElementById("historyTeamText")?.innerText || "全部";
+            const match = teamRaw.match(/\d+/);
+            const teamParam = (teamRaw === "全部") ? "all" : (match ? match[0] : teamRaw);
+
+            // 2. 處理月份參數
             const monthRaw = document.getElementById("reportMonth")?.value || "ALL";
-            
-            // 💡 關鍵：如果月份是 ALL，走直接下載流程
+
+            const params = {
+                team: teamParam,
+                year: document.getElementById("reportYearText")?.innerText.replace("年", "").trim() || "2025",
+                month: monthRaw,
+                // 類型與狀態在年度統計中通常也是送 all
+                type: (document.getElementById("historyTypeText")?.innerText === "全部") ? "all" : document.getElementById("historyTypeText")?.innerText,
+                status: (document.getElementById("reportStatusText")?.innerText === "全部") ? "all" : document.getElementById("reportStatusText")?.innerText
+            };
+
+            // 💡 關鍵分流：如果月份選「全部 (ALL)」
             if (monthRaw === "ALL") {
-                const teamRaw = document.getElementById("historyTeamText")?.innerText || "全部";
-                // 大隊去字處理
-                const match = teamRaw.match(/\d+/);
-                const teamParam = (teamRaw === "全部") ? "all" : (match ? match[0] : teamRaw);
-
-                const params = {
-                    team: teamParam,
-                    year: document.getElementById("reportYearText")?.innerText.replace("年", "").trim() || "2025",
-                    month: "ALL"
-                };
-
-                const yearlyData = await fetchYearlySummaryFromGAS(params);
-                if (!yearlyData || yearlyData.length === 0) {
-                    alert("尚無年度彙總資料！");
+                console.log("🚀 執行年度累計下載流程");
+                const summaryData = await fetchYearlySummaryFromGAS(params);
+                
+                if (!summaryData || summaryData.length === 0) {
+                    alert("尚無符合的年度資料!");
                 } else {
-                    // 直接下載，不顯示預覽
-                    downloadYearlySummaryExcel(yearlyData, params);
+                    // 組合你的檔名：2025年度累計_全部大隊
+                    const teamForName = (teamRaw === "全部") ? "全部大隊" : teamRaw;
+                    const fileName = `${params.year}年度累計_${teamForName}`;
+                    
+                    // 呼叫你原本寫好的下載函式
+                    downloadYearlySummaryExcel(summaryData, fileName);
                 }
                 hideMicLoading();
-                return; // 結束函式，不往下跑預覽視窗
+                return; // 直接結束，不顯示預覽視窗
             }
     // --- 前端主動配合 GAS 格式 ---
     
