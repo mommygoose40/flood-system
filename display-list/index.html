@@ -2634,16 +2634,16 @@ document.getElementById("adminSearchBtn").onclick = () => {
  * 整合分流報表功能 (電腦版預覽 + 手機版原本邏輯)
  */
 async function exportReport(mode = 'current') {
+    // 1. 顯示處理中
     showMicLoading(0);
+    
+    let filteredData = [];
     try {
-        let filteredData = [];
-        let title = "";
-
-        // 分流抓取數據
+        // --- 數據分流：根據 mode 決定資料來源 ---
         if (mode === 'current') {
-            filteredData = filterAdminRecords();
-            title = "近期紀錄預覽";
+            filteredData = filterAdminRecords(); // 抓取你近期紀錄的篩選
         } else {
+            // 抓取你歷史紀錄區域的 UI 參數
             const params = {
                 team: document.getElementById("historyTeamText")?.innerText || "全部",
                 year: document.getElementById("reportYearText")?.innerText || "2025",
@@ -2651,8 +2651,8 @@ async function exportReport(mode = 'current') {
                 type: document.getElementById("historyTypeText")?.innerText || "全部",
                 status: document.getElementById("reportStatusText")?.innerText || "全部"
             };
+            // 執行你提供的 GAS 抓取函式
             filteredData = await fetchHistoryFromGAS(params);
-            title = `歷史紀錄預覽 (${params.year}/${params.month})`;
         }
 
         if (!filteredData || filteredData.length === 0) {
@@ -2660,22 +2660,85 @@ async function exportReport(mode = 'current') {
             return;
         }
 
-        // 判斷手機版
-        const isMobile = (window.innerWidth < 769);
+        // 2. 手機版判斷 (保持你原本的邏輯)
+        const isMobile = window.innerWidth < 769;
         if (isMobile) {
-            if (typeof renderMobileReportOverlay === "function") {
-                renderMobileReportOverlay(filteredData);
-            } else {
-                console.error("找不到手機版渲染函式");
-            }
-        } else {
-            // 執行電腦版渲染
-            renderDesktopReportOverlay(filteredData, title, mode);
+            renderMobileReportOverlay(filteredData);
+            return;
         }
+
+        // 3. --- 電腦版預覽視窗 (請在此處貼回你原本的 HTML 樣板) ---
+        // 以下是我根據你原本邏輯幫你保留的樣板結構，請確認與你原本的一致
+        
+        const fb = document.getElementById("floatingButtons");
+        if (fb) fb.style.setProperty("display", "none", "important");
+
+        history.pushState({ action: "closeReport" }, "");
+        window.onpopstate = function() { if (document.getElementById("reportOverlay")) closeReportLayer(); };
+
+        let tableRows = "";
+        filteredData.forEach((r, index) => {
+            // 這裡保留你原本處理 hh, mm, combinedNote, reporterInfo 的所有邏輯...
+            let hh = "--", mm = "--";
+            try {
+                const match = (r.詳細紀錄 || "").match(/report_(\d+)/);
+                if (match) {
+                    const d = new Date(parseInt(match[1], 10));
+                    hh = String(d.getHours()).padStart(2, "0");
+                    mm = String(d.getMinutes()).padStart(2, "0");
+                }
+            } catch(e) {}
+            
+            const note = (r.說明 || "").trim();
+            const voice = (r.語音轉文字 || "").trim();
+            const combinedNote = (note && voice) ? `${note} / ${voice}` : (note || voice);
+            const reporterInfo = (r.回報者 || "").trim() + (r.同行者 ? `,${r.同行者.trim()}` : "");
+
+            tableRows += `
+                <tr>
+                    <td style="text-align:center;">${index + 1}</td>
+                    <td style="text-align:center;">${r.日期 ? normalizeDate(r.日期) : ''}<br/>${hh}:${mm}</td>
+                    <td>${r.通報類型 || ''}</td>
+                    <td style="${r.狀態 === '異常' ? 'color:red;font-weight:bold;' : ''}">${r.狀態 || ''}</td>
+                    <td>${r.異常分類 || ''}</td>
+                    <td style="text-align:center;"><a href="${r.詳細紀錄}" target="_blank">連結</a></td>
+                    <td>${combinedNote}</td>
+                    <td>${reporterInfo}</td>
+                    <td>${r.所屬大隊 || ''}</td>
+                </tr>`;
+        });
+
+        // 這裡貼回你原本最熟悉的那個 reportHtml 樣式
+        const reportHtml = `
+        <div id="reportOverlay" style="position:fixed; top:0; left:0; width:100%; height:100%; background: rgba(0,0,0,0.6); z-index: 9995; display: flex; justify-content: center; align-items: flex-start; font-family:sans-serif;">
+            <div id="reportContent" style="background: white; width: 95%; max-height: 90vh; margin-top: 3vh; padding: 20px 30px; box-sizing: border-box; overflow-y: auto; border-radius: 10px; position: relative;">
+                <div class="no-print" style="display: flex; justify-content: space-between; align-items: center; position: sticky; top: -20px; background: white; padding: 15px 0; z-index: 20; border-bottom: 1px solid #eee;">
+                    <div style="font-weight: bold; font-size: 18px;">報表預覽 (共 ${filteredData.length} 筆)</div>
+                    <div>
+                        <button onclick="downloadExcelWithMsg()" style="padding: 10px 20px; background: #198754; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; margin-right: 10px;">匯出報表</button>
+                        <button onclick="closeReportLayer()" style="padding: 10px 20px; background: #dc3545; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: bold;">✕ 關閉視窗</button>
+                    </div>
+                </div>
+                <h2 style="text-align:center; margin: 20px 0;">巡視紀錄明細報表</h2>
+                <table id="targetTable" style="width:100%; border-collapse:collapse; font-size:14px;">
+                    <thead>
+                        <tr style="background:#f2f2f2; position: sticky; top: 45px; z-index: 15;">
+                            <th>編號</th><th>時間</th><th>類型</th><th>狀態</th><th>分類</th><th>紀錄</th><th>說明</th><th>回報者</th><th>大隊</th>
+                        </tr>
+                    </thead>
+                    <tbody>${tableRows}</tbody>
+                </table>
+            </div>
+        </div>`;
+
+        const div = document.createElement('div');
+        div.innerHTML = reportHtml;
+        document.body.appendChild(div.firstElementChild);
+
     } catch (err) {
-        console.error("報表執行失敗:", err);
+        console.error("錯誤:", err);
     } finally {
-        hideMicLoading();
+        hideMicLoading(); // 確保不論成功失敗都會關閉載入圖示
     }
 }
 
@@ -2781,44 +2844,64 @@ function downloadExcelFinal() {
         const table = document.getElementById("targetTable");
         if (!table) return;
 
-        // 決定 Excel 檔名
+        showMicLoading(0);
+
+        // 1. 檔名邏輯：恢復你原本的組合方式
         let fileName = "";
         if (mode === 'current') {
+            // 近期紀錄：抓 admin 區域的條件
             const team = document.getElementById('teamText')?.innerText || "全部";
-            fileName = `近期紀錄_${team}_${new Date().getTime()}.xlsx`;
+            const dateS = document.getElementById('dateStart')?.value || "";
+            const dateE = document.getElementById('dateEnd')?.value || "";
+            fileName = `巡視紀錄_${team}_${dateS}至${dateE}.xlsx`;
         } else {
-            const year = document.getElementById("reportYearText")?.innerText || "History";
-            const month = document.getElementById("reportMonthText")?.innerText || "";
-            fileName = `歷史報表_${year}_${month}.xlsx`;
+            // 歷史紀錄：抓 history 區域的條件
+            const team = document.getElementById('historyTeamText')?.innerText || "全部";
+            const year = document.getElementById('reportYearText')?.innerText || "";
+            const month = document.getElementById('reportMonthText')?.innerText || "";
+            fileName = `歷史紀錄_${team}_${year}年${month}.xlsx`;
         }
 
-        // 提取表格數據
+        // 2. 數據提取：恢復你原本指定的欄位與順序
         const rows = Array.from(table.querySelectorAll("tbody tr"));
         const excelData = rows.map(tr => {
             const cells = tr.querySelectorAll("td");
+            // 這裡必須對應你原本 tableRows 產出的順序
+            const timeText = cells[1].innerText.replace("\n", " "); 
+            
             return {
-                "日期時間": cells[1].innerText.replace("\n", " "),
-                "類型": cells[2].innerText,
+                "編號": cells[0].innerText,
+                "日期時間": timeText,
+                "通報類型": cells[2].innerText,
                 "狀態": cells[3].innerText,
-                "分類": cells[4].innerText,
-                "說明": cells[6].innerText,
-                "回報者": cells[7].innerText,
-                "大隊": cells[8].innerText
+                "異常分類": cells[4].innerText,
+                "詳細紀錄": cells[5].querySelector('a')?.href || "",
+                "說明/語音": cells[6].innerText,
+                "回報者/同行者": cells[7].innerText,
+                "所屬大隊": cells[8].innerText
             };
         });
 
-        // 執行 SheetJS 下載 (略，同你原本邏輯)
+        // 3. 執行 SheetJS：維持你原本的設定
         const worksheet = XLSX.utils.json_to_sheet(excelData);
+        
+        // 如果你原本有設定欄寬，可以在這裡補回
+        const wscols = [
+            {wch: 6}, {wch: 20}, {wch: 10}, {wch: 8}, {wch: 15}, 
+            {wch: 15}, {wch: 40}, {wch: 20}, {wch: 12}
+        ];
+        worksheet['!cols'] = wscols;
+
         const workbook = XLSX.utils.book_new();
-        XLSX.utils.book_append_sheet(workbook, worksheet, "Sheet1");
+        XLSX.utils.book_append_sheet(workbook, worksheet, "報表明細");
         XLSX.writeFile(workbook, fileName);
 
-    } catch (e) {
-        alert("下載失敗");
+    } catch (err) {
+        console.error("匯出失敗:", err);
+        alert("匯出失敗，請檢查資料訊息");
     } finally {
         hideMicLoading();
     }
-}
 }
   
 function showMessage(text, onConfirm) {
