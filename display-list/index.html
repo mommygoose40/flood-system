@@ -2874,18 +2874,21 @@ function downloadExcelFinal(mode = 'current') {
         const script = document.createElement('script');
         script.src = "https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js";
         script.onload = () => {
-            setTimeout(executeDownload, 100);
+            // 💡 確保傳遞 mode
+            setTimeout(() => executeDownload(mode), 100);
         };
         script.onerror = () => {
             hideMicLoading();
-            alert("匯出元件載入失敗，請檢查網路連線。");
+            alert("匯出元件載入失敗");
         };
         document.head.appendChild(script);
     } else {
-        setTimeout(executeDownload, 100);
+        // 💡 確保傳遞 mode
+        setTimeout(() => executeDownload(mode), 100);
     }
 
-    function executeDownload() {
+    // 💡 內層函式現在明確接收 mode 參數
+    function executeDownload(currentMode) {
         try {
             const table = document.getElementById("targetTable");
             if (!table) {
@@ -2893,10 +2896,7 @@ function downloadExcelFinal(mode = 'current') {
                 return;
             }
 
-            // --- A. 處理檔名與日期區間 ---
             let fileName = "";
-            
-            // 格式化日期工具
             const ft = (d) => {
                 const y = d.getFullYear();
                 const m = String(d.getMonth() + 1).padStart(2, '0');
@@ -2906,8 +2906,8 @@ function downloadExcelFinal(mode = 'current') {
                 return `${y}${m}${day}_${h}${min}`;
             };
 
-            if (mode === 'current') {
-                // 近期紀錄：沿用你原本的邏輯
+            // --- A. 檔名分流邏輯 ---
+            if (currentMode === 'current') {
                 const team = document.getElementById('teamText')?.innerText || "全部";
                 const type = document.getElementById('typeText')?.innerText || "全部";
                 const dateStart = document.getElementById("dateStart")?.value;
@@ -2923,67 +2923,57 @@ function downloadExcelFinal(mode = 'current') {
                 if (type !== "全部") fileName += `_${type}`;
                 fileName += ".xlsx";
             } else {
-            // 🛑 歷史紀錄：依照你的新規則「年份月份_大隊_類型_狀態」
-            const hYear = document.getElementById("reportYearText")?.innerText || "";
-            const hMonth = document.getElementById("reportMonthText")?.innerText || "";
-            const hTeam = document.getElementById("historyTeamText")?.innerText || "全部";
-            const hType = document.getElementById("historyTypeText")?.innerText || "全部";
-            const hStatus = document.getElementById("reportStatusText")?.innerText || "全部";
+                // 🛑 歷史紀錄：採用你的新規則
+                const hYear = document.getElementById("reportYearText")?.innerText || "";
+                const hMonth = document.getElementById("reportMonthText")?.innerText || ""; // 💡 確保這是顯示文字的 ID
+                const hTeam = document.getElementById("historyTeamText")?.innerText || "全部";
+                const hType = document.getElementById("historyTypeText")?.innerText || "全部";
+                const hStatus = document.getElementById("reportStatusText")?.innerText || "全部";
 
-            // 1. 基礎開頭：年份月份_大隊
-            fileName = `${hYear}${hMonth}_${hTeam}`;
-
-            // 2. 若類型不為全部則顯示
-            if (hType !== "全部") {
-                fileName += `_${hType}`;
+                fileName = `${hYear}${hMonth}_${hTeam}`;
+                if (hType !== "全部") fileName += `_${hType}`;
+                if (hStatus !== "全部") fileName += `_${hStatus}`;
+                fileName += ".xlsx";
             }
 
-            // 3. 若狀態不為全部則顯示
-            if (hStatus !== "全部") {
-                fileName += `_${hStatus}`;
-            }
+            // --- B. 處理資料內容 ---
+            const rows = Array.from(table.querySelectorAll("tbody tr"));
+            const excelData = rows.map(tr => {
+                const cells = tr.querySelectorAll("td");
+                if (cells.length < 9) return null; // 略過無效列
 
-            fileName += ".xlsx";
-        }
+                const timeParts = cells[1].innerText.trim().split("\n");
+                
+                // 💡 抓取埋在 cells[7] (回報者那一格) 的屬性
+                const reporterTd = cells[7]; 
+                const name = reporterTd.getAttribute("data-name") || "";
+                const rid  = reporterTd.getAttribute("data-rid") || ""; // 這裡會抓到 ID
+                const comp = reporterTd.getAttribute("data-comp") || "";
 
-        // --- B. 處理資料內容 (從 data 屬性抓取拆分的值) ---
-        const rows = Array.from(table.querySelectorAll("tbody tr"));
-        const excelData = rows.map(tr => {
-            const cells = tr.querySelectorAll("td");
-            const timeParts = cells[1].innerText.trim().split("\n");
-            
-            // 抓取在 exportReport 埋好的屬性
-            const reporterTd = cells[7]; 
-            const name = reporterTd.getAttribute("data-name") || "";
-            const rid  = reporterTd.getAttribute("data-rid") || "";
-            const comp = reporterTd.getAttribute("data-comp") || "";
+                return {
+                    "日期": timeParts[0] || "",
+                    "時間": timeParts[1] || "",
+                    "類型": cells[2].innerText.trim(),
+                    "狀態": cells[3].innerText.trim(),
+                    "分類": cells[4].innerText.trim(),
+                    "說明": cells[6].innerText.trim(),
+                    "回報者": name,
+                    "回報者ID": rid,
+                    "同行者": comp,
+                    "大隊": cells[8].innerText.trim()
+                };
+            }).filter(item => item !== null);
 
-            return {
-                "日期": timeParts[0] || "",
-                "時間": timeParts[1] || "",
-                "類型": cells[2].innerText.trim(),
-                "狀態": cells[3].innerText.trim(),
-                "分類": cells[4].innerText.trim(),
-                "說明": cells[6].innerText.trim(),
-                "回報者": name,
-                "回報者ID": rid,
-                "同行者": comp,
-                "大隊": cells[8].innerText.trim()
-            };
-        });
-
-            // --- C. 設定 Excel 結構 (完全保留你指定的 Headers) ---
+            // --- C. 設定 Excel 結構 ---
             const finalHeaders = ["日期", "時間", "類型", "狀態", "分類", "說明", "回報者", "回報者ID", "同行者", "大隊"];
             const worksheet = XLSX.utils.json_to_sheet(excelData, { header: finalHeaders });
 
-            // 強制格式為字串
+            // 強制格式為字串並設定欄寬
             Object.keys(worksheet).forEach(key => {
                 if (key[0] === '!') return;
                 worksheet[key].t = 's';
                 worksheet[key].z = '@';
             });
-
-            // 設定欄寬 (完全保留你原本的設定)
             worksheet['!cols'] = [
                 { wch: 12 }, { wch: 8 }, { wch: 10 }, { wch: 8 }, { wch: 15 }, 
                 { wch: 45 }, { wch: 12 }, { wch: 15 }, { wch: 15 }, { wch: 12 }
@@ -2991,8 +2981,6 @@ function downloadExcelFinal(mode = 'current') {
 
             const workbook = XLSX.utils.book_new();
             XLSX.utils.book_append_sheet(workbook, worksheet, "巡視紀錄");
-
-            // 下載
             XLSX.writeFile(workbook, fileName);
 
         } catch (err) {
