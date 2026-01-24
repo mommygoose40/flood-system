@@ -2630,20 +2630,20 @@ document.getElementById("adminSearchBtn").onclick = () => {
  * 統一報表入口
  * @param {string} mode - 'current' (近期) 或 'history' (歷史)
  */
+/**
+ * 整合分流報表功能 (電腦版預覽 + 手機版原本邏輯)
+ */
 async function exportReport(mode = 'current') {
-    let filteredData = [];
-    let reportTitle = "";
-
-    // 1. 顯示處理中 (尤其歷史紀錄需要等 GAS)
     showMicLoading(0);
-
     try {
+        let filteredData = [];
+        let title = "";
+
+        // 分流抓取數據
         if (mode === 'current') {
-            // --- 近期紀錄：從畫面的日期區間過濾 ---
             filteredData = filterAdminRecords();
-            reportTitle = "近期紀錄預覽";
+            title = "近期紀錄預覽";
         } else {
-            // --- 歷史紀錄：從歷史區域抓參數，並從 GAS 獲取 ---
             const params = {
                 team: document.getElementById("historyTeamText")?.innerText || "全部",
                 year: document.getElementById("reportYearText")?.innerText || "2025",
@@ -2651,32 +2651,29 @@ async function exportReport(mode = 'current') {
                 type: document.getElementById("historyTypeText")?.innerText || "全部",
                 status: document.getElementById("reportStatusText")?.innerText || "全部"
             };
-            // 呼叫你的 GAS 函式
             filteredData = await fetchHistoryFromGAS(params);
-            reportTitle = `歷史紀錄預覽 (${params.year}/${params.month})`;
+            title = `歷史紀錄預覽 (${params.year}/${params.month})`;
         }
 
         if (!filteredData || filteredData.length === 0) {
-            hideMicLoading();
             showMessage("尚無符合資料!");
             return;
         }
 
-        // 2. 判斷裝置類型（保留你原本的手機版邏輯）
-        const isMobile = window.innerWidth < 769;
+        // 判斷手機版
+        const isMobile = (window.innerWidth < 769);
         if (isMobile) {
-            hideMicLoading();
-            // 直接呼叫你原本定義好的手機版 Overlay 函式
-            renderMobileReportOverlay(filteredData);
-            return; 
+            if (typeof renderMobileReportOverlay === "function") {
+                renderMobileReportOverlay(filteredData);
+            } else {
+                console.error("找不到手機版渲染函式");
+            }
+        } else {
+            // 執行電腦版渲染
+            renderDesktopReportOverlay(filteredData, title, mode);
         }
-
-        // 3. --- 電腦版預覽視窗邏輯 ---
-        renderDesktopReportOverlay(filteredData, reportTitle, mode);
-
     } catch (err) {
-        console.error("執行報表發生錯誤:", err);
-        alert("資料讀取失敗，請稍後再試");
+        console.error("報表執行失敗:", err);
     } finally {
         hideMicLoading();
     }
@@ -2821,6 +2818,7 @@ function downloadExcelFinal() {
     } finally {
         hideMicLoading();
     }
+}
 }
   
 function showMessage(text, onConfirm) {
