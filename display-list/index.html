@@ -2916,7 +2916,7 @@ function downloadExcelFinal(mode = 'current') {
 
             // --- A. 檔名分流邏輯 ---
             if (currentMode === 'current') {
-                const team = document.getElementById('teamText')?.innerText || "全部大隊";
+                const team = document.getElementById('teamText')?.innerText || "全部";
                 const type = document.getElementById('typeText')?.innerText || "全部";
                 const dateStart = document.getElementById("dateStart")?.value;
                 const dateEnd   = document.getElementById("dateEnd")?.value;
@@ -2927,21 +2927,24 @@ function downloadExcelFinal(mode = 'current') {
                 let endD   = dateEnd ? new Date(`${dateEnd}T${timeEnd}:59`) : new Date();
                 const dateRange = `${ft(startD)}~${ft(endD)}`;
 
-                fileName = `${dateRange}_${team}`;
-                if (type !== "全部") fileName += `_${type}`;
-                fileName += ".xlsx";
+                fileName = `${dateRange}_${team === "全部" ? "全部大隊" : team}`; // 這裡也可以順便統一
+    if (type !== "全部") fileName += `_${type}`;
+    fileName += ".xlsx";
             } else {
                 // 🛑 歷史紀錄：採用你的新規則
                 const hYear = document.getElementById("reportYearText")?.innerText || "";
                 const hMonth = document.getElementById("reportMonthText")?.innerText || ""; // 💡 確保這是顯示文字的 ID
-                const hTeam = document.getElementById("historyTeamText")?.innerText || "全部大隊";
+                const hTeam = document.getElementById("historyTeamText")?.innerText || "全部";
                 const hType = document.getElementById("historyTypeText")?.innerText || "全部";
                 const hStatus = document.getElementById("reportStatusText")?.innerText || "全部";
 
-                fileName = `${hYear}${hMonth}_${hTeam}`;
-                if (hType !== "全部") fileName += `_${hType}`;
-                if (hStatus !== "全部") fileName += `_${hStatus}`;
-                fileName += ".xlsx";
+                // 💡 關鍵修正：如果是「全部」，則檔名顯示「全部大隊」
+    const teamNameForFile = (hTeam === "全部") ? "全部大隊" : hTeam;
+
+    fileName = `${hYear}${hMonth}_${teamNameForFile}`;
+    if (hType !== "全部") fileName += `_${hType}`;
+    if (hStatus !== "全部") fileName += `_${hStatus}`;
+    fileName += ".xlsx";
             }
 
             // --- B. 處理資料內容 ---
