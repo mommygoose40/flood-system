@@ -2642,6 +2642,31 @@ async function exportReport(mode = 'current') {
         if (mode === 'current') {
             filteredData = filterAdminRecords(); 
         } else {
+            const monthRaw = document.getElementById("reportMonth")?.value || "ALL";
+            
+            // 💡 關鍵：如果月份是 ALL，走直接下載流程
+            if (monthRaw === "ALL") {
+                const teamRaw = document.getElementById("historyTeamText")?.innerText || "全部";
+                // 大隊去字處理
+                const match = teamRaw.match(/\d+/);
+                const teamParam = (teamRaw === "全部") ? "all" : (match ? match[0] : teamRaw);
+
+                const params = {
+                    team: teamParam,
+                    year: document.getElementById("reportYearText")?.innerText.replace("年", "").trim() || "2025",
+                    month: "ALL"
+                };
+
+                const yearlyData = await fetchYearlySummaryFromGAS(params);
+                if (!yearlyData || yearlyData.length === 0) {
+                    alert("尚無年度彙總資料！");
+                } else {
+                    // 直接下載，不顯示預覽
+                    downloadYearlySummaryExcel(yearlyData, params);
+                }
+                hideMicLoading();
+                return; // 結束函式，不往下跑預覽視窗
+            }
     // --- 前端主動配合 GAS 格式 ---
     
     // 1. 處理大隊：如果是「全部」則轉為 "all"，否則只取出數字 (例如：第1大隊 -> 1)
@@ -2654,9 +2679,6 @@ async function exportReport(mode = 'current') {
         const match = teamRaw.match(/\d+/);
         teamParam = match ? match[0] : teamRaw; // 如果沒數字就送原字串，有數字就只送數字
     }
-
-    // 2. 處理月份：保持原樣
-    const monthRaw = document.getElementById("reportMonth")?.value || "ALL";
 
     // 3. 處理類型與狀態
     const typeRaw = document.getElementById("historyTypeText")?.innerText || "全部";
