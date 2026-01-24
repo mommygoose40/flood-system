@@ -2785,28 +2785,35 @@ function downloadExcelFinal() {
             const team = document.getElementById('teamText')?.innerText || "全部";
             const type = document.getElementById('typeText')?.innerText || "全部";
             
-            // 直接抓 select 的 value (例如 3, 7, 14)
-const dayRangeSelect = document.getElementById('adminDayRange');
-const days = parseInt(dayRangeSelect.value, 10) || 3;
+            const dateStart = document.getElementById("dateStart")?.value;
+const dateEnd   = document.getElementById("dateEnd")?.value;
+const timeStart = document.getElementById("timeStartText")?.innerText || "00:00";
+const timeEnd   = document.getElementById("timeEndText")?.innerText || "23:59";
 
-const endD = new Date();
-const startD = new Date();
-startD.setDate(endD.getDate() - (days - 1));
+let startD, endD;
 
-// 設定時間為當天的 00:00:00 確保比較準確
-startD.setHours(0, 0, 0, 0);
-endD.setHours(23, 59, 59, 999);
+if (dateStart && dateEnd) {
+  startD = new Date(`${dateStart}T${timeStart}:00`);
+  endD   = new Date(`${dateEnd}T${timeEnd}:59`);
+} else {
+  // fallback：如果使用者沒選（理論上不該）
+  endD = new Date();
+  startD = new Date(endD);
+}
 
 console.log(`查詢區間：${startD.toLocaleDateString()} ~ ${endD.toLocaleDateString()}`);
             
             // 格式化日期為 20260102 (補零處理)
-            const f = (d) => {
-                const y = d.getFullYear();
-                const m = String(d.getMonth() + 1).padStart(2, '0');
-                const day = String(d.getDate()).padStart(2, '0');
-                return `${y}${m}${day}`;
-            };
-            const dateRange = `${f(startD)}~${f(endD)}`;
+            const ft = (d) => {
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  const h = String(d.getHours()).padStart(2, '0');
+  const min = String(d.getMinutes()).padStart(2, '0');
+  return `${y}${m}${day}_${h}${min}`;
+};
+
+const dateRange = `${ft(startD)}~${ft(endD)}`;
 
             // --- B. 處理資料內容 ---
             const rows = Array.from(table.querySelectorAll("tbody tr"));
