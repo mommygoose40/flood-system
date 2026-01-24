@@ -1880,7 +1880,7 @@ body {
 <script>
 
   const VOLUNTEER_API_URL = "https://script.google.com/macros/s/AKfycbxiGSG5hSMO6We-C6cyEJZLgf4Rnbjp-6w9Tmb0qfF9VM6JB4YGEMqj3QRfTzg7Czpc/exec"; 
-const REPORT_GAS_URL = "https://script.google.com/macros/s/AKfycbzQWSf5x4Aff30xCo4gmjvx-0Mjdml8YSECDoXGRAGqt4HuV5U4DiA2BQEYNaytFfXCWg/exec";
+const REPORT_GAS_URL = "https://script.google.com/macros/s/AKfycbyv4whUoBYgvhc_h_201dCdHsnbIckFQNfw80ejQ1o0tWsQcdCaF4lz-glQ7GftvKvXVw/exec";
 
 let globalAdminRecords = [];   // 管理員一次抓全部後存在這邊
 let adminViewDays = 3;        // 預設抓最近兩週，可改 30
@@ -2642,33 +2642,40 @@ async function exportReport(mode = 'current') {
         if (mode === 'current') {
             filteredData = filterAdminRecords(); 
         } else {
-            // --- 前端主動配合 GAS 格式 ---
-            
-            // 1. 處理大隊：如果是「全部」則轉為 "all"
-            const teamRaw = document.getElementById("historyTeamText")?.innerText || "全部";
-            const teamParam = (teamRaw === "全部") ? "all" : teamRaw;
+    // --- 前端主動配合 GAS 格式 ---
+    
+    // 1. 處理大隊：如果是「全部」則轉為 "all"，否則只取出數字 (例如：第1大隊 -> 1)
+    const teamRaw = document.getElementById("historyTeamText")?.innerText || "全部";
+    let teamParam;
+    if (teamRaw === "全部") {
+        teamParam = "all";
+    } else {
+        // 使用正則表達式只抓取數字部分
+        const match = teamRaw.match(/\d+/);
+        teamParam = match ? match[0] : teamRaw; // 如果沒數字就送原字串，有數字就只送數字
+    }
 
-            // 2. 處理月份：如果是 "ALL" 保持原樣，否則轉為數字字串 (如 "01")
-            const monthRaw = document.getElementById("reportMonth")?.value || "ALL";
+    // 2. 處理月份：保持原樣
+    const monthRaw = document.getElementById("reportMonth")?.value || "ALL";
 
-            // 3. 處理類型與狀態
-            const typeRaw = document.getElementById("historyTypeText")?.innerText || "全部";
-            const typeParam = (typeRaw === "全部") ? "all" : typeRaw;
+    // 3. 處理類型與狀態
+    const typeRaw = document.getElementById("historyTypeText")?.innerText || "全部";
+    const typeParam = (typeRaw === "全部") ? "all" : typeRaw;
 
-            const statusRaw = document.getElementById("reportStatusText")?.innerText || "全部";
-            const statusParam = (statusRaw === "全部") ? "all" : statusRaw;
+    const statusRaw = document.getElementById("reportStatusText")?.innerText || "全部";
+    const statusParam = (statusRaw === "全部") ? "all" : statusRaw;
 
-            const params = {
-                team: teamParam,
-                year: document.getElementById("reportYearText")?.innerText.replace("年", "").trim() || "2025",
-                month: monthRaw,
-                type: typeParam,
-                status: statusParam
-            };
+    const params = {
+        team: teamParam, // 這裡現在會是 "1", "2", "3" 或 "all"
+        year: document.getElementById("reportYearText")?.innerText.replace("年", "").trim() || "2025",
+        month: monthRaw,
+        type: typeParam,
+        status: statusParam
+    };
 
-            console.log("🚀 送往 GAS 的正規化參數:", params);
-            filteredData = await fetchHistoryFromGAS(params);
-        }
+    console.log("🚀 送往 GAS 的正規化參數 (大隊已去字):", params);
+    filteredData = await fetchHistoryFromGAS(params);
+}
 
         if (!filteredData || filteredData.length === 0) {
             showMessage("尚無符合資料!");
@@ -2909,7 +2916,7 @@ function downloadExcelFinal(mode = 'current') {
 
             // --- A. 檔名分流邏輯 ---
             if (currentMode === 'current') {
-                const team = document.getElementById('teamText')?.innerText || "全部";
+                const team = document.getElementById('teamText')?.innerText || "全部大隊";
                 const type = document.getElementById('typeText')?.innerText || "全部";
                 const dateStart = document.getElementById("dateStart")?.value;
                 const dateEnd   = document.getElementById("dateEnd")?.value;
@@ -2927,7 +2934,7 @@ function downloadExcelFinal(mode = 'current') {
                 // 🛑 歷史紀錄：採用你的新規則
                 const hYear = document.getElementById("reportYearText")?.innerText || "";
                 const hMonth = document.getElementById("reportMonthText")?.innerText || ""; // 💡 確保這是顯示文字的 ID
-                const hTeam = document.getElementById("historyTeamText")?.innerText || "全部";
+                const hTeam = document.getElementById("historyTeamText")?.innerText || "全部大隊";
                 const hType = document.getElementById("historyTypeText")?.innerText || "全部";
                 const hStatus = document.getElementById("reportStatusText")?.innerText || "全部";
 
