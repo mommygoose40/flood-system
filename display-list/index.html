@@ -2277,7 +2277,7 @@ const dateStart = document.getElementById("dateStart")?.value;
 
   if (dateStart && dateEnd) {
     const startDateTime = toLocalTimestamp(dateStart, timeStart);
-const endDateTime   = toLocalTimestamp(dateEnd, timeEnd);
+const endDateTime   = toLocalTimestamp(dateEnd, timeEnd, true);
 
     records = records.filter(r => {
       const link = r.詳細紀錄 || "";
@@ -2300,10 +2300,26 @@ const endDateTime   = toLocalTimestamp(dateEnd, timeEnd);
   }
 
   console.log("篩選後筆數:", records.length); // 除錯用
+  console.log(
+  "[FILTER RESULT]",
+  records.length,
+  records.map(r => r.詳細紀錄)
+);
   return records;
 }
 
 function renderList(records) {
+
+  // ===【關鍵】決定真正要用的資料來源 ===
+  if (globalRole === "管理員" && viewMode === "admin") {
+    records = filterAdminRecords();
+  }
+
+  if (!Array.isArray(records)) {
+    console.error("renderList: records 無效", records);
+    records = [];
+  }
+
   const container = document.getElementById("listContainer");
   const spinner = document.getElementById("centerSpinner");
   const mask = document.getElementById("loadingMask");
@@ -2326,7 +2342,6 @@ if (globalRole === "管理員" && viewMode === "admin") {
   document.getElementById("adminFilterArea").style.display = "none";
 }
 
-  globalRecords = records;
   container.innerHTML = "";
 
   /* ===== 方案 B：只顯示一次的「可點擊提示」 ===== */
@@ -4206,10 +4221,14 @@ function hideScreenLock() {
   return `${y}-${m}-${d}`;
 }
 
-  function toLocalTimestamp(dateStr, timeStr) {
+  function toLocalTimestamp(dateStr, timeStr, isEnd = false) {
   const [y, m, d] = dateStr.split('-').map(Number);
   const [hh, mm] = timeStr.split(':').map(Number);
-  return new Date(y, m - 1, d, hh, mm, 0).getTime();
+
+  if (isEnd) {
+    return new Date(y, m - 1, d, hh, mm, 59, 999).getTime();
+  }
+  return new Date(y, m - 1, d, hh, mm, 0, 0).getTime();
 }
   
 </script>
