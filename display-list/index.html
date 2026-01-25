@@ -2255,66 +2255,57 @@ async function loadAdminRecords() {
 function filterAdminRecords() {
   let records = [...globalAdminRecords];
 
-  // --- 1. 大隊篩選 (保持原樣) ---
-  let targetTeam = document.getElementById("adminTeamSelect")?.value;
-  if (!targetTeam) targetTeam = document.getElementById("teamText")?.innerText || "全部";
-  if (targetTeam !== "全部") {
-    records = records.filter(r => (r.所屬大隊 + "") === targetTeam);
-  }
+  // 1. 篩選大隊
+let targetTeam = document.getElementById("adminTeamSelect")?.value;
 
-  // --- 2. 日期 + 時間區間篩選 (改用欄位合併) ---
-  const dateStart = document.getElementById("dateStart")?.value; // 格式: YYYY-MM-DD
+// iOS hidden select = "" → 必須補救
+if (!targetTeam) {
+  targetTeam = document.getElementById("teamText").innerText || "全部";
+}
+
+if (targetTeam !== "全部") {
+  records = records.filter(r => (r.所屬大隊 + "") === targetTeam);
+}
+
+  // 2. 日期＋時間區間篩選（最多 14 天）
+const dateStart = document.getElementById("dateStart")?.value;
   const dateEnd   = document.getElementById("dateEnd")?.value;
+  
+  // 修正點：按鈕沒有 .value，改抓 span 的內容
   const timeStart = document.getElementById("timeStartText")?.innerText || "00:00";
   const timeEnd   = document.getElementById("timeEndText")?.innerText || "23:59";
 
   if (dateStart && dateEnd) {
-    const startLimit = toLocalTimestamp(dateStart, timeStart);
-    const endLimit   = toLocalTimestamp(dateEnd, timeEnd, true);
+    const startDateTime = toLocalTimestamp(dateStart, timeStart);
+const endDateTime   = toLocalTimestamp(dateEnd, timeEnd, true);
 
     records = records.filter(r => {
-      // A. 標準化日期：處理民國或西元格式
-      const normalizedDate = normalizeDate(r.日期); // 預期輸出 YYYY/MM/DD
+      const link = r.詳細紀錄 || "";
+      const match = link.match(/report_(\d+)/);
+      if (!match) return false;
+
+      const recordTimeMs = parseInt(match[1], 10); // 直接用毫秒比對，避免時區轉換干擾
       
-      // B. 抓取紀錄中的時間：從「詳細紀錄」的 ID 或是從其他時間欄位
-      // 這裡維持你原有的解析邏輯來抓取時、分，但改成跟日期欄位合併
-      let hh = "00", mm = "00";
-      const match = (r.詳細紀錄 || "").match(/report_(\d+)/);
-      if (match) {
-        const dObj = new Date(parseInt(match[1], 10));
-        hh = String(dObj.getHours()).padStart(2, "0");
-        mm = String(dObj.getMinutes()).padStart(2, "0");
-      }
-
-      // C. 合併為紀錄的毫秒數
-      // 將 YYYY/MM/DD 與 HH:mm 組合
-      const [y, m, d] = normalizedDate.split("/").map(Number);
-      const recordTimeTs = new Date(y, m - 1, d, parseInt(hh), parseInt(mm), 0).getTime();
-
-      return recordTimeTs >= startLimit && recordTimeTs <= endLimit;
+      return recordTimeMs >= startDateTime && recordTimeMs <= endDateTime;
     });
   }
 
-  // --- 3. 類型篩選 (保持原樣) ---
+  // 3. 篩選通報類型
   let targetType = document.getElementById("adminTypeSelect")?.value || "全部";
   if (targetType !== "全部") {
-    records = records.filter(r => (r.通報類型 || "").trim() === targetType);
+    records = records.filter(r => {
+      const type = (r.通報類型 || "").trim();
+      return type === targetType;
+    });
   }
 
+  console.log("篩選後筆數:", records.length); // 除錯用
+  console.log(
+  "[FILTER RESULT]",
+  records.length,
+  records.map(r => r.詳細紀錄)
+);
   return records;
-}
-
-function normalizeDate(dateStr) {
-  if (!dateStr) return "";
-  let parts = dateStr.split(/[\/-]/);
-  let y = parseInt(parts[0], 10);
-  const m = parts[1];
-  const d = parts[2];
-  // 判斷是否為民國年 (例如 113)
-  if (y < 1911) {
-    y += 1911;
-  }
-  return `${y}/${m}/${d}`;
 }
 
 function renderList(records) {
