@@ -2276,8 +2276,8 @@ const dateStart = document.getElementById("dateStart")?.value;
   const timeEnd   = document.getElementById("timeEndText")?.innerText || "23:59";
 
   if (dateStart && dateEnd) {
-    const startDateTime = new Date(`${dateStart}T${timeStart}:00`).getTime();
-    const endDateTime   = new Date(`${dateEnd}T${timeEnd}:59`).getTime();
+    const startDateTime = toLocalTimestamp(dateStart, timeStart);
+const endDateTime   = toLocalTimestamp(dateEnd, timeEnd);
 
     records = records.filter(r => {
       const link = r.詳細紀錄 || "";
@@ -4182,28 +4182,35 @@ function hideScreenLock() {
   const end   = document.getElementById("dateEnd");
 
   const today = new Date();
-  const max = today.toISOString().slice(0, 10);
 
-  // --- 修改這裡：計算 3 天前的日期 ---
-  const threeDaysAgo = new Date();
-  threeDaysAgo.setDate(today.getDate() - 2); // 減 2 天 + 今天 = 3 天
-  const minDefault = threeDaysAgo.toISOString().slice(0, 10);
+  const day0 = new Date(today);           // 今天
+  const day2 = new Date(today); day2.setDate(today.getDate() - 2); // 前天
 
-  // --- 設定可選範圍（維持最多 14 天供切換，但預設顯示 3 天） ---
-  const fourteenDaysAgo = new Date();
-  fourteenDaysAgo.setDate(today.getDate() - 13);
-  const minLimit = fourteenDaysAgo.toISOString().slice(0, 10);
+  start.value = getLocalDateString(day2);
+  end.value   = getLocalDateString(day0);
 
-  // 設定 input 的限制
-  start.min = minLimit;
-  start.max = max;
-  end.min   = minLimit;
-  end.max   = max;
+  // 限制最多 14 天
+  const day13 = new Date(today);
+  day13.setDate(today.getDate() - 13);
 
-  // 設定「初始預設值」為近三天
-  start.value = minDefault;
-  end.value   = max;
+  start.min = getLocalDateString(day13);
+  start.max = getLocalDateString(day0);
+  end.min   = getLocalDateString(day13);
+  end.max   = getLocalDateString(day0);
 });
+
+  function getLocalDateString(date) {
+  const y = date.getFullYear();
+  const m = String(date.getMonth() + 1).padStart(2, '0');
+  const d = String(date.getDate()).padStart(2, '0');
+  return `${y}-${m}-${d}`;
+}
+
+  function toLocalTimestamp(dateStr, timeStr) {
+  const [y, m, d] = dateStr.split('-').map(Number);
+  const [hh, mm] = timeStr.split(':').map(Number);
+  return new Date(y, m - 1, d, hh, mm, 0).getTime();
+}
   
 </script>
 
