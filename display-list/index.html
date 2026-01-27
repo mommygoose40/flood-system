@@ -1544,6 +1544,20 @@ body {
 ">我的紀錄</button>
 </div>
 
+  <div id="leaderSummaryBar" style="display:none; margin: 10px 0 20px; text-align:center;">
+
+  <input type="hidden" id="leaderYearValue" value="current">
+    
+  <button class="fakeSelectBtn" onclick="openDropdown('leaderYear')">
+    <span id="leaderYearText">今年</span>
+    <span class="arrow">▾</span>
+  </button>
+
+  <button class="searchBtn" style="margin-left:12px;" onclick="openLeaderSummary()">
+    件數統計：
+  </button>
+</div>
+
 <div id="adminFilterArea" style="display:none; padding:12px;">
   <div class="admin-inner-wrapper">
   
@@ -2333,6 +2347,13 @@ if (globalRole === "管理員" || globalRole === "大隊長") {
   document.getElementById('switchArea').style.display = 'flex';
 } else {
   document.getElementById('switchArea').style.display = 'none';
+}
+
+//大隊長顯示件數統計
+if (globalRole === "大隊長") {
+  document.getElementById("leaderSummaryBar").style.display = "block";
+} else {
+  document.getElementById("leaderSummaryBar").style.display = "none";
 }
 
 // 只有管理員才顯示篩選區
@@ -3783,6 +3804,16 @@ dropdownData.historyType = {
   ]
 };
 
+  dropdownData.leaderYear = {
+  title: "選擇年度",
+  target: "leaderYearText",
+  input: "leaderYearValue",
+  options: [
+    { value: "current", text: "今年" },
+    { value: "last", text: "去年" }
+  ]
+};
+
 const mask = document.getElementById("fullDropdownMask");
 let maskOriginalParent = null;
 
@@ -4229,6 +4260,70 @@ function hideScreenLock() {
     return new Date(y, m - 1, d, hh, mm, 59, 999).getTime();
   }
   return new Date(y, m - 1, d, hh, mm, 0, 0).getTime();
+}
+
+  //大隊長件數統計
+  async function openLeaderSummary() {
+  showMicLoading(0);
+
+  try {
+    const yearMode = document.getElementById("leaderYearValue").value;
+    const now = new Date();
+    const year = (yearMode === "current") ? now.getFullYear() : now.getFullYear() - 1;
+
+    const summaryData = await fetchYearlySummaryFromGAS({
+      year: year,
+      team: globalTeam,   // 🔥 大隊長自己的大隊
+      type: "all",
+      status: "all"
+    });
+
+    if (!summaryData || summaryData.length === 0) {
+      showMessage("尚無年度件數資料");
+      return;
+    }
+
+    // 👉 用「手機版報表 overlay」render
+    renderLeaderSummaryOverlay(summaryData, year);
+
+  } catch (e) {
+    console.error(e);
+    showMessage("載入失敗，請稍後再試");
+  } finally {
+    hideMicLoading();
+  }
+}
+
+  function renderLeaderSummaryOverlay(data, year) {
+  const row = data[0]; // 只會有一列
+
+  let th = "";
+  let td = "";
+
+  Object.keys(row).forEach(key => {
+    th += `<th>${key}</th>`;
+    td += `<td style="text-align:center;">${row[key]}</td>`;
+  });
+
+  const html = `
+  <div id="reportOverlay" style="position:fixed; inset:0; background:#fff; z-index:9999;">
+    <div style="padding:15px; border-bottom:1px solid #ddd; display:flex; justify-content:space-between;">
+      <b>${year} 年度件數統計</b>
+      <button onclick="closeReportLayer()">關閉</button>
+    </div>
+
+    <div style="padding:10px; overflow-x:auto;">
+      <table style="border-collapse:collapse; min-width:600px;">
+        <thead><tr>${th}</tr></thead>
+        <tbody><tr>${td}</tr></tbody>
+      </table>
+    </div>
+  </div>
+  `;
+
+  const div = document.createElement("div");
+  div.innerHTML = html;
+  document.body.appendChild(div.firstElementChild);
 }
   
 </script>
