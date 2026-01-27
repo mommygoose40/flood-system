@@ -1480,16 +1480,19 @@ body {
   }
 }
 
-    /* ===============================
-   🔒 件數統計列：強制單行、不被其他樣式影響
+/* ===============================
+   🔒 件數統計列：內容寬度，不撐開
    =============================== */
 #leaderSummaryBar {
-  display: flex !important;
+  display: inline-flex !important;   /* ★ 關鍵：不要用 flex */
   align-items: center !important;
-  justify-content: center !important;
-  flex-wrap: nowrap !important;   /* ★ 關鍵：禁止換行 */
+  justify-content: flex-start !important;
+  flex-wrap: nowrap !important;
   gap: 8px !important;
-  width: 100% !important;
+
+  width: auto !important;            /* ★ 不要 100% */
+  max-width: 100% !important;
+  margin: 10px auto 20px !important; /* ★ 置中但不撐寬 */
 }
 
 /* 「件數統計：」文字 */
