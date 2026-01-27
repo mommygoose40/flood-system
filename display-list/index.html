@@ -2697,7 +2697,6 @@ async function exportReport(mode = 'current') {
             const monthRaw = document.getElementById("reportMonth")?.value || "ALL";
             const yearRaw = document.getElementById("reportYearText")?.innerText.replace("年", "").trim() || "2025";
             
-            // 💡 大隊拆分：第 1 大隊 -> 1
             const match = teamRaw.match(/\d+/);
             const teamParam = (teamRaw === "全部") ? "all" : (match ? match[0] : teamRaw);
 
@@ -2709,7 +2708,6 @@ async function exportReport(mode = 'current') {
                 status: (document.getElementById("reportStatusText")?.innerText === "全部") ? "all" : document.getElementById("reportStatusText")?.innerText
             };
 
-            // 💡 關鍵分流：如果月份選「全部 (ALL)」，直接下載年度報表
             if (monthRaw === "ALL") {
                 const summaryData = await fetchYearlySummaryFromGAS(params);
                 if (!summaryData || summaryData.length === 0) {
@@ -2720,10 +2718,8 @@ async function exportReport(mode = 'current') {
                     downloadYearlySummaryExcel(summaryData, fileName);
                 }
                 hideMicLoading();
-                return; // 直接結束，不顯示預覽
+                return;
             }
-
-            // 單月歷史明細抓取
             filteredData = await fetchHistoryFromGAS(params);
         }
 
@@ -2745,68 +2741,88 @@ async function exportReport(mode = 'current') {
         history.pushState({ action: "closeReport" }, "");
         window.onpopstate = () => { if (document.getElementById("reportOverlay")) closeReportLayer(); };
 
+        // 💡 1. 智慧型標題處理 (統一直式)
+        const headers = ["編號", "時間", "類型", "狀態", "分類", "紀錄", "說明", "回報者", "大隊"];
+        const getSmartVertical = (text) => {
+            const tokens = text.match(/(\d+|[^\d])/g) || [];
+            return tokens.map(t => `<span style="display:block; white-space:nowrap;">${t}</span>`).join('');
+        };
+        
+        const thHtml = headers.map(h => `
+            <th style="width:45px; min-width:45px; text-align:center; vertical-align:middle; background:#f2f2f2; position:sticky; top:60px; z-index:15; border:1px solid #ccc; padding:8px 4px; line-height:1.1;">
+                ${getSmartVertical(h)}
+            </th>
+        `).join('');
+
+        // 2. 生成表格行
         let tableRows = "";
-        filteredData.forEach((r, index) => {
-            let hh = "--", mm = "--";
-            try {
-                const match = (r.詳細紀錄 || "").match(/report_(\d+)/);
-                if (match) {
-                    const dateObj = new Date(parseInt(match[1], 10));
-                    hh = String(dateObj.getHours()).padStart(2, "0");
-                    mm = String(dateObj.getMinutes()).padStart(2, "0");
-                }
-            } catch(e) {}
+filteredData.forEach((r, index) => {
+    let hh = "--", mm = "--";
+    try {
+        const match = (r.詳細紀錄 || "").match(/report_(\d+)/);
+        if (match) {
+            const dateObj = new Date(parseInt(match[1], 10));
+            hh = String(dateObj.getHours()).padStart(2, "0");
+            mm = String(dateObj.getMinutes()).padStart(2, "0");
+        }
+    } catch(e) {}
 
-            const note = (r.說明 || "").trim();
-            const voice = (r.語音轉文字 || "").trim();
-            const combinedNote = (note && voice) ? `${note} / ${voice}` : (note || voice);
-            const rName = (r.回報者 || "").trim();
-            const rID = (r.回報者ID || "").trim(); 
-            const rComp = (r.同行者 || "").trim();
-            const reporterDisplay = rName + (rComp ? `,${rComp}` : "");
+    const note = (r.說明 || "").trim();
+    const voice = (r.語音轉文字 || "").trim();
+    const combinedNote = (note && voice) ? `${note} / ${voice}` : (note || voice);
+    const reporterDisplay = (r.回報者 || "").trim() + (r.同行者 ? `,${r.同行者.trim()}` : "");
 
-            tableRows += `
-                <tr>
-                    <td style="text-align:center;">${index + 1}</td>
-                    <td style="text-align:center;">${r.日期 ? normalizeDate(r.日期) : ''}<br/>${hh}:${mm}</td>
-                    <td>${r.通報類型 || ''}</td>
-                    <td style="color: ${r.狀態 === '異常' ? 'red' : 'black'}; font-weight: ${r.狀態 === '異常' ? 'bold' : 'normal'}">${r.狀態 || ''}</td>
-                    <td>${r.異常分類 || ''}</td>
-                    <td style="text-align:center;"><a href="${r.詳細紀錄}" target="_blank" style="color:#0b5ed7; text-decoration:underline;">連結</a></td>
-                    <td>${combinedNote}</td>
-                    <td data-name="${rName}" data-rid="${rID}" data-comp="${rComp}">${reporterDisplay}</td>
-                    <td>${r.所屬大隊 || ''}</td>
-                </tr>`;
-        });
+    tableRows += `
+        <tr>
+            <td style="text-align:center;">${index + 1}</td>
+            <td style="text-align:center; white-space:nowrap;">${r.日期 ? normalizeDate(r.日期) : ''}<br/>${hh}:${mm}</td>
+            <td style="text-align:center;">${r.通報類型 || ''}</td>
+            <td style="text-align:center; color: ${r.狀態 === '異常' ? 'red' : 'black'}; font-weight: ${r.狀態 === '異常' ? 'bold' : 'normal'}">${r.狀態 || ''}</td>
+            
+            <td style="text-align:left;">${r.異常分類 || ''}</td>
+            
+            <td style="text-align:center;"><a href="${r.詳細紀錄}" target="_blank" style="color:#0b5ed7; text-decoration:underline; font-weight:bold;">連結</a></td>
+            
+            <td style="text-align:left; word-break:break-all;">${combinedNote}</td>
+            <td style="text-align:left;">${reporterDisplay}</td>
+            
+            <td style="text-align:center;">${r.所屬大隊 || ''}</td>
+        </tr>`;
+});
 
         const reportHtml = `
             <div id="reportOverlay" style="position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.6); z-index:9995; display:flex; justify-content:center; align-items:flex-start; font-family:sans-serif;">
-                <div id="reportContent" style="background:white; width:95%; max-height:90vh; margin-top:3vh; padding:20px 30px; box-sizing:border-box; overflow-y:auto; border-radius:10px; position:relative;">
-                    <div style="display:flex; justify-content:space-between; align-items:center; position:sticky; top:-20px; background:white; padding:15px 0; z-index:20; border-bottom:1px solid #eee;">
+                <div id="reportContent" style="background:white; width:95%; max-height:90vh; margin-top:3vh; padding:0 30px 20px 30px; box-sizing:border-box; overflow-y:auto; border-radius:10px; position:relative;">
+                    <div style="display:flex; justify-content:space-between; align-items:center; position:sticky; top:0; background:white; padding:15px 0; z-index:20; border-bottom:1px solid #eee;">
                         <div style="font-weight:bold; font-size:18px;">報表預覽 (共 ${filteredData.length} 筆)</div>
                         <div>
                             <button onclick="downloadExcelWithMsg('${mode}')" style="padding:10px 20px; background:#198754; color:white; border:none; border-radius:6px; cursor:pointer; font-weight:bold; margin-right:10px;">📊 匯出為 Excel 檔</button>
                             <button onclick="closeReportLayer()" style="padding:10px 20px; background:#dc3545; color:white; border:none; border-radius:6px; cursor:pointer; font-weight:bold;">✕ 關閉視窗</button>
                         </div>
                     </div>
+                    
                     <h2 style="text-align:center; margin:20px 0; font-size:28px;">巡視紀錄明細報表</h2>
-                    <table id="targetTable" style="width:100%; border-collapse:collapse; font-size:14px;">
-                        <thead>
-                            <tr style="background:#f2f2f2; position:sticky; top:45px; z-index:15;">
-                                <th>編號</th><th>時間</th><th>類型</th><th>狀態</th><th>分類</th><th>紀錄</th><th>說明</th><th>回報者</th><th>大隊</th>
-                            </tr>
-                        </thead>
-                        <tbody>${tableRows}</tbody>
-                    </table>
+                    
+                    <div style="overflow-x: auto;">
+                        <table id="targetTable" style="width:100%; min-width:800px; border-collapse:collapse; font-size:14px; border:1px solid #ccc;">
+                            <thead>
+                                <tr style="background:#f2f2f2;">${thHtml}</tr>
+                            </thead>
+                            <tbody>${tableRows}</tbody>
+                        </table>
+                    </div>
                 </div>
                 <style>
-                    #targetTable th, #targetTable td { border:1px solid #ccc; padding:12px; text-align:left; }
+                    #targetTable th, #targetTable td { border:1px solid #ccc; padding:10px 8px; }
                     #targetTable tr:nth-child(even) { background-color: #fafafa; }
+                    #targetTable td { vertical-align: middle; }
                 </style>
             </div>`;
+
         const div = document.createElement('div');
         div.innerHTML = reportHtml;
         document.body.appendChild(div.firstElementChild);
+        document.body.style.overflow = "hidden"; // 開啟預覽時鎖定背景
 
     } catch (err) { console.error("預覽出錯:", err); } 
     finally { hideMicLoading(); }
@@ -4335,29 +4351,25 @@ function renderLeaderSummaryOverlay(data, year) {
     const headers = Object.keys(data[0]).filter(k => k !== "level");
     const displayHeaders = ["編號", ...headers];
 
-    // 1. 智慧型標題斷行處理函數
+    // 1. 智慧型標題斷行處理：數字不拆散 (例如 10月 -> 10 / 月)
     const getSmartVerticalText = (text) => {
-        // 正規表達式說明：
-        // (\d+|[^\d]) -> 匹配連續數字 (如 10) 或 任何單個非數字字元
         const tokens = text.match(/(\d+|[^\d])/g) || [];
         return tokens.map(t => `<span style="display:block; white-space:nowrap;">${t}</span>`).join('');
     };
 
+    // 2. 生成表格內容
     let tbodyRows = "";
     data.forEach((row, index) => {
         let tr = `<tr><td style="text-align:center;">${index + 1}</td>`;
         headers.forEach(h => {
-            if (row.level === "volunteer" && h === "大隊") {
-                tr += `<td style="padding-left:20px; text-align:center;">${row[h]}</td>`;
-            } else {
-                tr += `<td style="text-align:center;">${row[h] ?? ""}</td>`;
-            }
+            // 💡 全部統一置中 (包含姓名、大隊)
+            tr += `<td style="text-align:center;">${row[h] ?? ""}</td>`;
         });
         tr += "</tr>";
         tbodyRows += tr;
     });
 
-    // 2. 生成標題 (th)
+    // 3. 生成標題 (th)
     const thHtml = displayHeaders.map(text => {
         const verticalContent = getSmartVerticalText(text);
         return `
@@ -4369,8 +4381,8 @@ function renderLeaderSummaryOverlay(data, year) {
                 background: #f2f2f2;
                 font-size: 14px;
                 line-height: 1.2;
-                width: 45px;      /* 固定欄寬 */
-                min-width: 45px;
+                width: 45px;
+                min-width: 40px;
             ">${verticalContent}</th>
         `;
     }).join('');
@@ -4383,14 +4395,14 @@ function renderLeaderSummaryOverlay(data, year) {
             </div>
             
             <div id="reportContent" style="flex: 1; padding: 10px; box-sizing: border-box; overflow-y: auto;">
-                <h2 style="text-align:center; margin-bottom:5px; font-size: 22px; color: #333;">${year} 年度件數統計報表</h2>
+                <h2 style="text-align:center; margin-bottom:5px; font-size: 22px; color: #333;">${year} 年度統計報表</h2>
                 
                 <div style="margin-bottom: 10px; color: #666666; font-size: 13px; text-align: center; font-weight: bold;">
                     ※ 左右滑動以查看完整內容
                 </div>
                 
-                <div style="overflow-x: auto; -webkit-overflow-scrolling: touch; display: flex; justify-content: center;">
-                    <table id="targetTable" style="border-collapse:collapse; font-size:14px; border: 1px solid #ccc; margin: 0 auto;">
+                <div style="overflow-x: auto; -webkit-overflow-scrolling: touch;">
+                    <table id="targetTable">
                         <thead>
                             <tr>${thHtml}</tr>
                         </thead>
@@ -4404,11 +4416,22 @@ function renderLeaderSummaryOverlay(data, year) {
             </div>
 
             <style>
+                #targetTable {
+                    border-collapse: collapse;
+                    font-size: 14px;
+                    border: 1px solid #ccc;
+                    margin: 0 auto;
+                    /* 💡 核心改動：寬度最少 100%，若內容更多則往外撐開 */
+                    min-width: 100%; 
+                    width: auto;
+                }
                 #targetTable tr:nth-child(even) { background-color: #fafafa; }
                 #targetTable td { 
                     border: 1px solid #ccc; 
                     padding: 10px 8px; 
-                    white-space: nowrap; /* 避免資料內容換行 */
+                    white-space: nowrap; 
+                    text-align: center; /* 💡 確保內容（包含姓名）置中 */
+                    vertical-align: middle;
                 }
             </style>
         </div>
