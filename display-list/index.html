@@ -1499,6 +1499,7 @@ body {
 #leaderSummaryBar .summary-label {
   white-space: nowrap !important;
   flex-shrink: 0 !important;
+  font-size: 20px;
 }
 
 /* 年度下拉 */
@@ -1530,9 +1531,46 @@ body {
 }
 
 /* 統計按鈕 */
-#leaderSummaryBar .searchBtn {
-  flex: 0 0 auto !important;      /* ★ 永遠留在同一行 */
-  white-space: nowrap !important;
+#leaderSummaryBar .summary-btn {
+  /* 尺寸對齊 fakeSelectBtn */
+  height: 42px;
+  min-width: 80px;
+  padding: 0 14px;
+
+  font-size: 20px;
+  line-height: 1;
+  white-space: nowrap;
+
+  border-radius: 6px;
+  border: 1px solid #0b5ed7;
+  background: #0b5ed7;
+  color: #fff;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  cursor: pointer;
+  box-sizing: border-box;
+
+  /* 🔒 保證不被其他按鈕影響 */
+  flex: 0 0 auto;
+}
+
+/* hover / active（可選，但看起來會一致） */
+#leaderSummaryBar .summary-btn:hover {
+  background: #0a58ca;
+}
+
+#leaderSummaryBar .summary-btn:active {
+  background: #094aa3;
+}
+
+/* ===============================
+   🔒 強制隱藏（蓋過所有 display 設定）
+   =============================== */
+.force-hidden {
+  display: none !important;
 }
 </style>
 
@@ -1598,7 +1636,7 @@ body {
 ">我的紀錄</button>
 </div>
 
-  <div id="leaderSummaryBar" class="summary-row" style="display:none;">
+  <div id="leaderSummaryBar" class="summary-row force-hidden">
   <span class="summary-label">件數統計：</span>
 
     <input type="hidden" id="leaderYearValue" value="current">
@@ -1608,9 +1646,7 @@ body {
     <span class="arrow">▾</span>
   </button>
 
-  <button class="searchBtn" onclick="openLeaderSummary()">
-    統計
-  </button>
+  <button class="summary-btn" onclick="openLeaderSummary()">統計</button>
 </div>
 
 <div id="adminFilterArea" style="display:none; padding:12px;">
@@ -2406,9 +2442,9 @@ if (globalRole === "管理員" || globalRole === "大隊長") {
 
 //大隊長顯示件數統計
 if (globalRole === "大隊長") {
-  document.getElementById("leaderSummaryBar").style.display = "block";
+  showLeaderSummaryBar();
 } else {
-  document.getElementById("leaderSummaryBar").style.display = "none";
+  hideLeaderSummaryBar();
 }
 
 // 只有管理員才顯示篩選區
@@ -2538,6 +2574,18 @@ if (twYear === latestYear) {
   isInitialLoad = false;
   document.body.classList.remove("loading");
   debug("STEP3 完成：列表渲染成功，已自動展開最近3天資料");
+}
+
+function showLeaderSummaryBar() {
+  const bar = document.getElementById("leaderSummaryBar");
+  if (!bar) return;
+  bar.classList.remove("force-hidden");
+}
+
+function hideLeaderSummaryBar() {
+  const bar = document.getElementById("leaderSummaryBar");
+  if (!bar) return;
+  bar.classList.add("force-hidden");
 }
 
 function updateTapHintVisibility() {
