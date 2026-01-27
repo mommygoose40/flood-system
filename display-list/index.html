@@ -1502,9 +1502,31 @@ body {
 }
 
 /* 年度下拉 */
+/* ===============================
+   🎯 件數統計：年度下拉防爆版
+   =============================== */
+
+/* 只限制 leaderSummaryBar 裡的年度下拉 */
 #leaderSummaryBar .fakeSelectBtn {
-  flex: 0 0 auto !important;      /* ★ 不拉伸、不壓縮 */
-  min-width: 90px !important;
+  max-width: 110px !important;   /* ★ 關鍵：鎖最大寬 */
+  min-width: 80px !important;
+  width: auto !important;
+
+  overflow: hidden !important;
+}
+
+/* 文字超出就省略 */
+#leaderSummaryBar .fakeSelectBtn span:first-child {
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  white-space: nowrap !important;
+  display: inline-block !important;
+  max-width: 70px;               /* ★ 控制「今年 / 2025」顯示寬度 */
+}
+
+/* 箭頭固定，不被壓縮 */
+#leaderSummaryBar .fakeSelectBtn .arrow {
+  flex-shrink: 0 !important;
 }
 
 /* 統計按鈕 */
