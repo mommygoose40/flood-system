@@ -1492,7 +1492,7 @@ body {
 
   width: auto !important;            /* ★ 不要 100% */
   max-width: 100% !important;
-  margin: 10px auto 20px !important; /* ★ 置中但不撐寬 */
+  margin: 10px 0 20px !important;
 }
 
 /* 「件數統計：」文字 */
@@ -2711,6 +2711,8 @@ document.getElementById("btnSelf").onclick = function () {
   
   // 立即更新按鈕樣式
   updateSwitchUI();
+
+hideLeaderSummaryBar();
   
   // 隱藏管理員篩選區域
   document.getElementById("adminFilterArea").style.display = "none";
