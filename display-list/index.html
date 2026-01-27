@@ -4278,6 +4278,8 @@ function hideScreenLock() {
       status: "all"
     });
 
+    console.log("目前 globalTeam =", globalTeam);
+
     if (!summaryData || summaryData.length === 0) {
       showMessage("尚無年度件數資料");
       return;
