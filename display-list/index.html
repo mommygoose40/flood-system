@@ -1479,7 +1479,20 @@ body {
     font-size: 12px;
   }
 }
-    
+
+.summary-row {
+  display: flex;
+  align-items: center;   /* 垂直置中 */
+  justify-content: center;
+  gap: 10px;             /* 元件之間的距離 */
+  margin: 10px 0 20px;
+  flex-wrap: nowrap;     /* 強制同一列 */
+}
+
+.summary-label {
+  font-weight: bold;
+  white-space: nowrap;  /* 防止「件數統計」被折行 */
+}
 </style>
 
   <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
@@ -1544,17 +1557,16 @@ body {
 ">我的紀錄</button>
 </div>
 
-  <div id="leaderSummaryBar" style="display:none; margin: 10px 0 20px; text-align:center;">
+  <div id="leaderSummaryBar" class="summary-row" style="display:none;">
+  <span class="summary-label">件數統計：</span>
 
-  <input type="hidden" id="leaderYearValue" value="current">
-    
   <button class="fakeSelectBtn" onclick="openDropdown('leaderYear')">
     <span id="leaderYearText">今年</span>
     <span class="arrow">▾</span>
   </button>
 
-  <button class="searchBtn" style="margin-left:12px;" onclick="openLeaderSummary()">
-    件數統計：
+  <button class="searchBtn" onclick="openLeaderSummary()">
+    查看報表
   </button>
 </div>
 
@@ -4297,7 +4309,7 @@ function hideScreenLock() {
 }
 
   function renderLeaderSummaryOverlay(data, year) {
-  const row = data[0]; // 只會有一列
+  const row = data.find(r => String(r["大隊"]) === String(globalTeam));
 
   let th = "";
   let td = "";
