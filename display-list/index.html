@@ -1557,15 +1557,6 @@ body {
   flex: 0 0 auto;
 }
 
-/* hover / active（可選，但看起來會一致） */
-#leaderSummaryBar .summary-btn:hover {
-  background: #0a58ca;
-}
-
-#leaderSummaryBar .summary-btn:active {
-  background: #094aa3;
-}
-
 /* ===============================
    🔒 強制隱藏（蓋過所有 display 設定）
    =============================== */
@@ -2306,8 +2297,6 @@ async function loadAdminRecords() {
       3. 從 GAS 取得回報記錄（未來串 API）
   -------------------------------------------*/
   async function loadRecordList(mode = "self") {
-
-  hideLeaderSummaryBar();
     
   if (!globalVid) {
     debug("錯誤：沒有 vid 無法查詢");
@@ -2446,7 +2435,7 @@ if (globalRole === "管理員" || globalRole === "大隊長") {
 
   
 //大隊長顯示件數統計
-if (globalRole === "大隊長") {
+if (globalRole === "大隊長" && viewMode === "team") {
   showLeaderSummaryBar();
 } else {
   hideLeaderSummaryBar();
@@ -2716,8 +2705,6 @@ document.getElementById("btnSelf").onclick = function () {
   
   // 立即更新按鈕樣式
   updateSwitchUI();
-
-hideLeaderSummaryBar();
   
   // 隱藏管理員篩選區域
   document.getElementById("adminFilterArea").style.display = "none";
@@ -2736,7 +2723,6 @@ document.getElementById("btnTeam").onclick = async function () {
   if (globalRole === "大隊長") {
     viewMode = "team";
     updateSwitchUI(); // 立即更新按鈕樣式
-    showLeaderSummaryBar();
     document.getElementById("adminFilterArea").style.display = "none";
     renderLoadingInList();
     loadRecordList("team");
