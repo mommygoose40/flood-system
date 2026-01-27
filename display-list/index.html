@@ -4281,7 +4281,11 @@ async function openLeaderSummary() {
   showMicLoading(0);
 
   try {
-    const year = new Date().getFullYear();
+    const yearMode = document.getElementById("leaderYearValue").value;
+    const now = new Date();
+    const year = (yearMode === "current")
+      ? now.getFullYear()
+      : now.getFullYear() - 1;
 
     const query = new URLSearchParams({
       action: 'getLeaderTeamVolunteerYearlySummary',
@@ -4298,15 +4302,11 @@ async function openLeaderSummary() {
 
     const summaryData = result.data;
 
-    console.log("目前 globalTeam =", globalTeam);
-    console.log("summaryData =", summaryData);
-
     if (!summaryData || summaryData.length === 0) {
       showMessage("尚無年度件數資料");
       return;
     }
 
-    // 🔥 直接 render（新版本：多列）
     renderLeaderSummaryOverlay(summaryData, year);
 
   } catch (e) {
