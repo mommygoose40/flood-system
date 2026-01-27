@@ -4335,12 +4335,20 @@ function renderLeaderSummaryOverlay(data, year) {
     const headers = Object.keys(data[0]).filter(k => k !== "level");
     const displayHeaders = ["編號", ...headers];
 
+    // 1. 智慧型標題斷行處理函數
+    const getSmartVerticalText = (text) => {
+        // 正規表達式說明：
+        // (\d+|[^\d]) -> 匹配連續數字 (如 10) 或 任何單個非數字字元
+        const tokens = text.match(/(\d+|[^\d])/g) || [];
+        return tokens.map(t => `<span style="display:block; white-space:nowrap;">${t}</span>`).join('');
+    };
+
     let tbodyRows = "";
     data.forEach((row, index) => {
         let tr = `<tr><td style="text-align:center;">${index + 1}</td>`;
         headers.forEach(h => {
             if (row.level === "volunteer" && h === "大隊") {
-                tr += `<td style="padding-left:20px; text-align:left;">${row[h]}</td>`;
+                tr += `<td style="padding-left:20px; text-align:center;">${row[h]}</td>`;
             } else {
                 tr += `<td style="text-align:center;">${row[h] ?? ""}</td>`;
             }
@@ -4349,23 +4357,21 @@ function renderLeaderSummaryOverlay(data, year) {
         tbodyRows += tr;
     });
 
-    // 💡 關鍵修正：使用 span 強制換行並固定寬度
+    // 2. 生成標題 (th)
     const thHtml = displayHeaders.map(text => {
-        // 將每個字拆開並包入 span，強制其寬度等於 1 個字，達成無論裝置都維持直式
-        const verticalChars = text.split('').map(char => `<span style="display:block;">${char}</span>`).join('');
-        
+        const verticalContent = getSmartVerticalText(text);
         return `
             <th style="
                 border: 1px solid #ccc; 
-                padding: 8px 2px; 
+                padding: 8px 4px; 
                 text-align: center;
                 vertical-align: middle;
                 background: #f2f2f2;
                 font-size: 14px;
-                line-height: 1.1;
-                width: 1.5em; /* 固定寬度確保不橫擺 */
-                min-width: 1.5em;
-            ">${verticalChars}</th>
+                line-height: 1.2;
+                width: 45px;      /* 固定欄寬 */
+                min-width: 45px;
+            ">${verticalContent}</th>
         `;
     }).join('');
 
@@ -4383,8 +4389,8 @@ function renderLeaderSummaryOverlay(data, year) {
                     ※ 左右滑動以查看完整內容
                 </div>
                 
-                <div style="overflow-x: auto; -webkit-overflow-scrolling: touch;">
-                    <table id="targetTable" style="width:100%; border-collapse:collapse; font-size:14px; min-width: 600px; border: 1px solid #ccc;">
+                <div style="overflow-x: auto; -webkit-overflow-scrolling: touch; display: flex; justify-content: center;">
+                    <table id="targetTable" style="border-collapse:collapse; font-size:14px; border: 1px solid #ccc; margin: 0 auto;">
                         <thead>
                             <tr>${thHtml}</tr>
                         </thead>
@@ -4402,7 +4408,7 @@ function renderLeaderSummaryOverlay(data, year) {
                 #targetTable td { 
                     border: 1px solid #ccc; 
                     padding: 10px 8px; 
-                    word-break: break-all; 
+                    white-space: nowrap; /* 避免資料內容換行 */
                 }
             </style>
         </div>
