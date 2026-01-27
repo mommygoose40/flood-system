@@ -2735,27 +2735,27 @@ async function exportReport(mode = 'current') {
         }
 
         // --- 電腦版預覽視窗渲染 ---
-        const fb = document.getElementById("floatingButtons");
-        if (fb) fb.style.setProperty("display", "none", "important");
+const fb = document.getElementById("floatingButtons");
+if (fb) fb.style.setProperty("display", "none", "important");
 
-        history.pushState({ action: "closeReport" }, "");
-        window.onpopstate = () => { if (document.getElementById("reportOverlay")) closeReportLayer(); };
+history.pushState({ action: "closeReport" }, "");
+window.onpopstate = () => { if (document.getElementById("reportOverlay")) closeReportLayer(); };
 
-        // 💡 1. 智慧型標題處理 (統一直式)
-        const headers = ["編號", "時間", "類型", "狀態", "分類", "紀錄", "說明", "回報者", "大隊"];
-        const getSmartVertical = (text) => {
-            const tokens = text.match(/(\d+|[^\d])/g) || [];
-            return tokens.map(t => `<span style="display:block; white-space:nowrap;">${t}</span>`).join('');
-        };
-        
-        const thHtml = headers.map(h => `
-            <th style="width:45px; min-width:45px; text-align:center; vertical-align:middle; background:#f2f2f2; position:sticky; top:60px; z-index:15; border:1px solid #ccc; padding:8px 4px; line-height:1.1;">
-                ${getSmartVertical(h)}
-            </th>
-        `).join('');
+// 1. 智慧型標題處理：僅強制直式顯示，不鎖死整個表格寬度
+const headers = ["編號", "時間", "類型", "狀態", "分類", "紀錄", "說明", "回報者", "大隊"];
+const getSmartVertical = (text) => {
+    const tokens = text.match(/(\d+|[^\d])/g) || [];
+    return tokens.map(t => `<span style="display:block; white-space:nowrap;">${t}</span>`).join('');
+};
 
-        // 2. 生成表格行
-        let tableRows = "";
+const thHtml = headers.map(h => `
+    <th style="text-align:center; vertical-align:middle; background:#f2f2f2; position:sticky; top:45px; z-index:15; border:1px solid #ccc; padding:12px 4px; line-height:1.1; min-width:1.2em;">
+        ${getSmartVertical(h)}
+    </th>
+`).join('');
+
+// 2. 生成表格行：精確控制特定欄位置中
+let tableRows = "";
 filteredData.forEach((r, index) => {
     let hh = "--", mm = "--";
     try {
@@ -2774,54 +2774,41 @@ filteredData.forEach((r, index) => {
 
     tableRows += `
         <tr>
-            <td style="text-align:center;">${index + 1}</td>
-            <td style="text-align:center; white-space:nowrap;">${r.日期 ? normalizeDate(r.日期) : ''}<br/>${hh}:${mm}</td>
-            <td style="text-align:center;">${r.通報類型 || ''}</td>
-            <td style="text-align:center; color: ${r.狀態 === '異常' ? 'red' : 'black'}; font-weight: ${r.狀態 === '異常' ? 'bold' : 'normal'}">${r.狀態 || ''}</td>
-            
-            <td style="text-align:left;">${r.異常分類 || ''}</td>
-            
-            <td style="text-align:center;"><a href="${r.詳細紀錄}" target="_blank" style="color:#0b5ed7; text-decoration:underline; font-weight:bold;">連結</a></td>
-            
-            <td style="text-align:left; word-break:break-all;">${combinedNote}</td>
+            <td style="text-align:center;">${index + 1}</td> <td style="text-align:center; white-space:nowrap;">${r.日期 ? normalizeDate(r.日期) : ''}<br/>${hh}:${mm}</td> <td style="text-align:center;">${r.通報類型 || ''}</td> <td style="text-align:center; color: ${r.狀態 === '異常' ? 'red' : 'black'}; font-weight: ${r.狀態 === '異常' ? 'bold' : 'normal'}">${r.狀態 || ''}</td> <td style="text-align:left;">${r.異常分類 || ''}</td>
+            <td style="text-align:center;"><a href="${r.詳細紀錄}" target="_blank" style="color:#0b5ed7; text-decoration:underline;">連結</a></td> <td style="text-align:left;">${combinedNote}</td>
             <td style="text-align:left;">${reporterDisplay}</td>
-            
-            <td style="text-align:center;">${r.所屬大隊 || ''}</td>
-        </tr>`;
+            <td style="text-align:center;">${r.所屬大隊 || ''}</td> </tr>`;
 });
 
-        const reportHtml = `
-            <div id="reportOverlay" style="position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.6); z-index:9995; display:flex; justify-content:center; align-items:flex-start; font-family:sans-serif;">
-                <div id="reportContent" style="background:white; width:95%; max-height:90vh; margin-top:3vh; padding:0 30px 20px 30px; box-sizing:border-box; overflow-y:auto; border-radius:10px; position:relative;">
-                    <div style="display:flex; justify-content:space-between; align-items:center; position:sticky; top:0; background:white; padding:15px 0; z-index:20; border-bottom:1px solid #eee;">
-                        <div style="font-weight:bold; font-size:18px;">報表預覽 (共 ${filteredData.length} 筆)</div>
-                        <div>
-                            <button onclick="downloadExcelWithMsg('${mode}')" style="padding:10px 20px; background:#198754; color:white; border:none; border-radius:6px; cursor:pointer; font-weight:bold; margin-right:10px;">📊 匯出為 Excel 檔</button>
-                            <button onclick="closeReportLayer()" style="padding:10px 20px; background:#dc3545; color:white; border:none; border-radius:6px; cursor:pointer; font-weight:bold;">✕ 關閉視窗</button>
-                        </div>
-                    </div>
-                    
-                    <h2 style="text-align:center; margin:20px 0; font-size:28px;">巡視紀錄明細報表</h2>
-                    
-                    <div style="overflow-x: auto;">
-                        <table id="targetTable" style="width:100%; min-width:800px; border-collapse:collapse; font-size:14px; border:1px solid #ccc;">
-                            <thead>
-                                <tr style="background:#f2f2f2;">${thHtml}</tr>
-                            </thead>
-                            <tbody>${tableRows}</tbody>
-                        </table>
-                    </div>
+const reportHtml = `
+    <div id="reportOverlay" style="position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.6); z-index:9995; display:flex; justify-content:center; align-items:flex-start; font-family:sans-serif;">
+        <div id="reportContent" style="background:white; width:95%; max-height:90vh; margin-top:3vh; padding:20px 30px; box-sizing:border-box; overflow-y:auto; border-radius:10px; position:relative;">
+            <div style="display:flex; justify-content:space-between; align-items:center; position:sticky; top:-20px; background:white; padding:15px 0; z-index:20; border-bottom:1px solid #eee;">
+                <div style="font-weight:bold; font-size:18px;">報表預覽 (共 ${filteredData.length} 筆)</div>
+                <div>
+                    <button onclick="downloadExcelWithMsg('${mode}')" style="padding:10px 20px; background:#198754; color:white; border:none; border-radius:6px; cursor:pointer; font-weight:bold; margin-right:10px;">📊 匯出為 Excel 檔</button>
+                    <button onclick="closeReportLayer()" style="padding:10px 20px; background:#dc3545; color:white; border:none; border-radius:6px; cursor:pointer; font-weight:bold;">✕ 關閉視窗</button>
                 </div>
-                <style>
-                    #targetTable th, #targetTable td { border:1px solid #ccc; padding:10px 8px; }
-                    #targetTable tr:nth-child(even) { background-color: #fafafa; }
-                    #targetTable td { vertical-align: middle; }
-                </style>
-            </div>`;
+            </div>
+            <h2 style="text-align:center; margin:20px 0; font-size:28px;">巡視紀錄明細報表</h2>
+            <table id="targetTable" style="width:100%; border-collapse:collapse; font-size:14px;">
+                <thead>
+                    <tr style="background:#f2f2f2;">${thHtml}</tr>
+                </thead>
+                <tbody>${tableRows}</tbody>
+            </table>
+        </div>
+        <style>
+            #targetTable th, #targetTable td { border:1px solid #ccc; padding:12px; }
+            #targetTable tr:nth-child(even) { background-color: #fafafa; }
+            /* 標題固定在頂部，且維持原來的 padding 質感 */
+            #targetTable thead tr { position: sticky; top: 45px; z-index: 10; }
+        </style>
+    </div>`;
 
-        const div = document.createElement('div');
-        div.innerHTML = reportHtml;
-        document.body.appendChild(div.firstElementChild);
+const div = document.createElement('div');
+div.innerHTML = reportHtml;
+document.body.appendChild(div.firstElementChild);
         document.body.style.overflow = "hidden"; // 開啟預覽時鎖定背景
 
     } catch (err) { console.error("預覽出錯:", err); } 
