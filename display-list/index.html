@@ -1443,7 +1443,7 @@ body {
 
 /* 日期框彈性寬度 */
 .dateInput {
-  width: 140px; /* 根據你的需求調整數值，讓兩行等寬 */
+  width: 145px; /* 根據你的需求調整數值，讓兩行等寬 */
   flex-shrink: 0; /* 禁止被壓縮 */
 }
 
@@ -4317,47 +4317,102 @@ async function openLeaderSummary() {
   }
 }
 
-  function renderLeaderSummaryOverlay(data, year) {
-  const headers = Object.keys(data[0]).filter(k => k !== "level");
+  /**
+ * 依照 Mobile 樣式重製的 Leader 彙整報表
+ */
+function renderLeaderSummaryOverlay(data, year) {
+    sessionStorage.setItem('isReportOpen', 'true');
+    sessionStorage.setItem('lastReportData', JSON.stringify(data));
+    
+    const fb = document.getElementById("floatingButtons");
+    if (fb) fb.style.setProperty("display", "none", "important");
 
-  let th = "";
-  headers.forEach(h => {
-    th += `<th>${h}</th>`;
-  });
+    history.pushState({ action: "closeReport" }, "");
+    window.onpopstate = function() {
+        if (document.getElementById("reportOverlay")) closeReportLayer();
+    };
 
-  let tbody = "";
-  data.forEach(row => {
-    let tr = "<tr>";
-    headers.forEach(h => {
-      if (row.level === "volunteer" && h === "大隊") {
-        tr += `<td style="padding-left:20px; text-align:left;">${row[h]}</td>`;
-      } else {
-        tr += `<td style="text-align:center;">${row[h] ?? ""}</td>`;
-      }
+    const headers = Object.keys(data[0]).filter(k => k !== "level");
+    const displayHeaders = ["編號", ...headers];
+
+    let tbodyRows = "";
+    data.forEach((row, index) => {
+        let tr = `<tr><td style="text-align:center;">${index + 1}</td>`;
+        headers.forEach(h => {
+            if (row.level === "volunteer" && h === "大隊") {
+                tr += `<td style="padding-left:20px; text-align:left;">${row[h]}</td>`;
+            } else {
+                tr += `<td style="text-align:center;">${row[h] ?? ""}</td>`;
+            }
+        });
+        tr += "</tr>";
+        tbodyRows += tr;
     });
-    tr += "</tr>";
-    tbody += tr;
-  });
 
-  const html = `
-  <div id="reportOverlay" style="position:fixed; inset:0; background:#fff; z-index:9999;">
-    <div style="padding:15px; border-bottom:1px solid #ddd; display:flex; justify-content:space-between;">
-      <b>${year} 年度件數統計</b>
-      <button onclick="closeReportLayer()">關閉</button>
-    </div>
+    // 💡 關鍵修正：使用 span 強制換行並固定寬度
+    const thHtml = displayHeaders.map(text => {
+        // 將每個字拆開並包入 span，強制其寬度等於 1 個字，達成無論裝置都維持直式
+        const verticalChars = text.split('').map(char => `<span style="display:block;">${char}</span>`).join('');
+        
+        return `
+            <th style="
+                border: 1px solid #ccc; 
+                padding: 8px 2px; 
+                text-align: center;
+                vertical-align: middle;
+                background: #f2f2f2;
+                font-size: 14px;
+                line-height: 1.1;
+                width: 1.5em; /* 固定寬度確保不橫擺 */
+                min-width: 1.5em;
+            ">${verticalChars}</th>
+        `;
+    }).join('');
 
-    <div style="padding:10px; overflow-x:auto;">
-      <table style="border-collapse:collapse; min-width:600px;">
-        <thead><tr>${th}</tr></thead>
-        <tbody>${tbody}</tbody>
-      </table>
-    </div>
-  </div>
-  `;
+    const reportHtml = `
+        <div id="reportOverlay" style="position:fixed; top:0; left:0; width:100%; height:100%; background: white; z-index: 9999; display: flex; flex-direction: column; font-family:sans-serif;">
+            <div style="padding: 15px; border-bottom: 1px solid #ddd; display: flex; justify-content: space-between; align-items: center; background: #f8f9fa;">
+                <span style="font-weight: bold;">${year} 年度統計 (共 ${data.length} 筆)</span>
+                <button onclick="closeReportLayer()" style="padding: 8px 15px; background: #dc3545; color: white; border: none; border-radius: 4px; font-size:16px;">關閉</button>
+            </div>
+            
+            <div id="reportContent" style="flex: 1; padding: 10px; box-sizing: border-box; overflow-y: auto;">
+                <h2 style="text-align:center; margin-bottom:5px; font-size: 22px; color: #333;">${year} 年度件數統計報表</h2>
+                
+                <div style="margin-bottom: 10px; color: #666666; font-size: 13px; text-align: center; font-weight: bold;">
+                    ※ 左右滑動以查看完整內容
+                </div>
+                
+                <div style="overflow-x: auto; -webkit-overflow-scrolling: touch;">
+                    <table id="targetTable" style="width:100%; border-collapse:collapse; font-size:14px; min-width: 600px; border: 1px solid #ccc;">
+                        <thead>
+                            <tr>${thHtml}</tr>
+                        </thead>
+                        <tbody>${tbodyRows}</tbody>
+                    </table>
+                </div>
 
-  const div = document.createElement("div");
-  div.innerHTML = html;
-  document.body.appendChild(div.firstElementChild);
+                <div style="padding: 30px 0; text-align: center; color: #999; font-size: 15px;">
+                    --- 已顯示全部 ${data.length} 筆資料 ---
+                </div>
+            </div>
+
+            <style>
+                #targetTable tr:nth-child(even) { background-color: #fafafa; }
+                #targetTable td { 
+                    border: 1px solid #ccc; 
+                    padding: 10px 8px; 
+                    word-break: break-all; 
+                }
+            </style>
+        </div>
+    `;
+
+    const div = document.createElement("div");
+    div.id = "report_container_wrapper";
+    div.innerHTML = reportHtml;
+    document.body.appendChild(div);
+    document.body.style.overflow = "hidden";
 }
   
 </script>
