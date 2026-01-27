@@ -1490,7 +1490,7 @@ body {
   flex-wrap: nowrap !important;
   gap: 8px !important;
 
-  width: auto !important;            /* ★ 不要 100% */
+  width: 100% !important;        /* ★ 關鍵 */
   max-width: 100% !important;
   margin: 10px 0 20px !important;
 }
@@ -2441,13 +2441,15 @@ if (globalRole === "管理員" || globalRole === "大隊長") {
   document.getElementById('switchArea').style.display = 'none';
 }
 
+  /*
 //大隊長顯示件數統計
 if (globalRole === "大隊長") {
   showLeaderSummaryBar();
 } else {
   hideLeaderSummaryBar();
 }
-
+*/
+  
 // 只有管理員才顯示篩選區
 if (globalRole === "管理員" && viewMode === "admin") {
   document.getElementById("adminFilterArea").style.display = "block";
@@ -2731,6 +2733,7 @@ document.getElementById("btnTeam").onclick = async function () {
   if (globalRole === "大隊長") {
     viewMode = "team";
     updateSwitchUI(); // 立即更新按鈕樣式
+    showLeaderSummaryBar();
     document.getElementById("adminFilterArea").style.display = "none";
     renderLoadingInList();
     loadRecordList("team");
