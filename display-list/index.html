@@ -1908,7 +1908,7 @@ body {
 <script>
 
   const VOLUNTEER_API_URL = "https://script.google.com/macros/s/AKfycbxiGSG5hSMO6We-C6cyEJZLgf4Rnbjp-6w9Tmb0qfF9VM6JB4YGEMqj3QRfTzg7Czpc/exec"; 
-const REPORT_GAS_URL = "https://script.google.com/macros/s/AKfycbyv4whUoBYgvhc_h_201dCdHsnbIckFQNfw80ejQ1o0tWsQcdCaF4lz-glQ7GftvKvXVw/exec";
+const REPORT_GAS_URL = "https://script.google.com/macros/s/AKfycbzSGvdV22w0XVIi1r4D23kQgJnIoM4sPf0ujg1LUOZQNvrMdM9_8HlbM71AIQx-2FJFow/exec";
 
 let globalAdminRecords = [];   // 管理員一次抓全部後存在這邊
 let adminViewDays = 3;        // 預設抓最近兩週，可改 30
@@ -4276,30 +4276,32 @@ function hideScreenLock() {
   return new Date(y, m - 1, d, hh, mm, 0, 0).getTime();
 }
 
-  //大隊長件數統計
-  async function openLeaderSummary() {
+  // 大隊長件數統計
+async function openLeaderSummary() {
   showMicLoading(0);
 
   try {
-    const yearMode = document.getElementById("leaderYearValue").value;
     const now = new Date();
-    const year = (yearMode === "current") ? now.getFullYear() : now.getFullYear() - 1;
+    const year = now.getFullYear();
 
-    const summaryData = await fetchYearlySummaryFromGAS({
-      year: year,
-      team: globalTeam,   // 🔥 大隊長自己的大隊
-      type: "all",
-      status: "all"
-    });
+    // 🔥 改成呼叫新的 GAS
+    const summaryData = await callGAS(
+      "buildLeaderTeamVolunteerYearlySummary",
+      {
+        year: year,
+        team: globalTeam
+      }
+    );
 
     console.log("目前 globalTeam =", globalTeam);
+    console.log("summaryData =", summaryData);
 
     if (!summaryData || summaryData.length === 0) {
       showMessage("尚無年度件數資料");
       return;
     }
 
-    // 👉 用「手機版報表 overlay」render
+    // 👉 直接整包丟進 render
     renderLeaderSummaryOverlay(summaryData, year);
 
   } catch (e) {
@@ -4311,14 +4313,25 @@ function hideScreenLock() {
 }
 
   function renderLeaderSummaryOverlay(data, year) {
-  const row = data.find(r => String(r["大隊"]) === String(globalTeam));
+  const headers = Object.keys(data[0]).filter(k => k !== "level");
 
   let th = "";
-  let td = "";
+  headers.forEach(h => {
+    th += `<th>${h}</th>`;
+  });
 
-  Object.keys(row).forEach(key => {
-    th += `<th>${key}</th>`;
-    td += `<td style="text-align:center;">${row[key]}</td>`;
+  let tbody = "";
+  data.forEach(row => {
+    let tr = "<tr>";
+    headers.forEach(h => {
+      if (row.level === "volunteer" && h === "大隊") {
+        tr += `<td style="padding-left:20px; text-align:left;">${row[h]}</td>`;
+      } else {
+        tr += `<td style="text-align:center;">${row[h] ?? ""}</td>`;
+      }
+    });
+    tr += "</tr>";
+    tbody += tr;
   });
 
   const html = `
@@ -4331,7 +4344,7 @@ function hideScreenLock() {
     <div style="padding:10px; overflow-x:auto;">
       <table style="border-collapse:collapse; min-width:600px;">
         <thead><tr>${th}</tr></thead>
-        <tbody><tr>${td}</tr></tbody>
+        <tbody>${tbody}</tbody>
       </table>
     </div>
   </div>
