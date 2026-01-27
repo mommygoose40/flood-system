@@ -1479,6 +1479,36 @@ body {
     font-size: 12px;
   }
 }
+
+    /* ===============================
+   🔒 件數統計列：強制單行、不被其他樣式影響
+   =============================== */
+#leaderSummaryBar {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  flex-wrap: nowrap !important;   /* ★ 關鍵：禁止換行 */
+  gap: 8px !important;
+  width: 100% !important;
+}
+
+/* 「件數統計：」文字 */
+#leaderSummaryBar .summary-label {
+  white-space: nowrap !important;
+  flex-shrink: 0 !important;
+}
+
+/* 年度下拉 */
+#leaderSummaryBar .fakeSelectBtn {
+  flex: 0 0 auto !important;      /* ★ 不拉伸、不壓縮 */
+  min-width: 90px !important;
+}
+
+/* 統計按鈕 */
+#leaderSummaryBar .searchBtn {
+  flex: 0 0 auto !important;      /* ★ 永遠留在同一行 */
+  white-space: nowrap !important;
+}
 </style>
 
   <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
@@ -1543,18 +1573,17 @@ body {
 ">我的紀錄</button>
 </div>
 
-  <div id="leaderSummaryBar" class="summary-row" style="display:none; display:flex; align-items:center; justify-content:center; gap:5px; margin:10px 0 20px; flex-wrap:nowrap; width:100%; overflow:hidden;">
-  
-  <span class="summary-label" style="font-weight:bold; white-space:nowrap; flex-shrink:0; font-size:14px;">件數統計：</span>
+  <div id="leaderSummaryBar" class="summary-row" style="display:none;">
+  <span class="summary-label">件數統計：</span>
 
-  <input type="hidden" id="leaderYearValue" value="current">
+    <input type="hidden" id="leaderYearValue" value="current">
 
-  <button class="fakeSelectBtn" onclick="openDropdown('leaderYear')" style="flex:1; min-width:0; padding:6px 4px; font-size:14px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
+  <button class="fakeSelectBtn" onclick="openDropdown('leaderYear')">
     <span id="leaderYearText">今年</span>
     <span class="arrow">▾</span>
   </button>
 
-  <button class="searchBtn" onclick="openLeaderSummary()" style="flex-shrink:0; padding:6px 10px; font-size:14px; white-space:nowrap;">
+  <button class="searchBtn" onclick="openLeaderSummary()">
     統計
   </button>
 </div>
