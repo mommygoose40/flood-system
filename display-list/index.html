@@ -1479,20 +1479,6 @@ body {
     font-size: 12px;
   }
 }
-
-.summary-row {
-  display: flex;
-  align-items: center;   /* 垂直置中 */
-  justify-content: center;
-  gap: 10px;             /* 元件之間的距離 */
-  margin: 10px 0 20px;
-  flex-wrap: nowrap;     /* 強制同一列 */
-}
-
-.summary-label {
-  font-weight: bold;
-  white-space: nowrap;  /* 防止「件數統計」被折行 */
-}
 </style>
 
   <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
@@ -1557,18 +1543,19 @@ body {
 ">我的紀錄</button>
 </div>
 
-  <div id="leaderSummaryBar" class="summary-row" style="display:none;">
-  <span class="summary-label">件數統計：</span>
+  <div id="leaderSummaryBar" class="summary-row" style="display:none; display:flex; align-items:center; justify-content:center; gap:5px; margin:10px 0 20px; flex-wrap:nowrap; width:100%; overflow:hidden;">
+  
+  <span class="summary-label" style="font-weight:bold; white-space:nowrap; flex-shrink:0; font-size:14px;">件數統計：</span>
 
   <input type="hidden" id="leaderYearValue" value="current">
 
-  <button class="fakeSelectBtn" onclick="openDropdown('leaderYear')">
+  <button class="fakeSelectBtn" onclick="openDropdown('leaderYear')" style="flex:1; min-width:0; padding:6px 4px; font-size:14px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
     <span id="leaderYearText">今年</span>
     <span class="arrow">▾</span>
   </button>
 
-  <button class="searchBtn" onclick="openLeaderSummary()">
-    查看報表
+  <button class="searchBtn" onclick="openLeaderSummary()" style="flex-shrink:0; padding:6px 10px; font-size:14px; white-space:nowrap;">
+    統計
   </button>
 </div>
 
