@@ -948,65 +948,60 @@ function getReportIdFromUrl(url) {
     }
 }
 
-    document.addEventListener('DOMContentLoaded', async () => {
-    const urlParams = new URLSearchParams(window.location.search);
-    const reportId = urlParams.get('id');
-    pageSource = urlParams.get('source');
+    document.addEventListener('DOMContentLoaded', () => {
+  const urlParams = new URLSearchParams(window.location.search);
+  const reportId = urlParams.get('id');
+  if (!reportId) return showError('無法載入');
 
-    if (!reportId) {
-        showError('URL 中缺少報告 ID');
-        return;
-    }
+  currentReportId = reportId;
 
-    currentReportId = reportId;
+  // 1. 嘗試從 localStorage 或 sessionStorage 拿快取
+  const temp = localStorage.getItem('tempReportData');
+  let loadedFromCache = false;
 
-    // 1. 檢查是否有「暫存/快取」資料
-    const temp = localStorage.getItem('tempReportData');
-    let hasLoadedCache = false;
+  if (temp) {
+    try {
+      const data = JSON.parse(temp);
+      handleResponse(data); // 先渲染文字，讓使用者立刻看到內容
+      loadedFromCache = true;
+      localStorage.removeItem('tempReportData');
+    } catch (e) { console.warn(e); }
+  }
 
-    if (temp) {
-        try {
-            const data = JSON.parse(temp);
-            console.log('⚡ 使用暫存資料進行首屏渲染:', data);
-            handleResponse(data); // 第一次渲染（快速呈現）
-            hasLoadedCache = true;
-            localStorage.removeItem('tempReportData');
-        } catch (e) {
-            console.warn('暫存資料解析失敗:', e);
-        }
-    }
-
-    // 2. 執行完整的載入 (Firebase 圖片、語音等)
-    // 我們傳入 hasLoadedCache，告訴 loadReportData 是否需要重新抓取 Sheet 內容
-    loadReportData(reportId, hasLoadedCache);
+  // 2. 執行載入程序
+  // 如果載入過快取了，loadReportData 的第一個參數設為 false (不重抓 Sheet)
+  loadReportData(reportId, !loadedFromCache); 
 });
 
-async function loadReportData(reportId, skipSheetRequest) {
-    try {
-        // 設定日期（這是不變的）
-        document.getElementById('report-date').innerHTML = `回報時間：${formatDateFromId(reportId)}`;
+async function loadReportData(reportId, needSheetData = true) {
+  try {
+    document.getElementById('report-date').innerHTML = `回報時間：${formatDateFromId(reportId)}`;
 
-        // ❗ 關鍵點：如果已經從快取渲染過了，且我們不需要最新狀態，就跳過 Sheet 請求
-        // 或者，如果你需要最新資料但又怕覆蓋編輯中的 UI，這裡要配合 isEditingMode 旗標
-        if (!skipSheetRequest && !isEditingMode) {
-            await loadReportInfoFromSheet(reportId); // 這邊通常會呼叫 handleResponse
-        }
-
-        // 載入多媒體（Firebase 部分通常不影響文字欄位）
-        await loadPhotosFromFirebase(reportId);
-        const hasAudio = await loadAudioFromFirebase(reportId);
-
-        // 語音顯示控制
-        const audioSection = document.getElementById('audio-section');
-        if (audioSection) audioSection.style.display = hasAudio ? 'block' : 'none';
-
-        // ... 語音文字同步邏輯 ...
-    } catch (e) {
-        console.error(e);
-        showError('載入數據失敗');
+    // --- 分流處理 ---
+    if (needSheetData) {
+      console.log('📡 快取無資料，向 Sheet 請求完整內容');
+      await loadReportInfoFromSheet(reportId); 
+    } else {
+      console.log('⚡ 已有快取，跳過 Sheet 請求，直接載入媒體');
     }
-}
 
+    // --- 媒體部分：無論有無快取都要跑 ---
+    await loadPhotosFromFirebase(reportId);
+    const hasAudio = await loadAudioFromFirebase(reportId);
+
+    // 語音 UI 顯示
+    const audioSection = document.getElementById('audio-section');
+    if (audioSection) audioSection.style.display = hasAudio ? 'block' : 'none';
+
+    // 語音文字同步檢查
+    checkTranscriptionDisplay(hasAudio);
+
+  } catch (e) {
+    console.error(e);
+    showError('載入數據失敗');
+  }
+}
+     
     function handleResponse(data) {
       console.log('📥 JSONP 取得:', data);
       if (!data || data.error) return showError('查無此報告資料');
