@@ -1003,15 +1003,16 @@ const checkInterval = setInterval(() => {
 }
 
     function handleResponse(data) {
-      // ❗ 關鍵一：如果正在編輯，絕對不要執行 handleResponse 裡的填值動作
-    if (isEditingMode) {
-        console.warn("⚠️ 偵測到編輯模式中，已攔截自動填值，避免覆蓋 UI。");
-        return; 
-    }
-      console.log('📥 JSONP 取得:', data);
-      if (!data || data.error) return showError('查無此報告資料');
+  // ❗ 關鍵一：如果正在編輯，絕對不要執行動作
+  if (isEditingMode) {
+    console.warn("⚠️ 偵測到編輯模式中，已攔截自動填值。");
+    return; 
+  }
 
-      // 1. 填充要編輯的三欄 (及語音)
+  console.log('📥 JSONP 取得:', data);
+  if (!data || data.error) return showError('查無此報告資料');
+
+  // 1. 定義要填充的編輯欄位
   const editables = {
     'report-type-text': data['通報類型'],
     'report-status-text': data['狀態'],
@@ -1020,42 +1021,72 @@ const checkInterval = setInterval(() => {
     'abnormal-type-val': data['異常分類']
   };
 
-  // 2. 遍歷填充資料，並處理「無」的顯示邏輯
+  // 2. 遍歷填充資料，並處理「無」的顯示邏輯 (使用 textContent 確保 ID 存在)
   for (let id in editables) {
     const el = document.getElementById(id);
     if (el) {
-      // 如果資料為空 (空字串或 null)，則顯示 '無'
-      const value = editables[id] ? editables[id].trim() : "";
+      const value = editables[id] ? String(editables[id]).trim() : "";
       el.textContent = value === "" ? "無" : value;
     }
   }
 
-      if (data['狀態'] === '異常') {
-        document.getElementById('abnormal-type').style.display = 'block';
-        document.getElementById('abnormal-type').innerHTML = `異常分類：${data['異常分類'] || '無'}`;
-        document.getElementById('transcription-summary').style.display = 'block';
-        document.getElementById('transcription-summary').innerHTML = `語音轉文字：${data['語音轉文字'] || '無'}`;
-      } else {
-        document.getElementById('abnormal-type').style.display = 'none';
-        document.getElementById('transcription-summary').style.display = 'none';
-      }
+  // 3. 核心隱藏邏輯修正：判斷狀態與內容
+  const isAbnormal = (data['狀態'] === '異常');
+  const hasAbnormalType = data['異常分類'] && data['異常分類'].trim() !== "";
+  const hasTranscription = data['語音轉文字'] && data['語音轉文字'].trim() !== "";
 
-      document.getElementById('reporter').innerHTML = `回報者：${data['回報者'] || '無'}`;
-      document.getElementById('companions').innerHTML = `同行者：${data['同行者'] || '無'}`;
-      document.getElementById('team').innerHTML = `所屬大隊：${data['所屬大隊'] || '無'}`;
-
-      // 顯示語音轉文字內容（來自 Sheet）
-const transcriptionSection = document.getElementById('transcription-section');
-const transcriptionText = document.getElementById('transcription-text');
-const transcriptionValue = data['語音轉文字'] || '';
-
-transcriptionText.textContent = data['語音轉文字'] || '';
-transcriptionText.setAttribute('contenteditable', 'false'); // ← 改這行
-setupTranscriptionEditing(currentReportId);
-      // 4. 初始化編輯按鈕 (傳入網址抓到的 currentReportId)
-  setupGeneralEditing(currentReportId);
+  // 異常分類顯示判斷
+  const abnormalRow = document.getElementById('abnormal-type');
+  if (abnormalRow) {
+    // 只有「異常」且「有分類內容」時才顯示，否則隱藏
+    if (isAbnormal && hasAbnormalType) {
+      abnormalRow.style.display = 'block';
+      // 注意：這裡不要用 innerHTML = ... 會刷掉裡面原本的 span 或結構
+      // 建議 HTML 結構保持：異常分類：<span id="abnormal-type-val"></span>
+    } else {
+      abnormalRow.style.display = 'none';
     }
+  }
 
+  // 語音轉文字顯示判斷 (小結部分)
+  const transSummary = document.getElementById('transcription-summary');
+  if (transSummary) {
+    if (isAbnormal && hasTranscription) {
+      transSummary.style.display = 'block';
+    } else {
+      transSummary.style.display = 'none';
+    }
+  }
+
+  // 4. 填充不可編輯的資訊 (使用 textContent 較安全)
+  const reporterEl = document.getElementById('reporter');
+  if (reporterEl) reporterEl.textContent = `回報者：${data['回報者'] || '無'}`;
+  
+  const companionsEl = document.getElementById('companions');
+  if (companionsEl) companionsEl.textContent = `同行者：${data['同行者'] || '無'}`;
+  
+  const teamEl = document.getElementById('team');
+  if (teamEl) teamEl.textContent = `所屬大隊：${data['所屬大隊'] || '無'}`;
+
+  // 5. 語音區塊顯示控制 (底部區塊)
+  const transcriptionSection = document.getElementById('transcription-section');
+  const transcriptionText = document.getElementById('transcription-text');
+  
+  if (transcriptionText) {
+    transcriptionText.textContent = data['語音轉文字'] || '';
+    transcriptionText.setAttribute('contenteditable', 'false');
+  }
+
+  // 如果有語音文字才顯示區塊，否則隱藏
+  if (transcriptionSection) {
+    transcriptionSection.style.display = hasTranscription ? 'block' : 'none';
+  }
+
+  // 6. 初始化所有編輯按鈕
+  setupTranscriptionEditing(currentReportId);
+  setupGeneralEditing(currentReportId);
+}
+     
     async function loadReportInfoFromSheet(reportId) {
       const url = `https://script.google.com/macros/s/AKfycbw_zWtC5douqiQkviNskaaRihnk3d63kJf8eAzvphNxw4rpN43hbbnz5weST-p4UrO0Xw/exec?id=${reportId}&callback=handleResponse`;
       const script = document.createElement('script');
@@ -2288,14 +2319,23 @@ function setupGeneralEditing(reportId) {
 
             showMicLoading(300);
             try {
-                await saveContentFieldsToServer(reportId, updatedData);
-                isEditingMode = false; // 成功才放開鎖定
-                showMessage("儲存成功！");
-                location.reload(); 
-            } catch (err) {
-                hideMicLoading();
-                showMessage("儲存失敗");
-            }
+    await saveContentFieldsToServer(reportId, updatedData);
+    
+    // ❗ 關鍵修正：清除快取，防止 reload 後讀到舊資料
+    sessionStorage.removeItem('reportListCache'); 
+    localStorage.removeItem('tempReportData'); 
+    
+    isEditingMode = false;
+    showMessage("儲存成功!");
+
+    // 給 GAS 一點點寫入時間後再刷新
+    setTimeout(() => {
+      location.reload(); 
+    }, 1000);
+
+  } catch (err) {
+    showMessage("儲存失敗");
+  }
         };
     };
 }
