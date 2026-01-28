@@ -2211,77 +2211,68 @@ function closeWindowSafe() {
 
      // 修改「內容」欄位（不包含語音）
 function setupGeneralEditing(reportId) {
-  // 移除 transcription-text，只留這四個
-  const fields = ['report-type-text', 'report-status-text', 'abnormal-type-text', 'remarks-text'];
   const actionArea = document.getElementById('edit-actions');
   const editBtn = document.getElementById('edit-btn');
-
   if (!editBtn) return;
 
-  let originalData = {};
-
   editBtn.onclick = () => {
-    fields.forEach(id => {
-      const el = document.getElementById(id);
-      if (el) {
-        let currentText = el.textContent.trim();
-        // 紀錄原始資料：如果是 "無"，還原時要變回 "無"
-        originalData[id] = currentText;
-        
-        // 編輯時，如果是 "無" 則清空方便輸入
-        el.textContent = currentText === "無" ? "" : currentText;
-        el.setAttribute('contenteditable', 'true');
-        el.classList.add('editing');
-      }
-    });
+    // --- 1. 處理「通報類型」 -> 變更為按鈕組 ---
+    const typeEl = document.getElementById('report-type-text');
+    const currentType = typeEl.textContent.trim();
+    const typeOptions = ['平時', '災中', '其他'];
+    typeEl.innerHTML = typeOptions.map(opt => `
+      <label class="edit-chip">
+        <input type="radio" name="edit-type" value="${opt}" ${currentType === opt ? 'checked' : ''}>
+        <span>${opt}</span>
+      </label>
+    `).join('');
 
+    // --- 2. 處理「狀態」 -> 變更為按鈕組 ---
+    const statusEl = document.getElementById('report-status-text');
+    const currentStatus = statusEl.textContent.trim();
+    const statusOptions = ['正常', '異常'];
+    statusEl.innerHTML = statusOptions.map(opt => `
+      <label class="edit-chip">
+        <input type="radio" name="edit-status" value="${opt}" ${currentStatus === opt ? 'checked' : ''}>
+        <span>${opt}</span>
+      </label>
+    `).join('');
+
+    // --- 3. 處理「說明」 -> 變更為藍色可編輯框 ---
+    const remarksEl = document.getElementById('remarks-text');
+    const originalRemarks = remarksEl.textContent.trim() === "無" ? "" : remarksEl.textContent.trim();
+    remarksEl.textContent = originalRemarks;
+    remarksEl.setAttribute('contenteditable', 'true');
+    // 套用與語音編輯一致的 CSS 類名
+    remarksEl.className = 'editable-blue-box'; 
+    remarksEl.focus();
+
+    // --- 按鈕切換 ---
     actionArea.innerHTML = `
       <button id="cancel-btn" class="reset-btn">取消</button>
-      <button id="save-btn" class="save-btn">儲存內容</button>
+      <button id="save-btn" class="save-btn">儲存</button>
     `;
 
-    // 取消按鈕
-    document.getElementById('cancel-btn').onclick = () => {
-      fields.forEach(id => {
-        const el = document.getElementById(id);
-        if (el) {
-          el.textContent = originalData[id]; // 還原 (包含原本的 "無")
-          el.setAttribute('contenteditable', 'false');
-          el.classList.remove('editing');
-        }
-      });
-      restoreEditButton(reportId);
-    };
+    // 取消：直接刷新的做法最保險，能確保所有 ID 還原
+    document.getElementById('cancel-btn').onclick = () => location.reload();
 
-    // 儲存按鈕
+    // 儲存邏輯
     document.getElementById('save-btn').onclick = async () => {
-      // 抓取時若為空，依然傳送空字串給後端
       const updatedData = {
-        reportType: document.getElementById('report-type-text').textContent.trim(),
-        status: document.getElementById('report-status-text').textContent.trim(),
-        abnormalType: document.getElementById('abnormal-type-text').textContent.trim(),
-        remarks: document.getElementById('remarks-text').textContent.trim()
+        reportType: document.querySelector('input[name="edit-type"]:checked').value,
+        status: document.querySelector('input[name="edit-status"]:checked').value,
+        remarks: remarksEl.textContent.trim()
       };
 
       showMicLoading(300);
       try {
         await saveContentFieldsToServer(reportId, updatedData);
         hideMicLoading();
-        showMessage("內容儲存成功！");
-        
-        fields.forEach(id => {
-          const el = document.getElementById(id);
-          if (el) {
-            // 儲存後，若內容為空則顯示 "無"
-            if (el.textContent.trim() === "") el.textContent = "無";
-            el.setAttribute('contenteditable', 'false');
-            el.classList.remove('editing');
-          }
-        });
-        restoreEditButton(reportId);
+        showMessage("儲存成功！");
+        location.reload(); 
       } catch (err) {
         hideMicLoading();
-        alert("儲存失敗");
+        showMessage("儲存失敗");
       }
     };
   };
@@ -2291,7 +2282,7 @@ function setupGeneralEditing(reportId) {
 async function saveContentFieldsToServer(reportId, data) {
   const url = `https://script.google.com/macros/s/AKfycbwJmExFaj-FJtxX1AUDR_Rm_J0JF_GiVzx4XuIsQGxSajbSD-aK9bXgV9amwSexKHhaLg/exec`;
   const params = new URLSearchParams({
-    action: 'updateContentFields', // 建議與語音的 action 分開
+    action: 'updateAllFields', // 建議與語音的 action 分開
     id: reportId,
     ...data
   });
@@ -2302,7 +2293,7 @@ async function saveContentFieldsToServer(reportId, data) {
 
 function restoreEditButton(reportId) {
   const actionArea = document.getElementById('edit-actions');
-  actionArea.innerHTML = `<button id="edit-btn" class="save-btn">修改內容</button>`;
+  actionArea.innerHTML = `<button id="edit-btn" class="save-btn">修改</button>`;
   setupGeneralEditing(reportId);
 }
 
