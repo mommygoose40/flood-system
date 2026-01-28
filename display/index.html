@@ -993,15 +993,15 @@ const checkInterval = setInterval(() => {
       console.log('📥 JSONP 取得:', data);
       if (!data || data.error) return showError('查無此報告資料');
 
-      const elements = ['report-type', 'report-status', 'abnormal-type', 'remarks', 
+      const elements = ['report-type-text', 'report-status-text', 'abnormal-type', 'remarks-text', 
                        'transcription-summary', 'reporter', 'companions', 'team'];
       elements.forEach(id => {
         const el = document.getElementById(id);
         if (el) el.style.color = '';
       });
 
-      document.getElementById('report-type').innerHTML = `通報類型：${data['通報類型'] || '無'}`;
-      document.getElementById('report-status').innerHTML = `狀態：${data['狀態'] || '無'}`;
+      document.getElementById('report-type-text').innerHTML = `通報類型：${data['通報類型'] || '無'}`;
+      document.getElementById('report-status-text').innerHTML = `狀態：${data['狀態'] || '無'}`;
 
       if (data['狀態'] === '異常') {
         document.getElementById('abnormal-type').style.display = 'block';
@@ -1013,7 +1013,7 @@ const checkInterval = setInterval(() => {
         document.getElementById('transcription-summary').style.display = 'none';
       }
 
-      document.getElementById('remarks').innerHTML = `說明：${data['說明'] || '無'}`;
+      document.getElementById('remarks-text').innerHTML = `說明：${data['說明'] || '無'}`;
       document.getElementById('reporter').innerHTML = `回報者：${data['回報者'] || '無'}`;
       document.getElementById('companions').innerHTML = `同行者：${data['同行者'] || '無'}`;
       document.getElementById('team').innerHTML = `所屬大隊：${data['所屬大隊'] || '無'}`;
