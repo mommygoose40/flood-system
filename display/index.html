@@ -159,6 +159,12 @@ window.firebaseStorage = { storage, ref, list, listAll, getDownloadURL };
   box-shadow: 0 0 0 2px rgba(11,94,215,0.15);
 }
 
+    /*欄位內容可修改*/
+    .editable-text[contenteditable="true"] {
+  border-bottom: 2px solid #0b5ed7;
+  background: #f8fbff;
+}
+
 /* === 按鈕區 === */
 #edit-actions {
   display: flex;
@@ -755,25 +761,29 @@ h2 {
     </div>
 
     <div class="report-info">
-        <p id="report-type">通報類型：載入中...</p>
-        <p id="report-status">
+        <p>
+  通報類型：
+  <span id="report-type-text" class="editable-text"></span>
+</p>
+
+<p>
   狀態：
-  <span data-editable="status">載入中...</span>
+  <span id="report-status-text" class="editable-text"></span>
 </p>
 
-<p id="abnormal-type" style="display:none;">
-  異常分類：
-  <span data-editable="abnormal">載入中...</span>
-</p>
-
-<p id="remarks">
+<p>
   說明：
-  <span data-editable="remarks">載入中...</span>
+  <span id="remarks-text" class="editable-text"></span>
 </p>
         <p id="transcription-summary" style="display:none;">語音轉文字：載入中...</p>
         <p id="reporter">回報者：載入中...</p>
         <p id="companions">同行者：載入中...</p>
         <p id="team">所屬大隊：載入中...</p>
+
+     <div id="report-edit-actions" style="margin-bottom:12px;text-align:right;">
+  <button id="edit-report-btn" class="save-btn">修改</button>
+</div>
+      
     </div>
 
     <div id="photo-section">
@@ -1010,8 +1020,8 @@ const checkInterval = setInterval(() => {
         if (el) el.style.color = '';
       });
 
-      document.getElementById('report-type').innerHTML = `通報類型：${data['通報類型'] || '無'}`;
-      document.getElementById('report-status').innerHTML = `狀態：${data['狀態'] || '無'}`;
+      document.getElementById('report-type-text').textContent = data['通報類型'] || '無';
+document.getElementById('report-status-text').textContent = data['狀態'] || '無';
 
       if (data['狀態'] === '異常') {
         document.getElementById('abnormal-type').style.display = 'block';
@@ -1023,7 +1033,7 @@ const checkInterval = setInterval(() => {
         document.getElementById('transcription-summary').style.display = 'none';
       }
 
-      document.getElementById('remarks').innerHTML = `說明：${data['說明'] || '無'}`;
+      document.getElementById('remarks-text').textContent = data['說明'] || '無';
       document.getElementById('reporter').innerHTML = `回報者：${data['回報者'] || '無'}`;
       document.getElementById('companions').innerHTML = `同行者：${data['同行者'] || '無'}`;
       document.getElementById('team').innerHTML = `所屬大隊：${data['所屬大隊'] || '無'}`;
@@ -1036,7 +1046,7 @@ const transcriptionValue = data['語音轉文字'] || '';
 transcriptionText.textContent = data['語音轉文字'] || '';
 transcriptionText.setAttribute('contenteditable', 'false'); // ← 改這行
 setupTranscriptionEditing(currentReportId);
-enableFieldEditingIfFromReport();
+      setupReportEditing(currentReportId);
     }
 
     async function loadReportInfoFromSheet(reportId) {
@@ -2207,73 +2217,89 @@ function closeWindowSafe() {
   footer.style.display = 'flex';
 })();
 
-     function enableFieldEditingIfFromReport() {
-  const urlParams = new URLSearchParams(location.search);
-  const source = urlParams.get('source');
+     //共用欄位內容修改
+     function setupReportEditing(reportId) {
+  const fields = [
+    { key: '通報類型', el: document.getElementById('report-type-text') },
+    { key: '狀態', el: document.getElementById('report-status-text') },
+    { key: '說明', el: document.getElementById('remarks-text') },
+  ];
 
-  // 不是從 report 進來 → 全部鎖死
-  if (source !== 'form') return;
+  const actionArea = document.getElementById('report-edit-actions');
+  const editBtn = document.getElementById('edit-report-btn');
 
-  const editableFields = document.querySelectorAll('[data-editable]');
+  let originalData = {};
 
-  editableFields.forEach(el => {
-    el.contentEditable = 'true';
-    el.style.borderBottom = '2px dashed #0b5ed7';
-    el.style.padding = '2px 4px';
-    el.style.cursor = 'text';
-  });
+  editBtn.onclick = () => {
+    // 記住原始值
+    fields.forEach(f => {
+      originalData[f.key] = f.el.textContent.trim();
+      f.el.setAttribute('contenteditable', 'true');
+      f.el.classList.add('editing');
+    });
 
-  // 加一顆儲存按鈕（照片上方）
-  addSaveReportInfoButton();
+    actionArea.innerHTML = `
+      <button id="cancel-report-btn" class="reset-btn">取消</button>
+      <button id="save-report-btn" class="save-btn">儲存</button>
+    `;
+
+    document.getElementById('cancel-report-btn').onclick = () => {
+      fields.forEach(f => {
+        f.el.textContent = originalData[f.key];
+        f.el.setAttribute('contenteditable', 'false');
+        f.el.classList.remove('editing');
+      });
+      restoreEditButton();
+    };
+
+    document.getElementById('save-report-btn').onclick = async () => {
+      const newData = {};
+      fields.forEach(f => newData[f.key] = f.el.textContent.trim());
+
+      // 無變更直接返回
+      if (JSON.stringify(newData) === JSON.stringify(originalData)) {
+        showMessage('內容未變更');
+        return;
+      }
+
+      showMicLoading(300);
+      try {
+        await saveReportFields(reportId, newData);
+        hideMicLoading();
+        showMessage('儲存成功');
+      } catch {
+        hideMicLoading();
+        alert('儲存失敗');
+      }
+
+      fields.forEach(f => {
+        f.el.setAttribute('contenteditable', 'false');
+        f.el.classList.remove('editing');
+      });
+
+      restoreEditButton();
+    };
+  };
+
+  function restoreEditButton() {
+    actionArea.innerHTML = `<button id="edit-report-btn" class="save-btn">修改</button>`;
+    setupReportEditing(reportId);
+  }
 }
 
-     function addSaveReportInfoButton() {
-  if (document.getElementById('save-report-info-btn')) return;
-
-  const photoSection = document.getElementById('photo-section');
-  const btn = document.createElement('button');
-  btn.id = 'save-report-info-btn';
-  btn.className = 'save-btn';
-  btn.textContent = '儲存通報資料';
-  btn.style.marginBottom = '16px';
-
-  btn.onclick = saveReportInfoEdits;
-
-  photoSection.parentNode.insertBefore(btn, photoSection);
-}
-
-function saveReportInfoEdits() {
-  const reportId = currentReportId;
-  const data = {};
-
-  document.querySelectorAll('[data-editable]').forEach(el => {
-    const key = el.dataset.editable;
-    data[key] = el.textContent.trim();
+     async function saveReportFields(reportId, data) {
+  const url = `https://script.google.com/macros/s/AKfycbwfWkHOXH_DYDIf9UhhfyE6Cnk2037pKMgno-55W-v-trCj_xrn_7S5nY1XwhsVgSK41A/exec`;
+  const params = new URLSearchParams({
+    action: 'updateReportInfo',
+    id: reportId,
+    type: data['通報類型'],
+    status: data['狀態'],
+    remarks: data['說明']
   });
 
-  showMicLoading();
-
-  fetch(`https://script.google.com/macros/s/AKfycbwfWkHOXH_DYDIf9UhhfyE6Cnk2037pKMgno-55W-v-trCj_xrn_7S5nY1XwhsVgSK41A/exec`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      action: 'updateReportInfo',
-      id: reportId,
-      data
-    })
-  })
-  .then(res => res.text())
-  .then(() => {
-    hideMicLoading();
-    showMessage('通報資料已更新');
-  })
-  .catch(() => {
-    hideMicLoading();
-    alert('儲存失敗');
-  });
+  await fetch(`${url}?${params.toString()}`, { method: 'GET' });
 }
 
-     
   </script>
 </body>
 </html>
