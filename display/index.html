@@ -2244,7 +2244,7 @@ function setupGeneralEditing(reportId) {
     remarksEl.textContent = originalRemarks;
     remarksEl.setAttribute('contenteditable', 'true');
     // 套用與語音編輯一致的 CSS 類名
-    remarksEl.className = 'editable-blue-box'; 
+    remarksEl.classList.add('editing'); 
     remarksEl.focus();
 
     // --- 按鈕切換 ---
@@ -2280,7 +2280,7 @@ function setupGeneralEditing(reportId) {
 
 // 專屬於內容更新的傳送函式
 async function saveContentFieldsToServer(reportId, data) {
-  const url = `https://script.google.com/macros/s/AKfycbwJmExFaj-FJtxX1AUDR_Rm_J0JF_GiVzx4XuIsQGxSajbSD-aK9bXgV9amwSexKHhaLg/exec`;
+  const url = `https://script.google.com/macros/s/AKfycbwor1tP8EQI2kh1e6mwiYnAxgDyVaKQbR_hOmsJWMWCMev2WLD7cqQ5fLMJz-dDuRHF_Q/exec`;
   const params = new URLSearchParams({
     action: 'updateAllFields', // 建議與語音的 action 分開
     id: reportId,
