@@ -781,8 +781,7 @@ h2 {
         <p id="team">所屬大隊：載入中...</p>
 
      <div id="report-edit-actions" style="margin-bottom:12px;text-align:right;">
-  <button id="edit-report-btn" class="save-btn"
-  onclick="alert('點到了')">修改</button>
+  <button id="edit-report-btn" class="save-btn">修改</button>
 </div>
       
     </div>
@@ -2220,6 +2219,7 @@ function closeWindowSafe() {
 
      //共用欄位內容修改
      function setupReportEditing(reportId) {
+       console.log('🟢 setupReportEditing called');
   const fields = [
     { key: '通報類型', el: document.getElementById('report-type-text') },
     { key: '狀態', el: document.getElementById('report-status-text') },
@@ -2232,6 +2232,7 @@ function closeWindowSafe() {
   let originalData = {};
 
   editBtn.onclick = () => {
+    console.log('🟢 edit report clicked');
     // 記住原始值
     fields.forEach(f => {
       originalData[f.key] = f.el.textContent.trim();
