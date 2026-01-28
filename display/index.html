@@ -883,6 +883,7 @@ const zoomLevels = [1.0, 1.1, 1.25, 1.5, 1.75, 2.0, 2.5];
 let currentZoomIndex = 0;
 // 在頂部變數宣告區域添加
 let hasUserZoomed = false;
+     let isEditingMode = false; // 全域變數
 
      // ==========================================================
 // 🚨 請確認：這個新的 JS 區塊是在您的 /detail/index.html 頁面中 🚨
@@ -949,60 +950,64 @@ function getReportIdFromUrl(url) {
 }
 
     document.addEventListener('DOMContentLoaded', () => {
-  const urlParams = new URLSearchParams(window.location.search);
-  const reportId = urlParams.get('id');
-  if (!reportId) return showError('無法載入');
+      const temp = localStorage.getItem('tempReportData');
+      if (temp) {
+        try {
+          const data = JSON.parse(temp);
+          console.log('⚡ 显示暂存资料:', data);
+          handleResponse(data);
+        } catch (e) {
+          console.warn('暂存资料解析失败:', e);
+        }
+        localStorage.removeItem('tempReportData');
+      }
 
-  currentReportId = reportId;
+      const urlParams = new URLSearchParams(window.location.search);
+      const reportId = urlParams.get('id');
+      pageSource = urlParams.get('source');
+      if (reportId) {
+        currentReportId = reportId;
+        loadReportData(reportId);
+      } else showError('無法載入照片');
+    });
 
-  // 1. 嘗試從 localStorage 或 sessionStorage 拿快取
-  const temp = localStorage.getItem('tempReportData');
-  let loadedFromCache = false;
-
-  if (temp) {
-    try {
-      const data = JSON.parse(temp);
-      handleResponse(data); // 先渲染文字，讓使用者立刻看到內容
-      loadedFromCache = true;
-      localStorage.removeItem('tempReportData');
-    } catch (e) { console.warn(e); }
-  }
-
-  // 2. 執行載入程序
-  // 如果載入過快取了，loadReportData 的第一個參數設為 false (不重抓 Sheet)
-  loadReportData(reportId, !loadedFromCache); 
-});
-
-async function loadReportData(reportId, needSheetData = true) {
+    async function loadReportData(reportId) {
   try {
     document.getElementById('report-date').innerHTML = `回報時間：${formatDateFromId(reportId)}`;
 
-    // --- 分流處理 ---
-    if (needSheetData) {
-      console.log('📡 快取無資料，向 Sheet 請求完整內容');
-      await loadReportInfoFromSheet(reportId); 
-    } else {
-      console.log('⚡ 已有快取，跳過 Sheet 請求，直接載入媒體');
-    }
-
-    // --- 媒體部分：無論有無快取都要跑 ---
+    await loadReportInfoFromSheet(reportId);
     await loadPhotosFromFirebase(reportId);
+
     const hasAudio = await loadAudioFromFirebase(reportId);
 
-    // 語音 UI 顯示
+    // 語音顯示
     const audioSection = document.getElementById('audio-section');
-    if (audioSection) audioSection.style.display = hasAudio ? 'block' : 'none';
+    audioSection.style.display = hasAudio ? 'block' : 'none';
 
-    // 語音文字同步檢查
-    checkTranscriptionDisplay(hasAudio);
+    // 二次確認語音與文字同步顯示（多輪重試避免 race condition）
+let checkCount = 0;
+const checkInterval = setInterval(() => {
+  const text = document.getElementById('transcription-text')?.textContent.trim();
+  const transcriptionSection = document.getElementById('transcription-section');
+  if (text && text !== '' && hasAudio) {
+    transcriptionSection.style.display = 'block';
+    clearInterval(checkInterval);
+  }
+  if (++checkCount > 10) clearInterval(checkInterval); // 最多檢查10次（約2秒）
+}, 200);
 
   } catch (e) {
     console.error(e);
     showError('載入數據失敗');
   }
 }
-     
+
     function handleResponse(data) {
+      // ❗ 關鍵一：如果正在編輯，絕對不要執行 handleResponse 裡的填值動作
+    if (isEditingMode) {
+        console.warn("⚠️ 偵測到編輯模式中，已攔截自動填值，避免覆蓋 UI。");
+        return; 
+    }
       console.log('📥 JSONP 取得:', data);
       if (!data || data.error) return showError('查無此報告資料');
 
@@ -2221,71 +2226,78 @@ function closeWindowSafe() {
 
      // 修改「內容」欄位（不包含語音）
 function setupGeneralEditing(reportId) {
-  const actionArea = document.getElementById('edit-actions');
-  const editBtn = document.getElementById('edit-btn');
-  if (!editBtn) return;
+    const editBtn = document.getElementById('edit-btn');
+    if (!editBtn) return;
 
-  editBtn.onclick = () => {
-    // --- 1. 處理「通報類型」 -> 變更為按鈕組 ---
-    const typeEl = document.getElementById('report-type-text');
-    const currentType = typeEl.textContent.trim();
-    const typeOptions = ['平時', '災中', '其他'];
-    typeEl.innerHTML = typeOptions.map(opt => `
-      <label class="edit-chip">
-        <input type="radio" name="edit-type" value="${opt}" ${currentType === opt ? 'checked' : ''}>
-        <span>${opt}</span>
-      </label>
-    `).join('');
+    // 重新綁定時先清除舊事件，避免重複觸發
+    editBtn.onclick = null; 
 
-    // --- 2. 處理「狀態」 -> 變更為按鈕組 ---
-    const statusEl = document.getElementById('report-status-text');
-    const currentStatus = statusEl.textContent.trim();
-    const statusOptions = ['正常', '異常'];
-    statusEl.innerHTML = statusOptions.map(opt => `
-      <label class="edit-chip">
-        <input type="radio" name="edit-status" value="${opt}" ${currentStatus === opt ? 'checked' : ''}>
-        <span>${opt}</span>
-      </label>
-    `).join('');
+    editBtn.onclick = (e) => {
+        e.preventDefault();
+        
+        // ❗ 關鍵二：一旦按下，立刻變更旗標
+        isEditingMode = true; 
 
-    // --- 3. 處理「說明」 -> 變更為藍色可編輯框 ---
-    const remarksEl = document.getElementById('remarks-text');
-    const originalRemarks = remarksEl.textContent.trim() === "無" ? "" : remarksEl.textContent.trim();
-    remarksEl.textContent = originalRemarks;
-    remarksEl.setAttribute('contenteditable', 'true');
-    // 套用與語音編輯一致的 CSS 類名
-    remarksEl.classList.add('editing'); 
-    remarksEl.focus();
+        // 1. 取得現有值
+        const typeEl = document.getElementById('report-type-text');
+        const statusEl = document.getElementById('report-status-text');
+        const remarksEl = document.getElementById('remarks-text');
 
-    // --- 按鈕切換 ---
-    actionArea.innerHTML = `
-      <button id="cancel-btn" class="reset-btn">取消</button>
-      <button id="save-btn" class="save-btn">儲存</button>
-    `;
+        const currentType = typeEl.textContent.trim();
+        const currentStatus = statusEl.textContent.trim();
+        const originalRemarks = remarksEl.textContent.trim() === "無" ? "" : remarksEl.textContent.trim();
 
-    // 取消：直接刷新的做法最保險，能確保所有 ID 還原
-    document.getElementById('cancel-btn').onclick = () => location.reload();
+        // 2. 轉換為編輯 UI (這裡只改 innerHTML，不觸發 fetch)
+        typeEl.innerHTML = ['平時', '災中', '其他'].map(opt => `
+            <label class="edit-chip">
+                <input type="radio" name="edit-type" value="${opt}" ${currentType === opt ? 'checked' : ''}>
+                <span>${opt}</span>
+            </label>`).join('');
 
-    // 儲存邏輯
-    document.getElementById('save-btn').onclick = async () => {
-      const updatedData = {
-        reportType: document.querySelector('input[name="edit-type"]:checked').value,
-        status: document.querySelector('input[name="edit-status"]:checked').value,
-        remarks: remarksEl.textContent.trim()
-      };
+        statusEl.innerHTML = ['正常', '異常'].map(opt => `
+            <label class="edit-chip">
+                <input type="radio" name="edit-status" value="${opt}" ${currentStatus === opt ? 'checked' : ''}>
+                <span>${opt}</span>
+            </label>`).join('');
 
-      showMicLoading(300);
-      try {
-        await saveContentFieldsToServer(reportId, updatedData);
-        hideMicLoading();
-        showMessage("儲存成功！");
-        location.reload(); 
-      } catch (err) {
-        hideMicLoading();
-        showMessage("儲存失敗");
-      }
+        remarksEl.textContent = originalRemarks;
+        remarksEl.setAttribute('contenteditable', 'true');
+        remarksEl.classList.add('editing'); // 觸發藍色邊框
+        remarksEl.focus();
+
+        // 3. 切換按鈕
+        const actionArea = document.getElementById('edit-actions');
+        actionArea.innerHTML = `
+            <button id="cancel-btn" class="reset-btn">取消</button>
+            <button id="save-btn" class="save-btn">儲存</button>
+        `;
+
+        // 取消：解除鎖定並刷回原始狀態
+        document.getElementById('cancel-btn').onclick = () => {
+            isEditingMode = false;
+            location.reload(); 
+        };
+
+        // 儲存：成功後才解除鎖定
+        document.getElementById('save-btn').onclick = async () => {
+            const updatedData = {
+                reportType: document.querySelector('input[name="edit-type"]:checked').value,
+                status: document.querySelector('input[name="edit-status"]:checked').value,
+                remarks: remarksEl.textContent.trim()
+            };
+
+            showMicLoading(300);
+            try {
+                await saveContentFieldsToServer(reportId, updatedData);
+                isEditingMode = false; // 成功才放開鎖定
+                showMessage("儲存成功！");
+                location.reload(); 
+            } catch (err) {
+                hideMicLoading();
+                showMessage("儲存失敗");
+            }
+        };
     };
-  };
 }
 
 // 專屬於內容更新的傳送函式
