@@ -2212,7 +2212,7 @@ function closeWindowSafe() {
   const source = urlParams.get('source');
 
   // 不是從 report 進來 → 全部鎖死
-  if (source !== 'report') return;
+  if (source !== 'form') return;
 
   const editableFields = document.querySelectorAll('[data-editable]');
 
