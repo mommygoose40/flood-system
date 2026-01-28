@@ -1010,44 +1010,41 @@ const checkInterval = setInterval(() => {
 }
 
     function handleResponse(data) {
-      console.log('📥 JSONP 取得:', data);
-      if (!data || data.error) return showError('查無此報告資料');
+  console.log('📥 JSONP 取得:', data);
+  if (!data || data.error) return showError('查無此報告資料');
 
-      const elements = ['report-type-text', 'report-status-text', 'abnormal-type', 'remarks-text', 
-                       'transcription-summary', 'reporter', 'companions', 'team'];
-      elements.forEach(id => {
-        const el = document.getElementById(id);
-        if (el) el.style.color = '';
-      });
+  // ⭐ 永遠從 URL 拿 id
+  const reportId = new URLSearchParams(location.search).get('id');
 
-      document.getElementById('report-type-text').textContent = data['通報類型'] || '無';
-document.getElementById('report-status-text').textContent = data['狀態'] || '無';
+  document.getElementById('report-type-text').textContent = data['通報類型'] || '無';
+  document.getElementById('report-status-text').textContent = data['狀態'] || '無';
+  document.getElementById('remarks-text').textContent = data['說明'] || '無';
 
-      if (data['狀態'] === '異常') {
-        document.getElementById('abnormal-type').style.display = 'block';
-        document.getElementById('abnormal-type').innerHTML = `異常分類：${data['異常分類'] || '無'}`;
-        document.getElementById('transcription-summary').style.display = 'block';
-        document.getElementById('transcription-summary').innerHTML = `語音轉文字：${data['語音轉文字'] || '無'}`;
-      } else {
-        document.getElementById('abnormal-type').style.display = 'none';
-        document.getElementById('transcription-summary').style.display = 'none';
-      }
+  // 異常才顯示
+  const abnormal = document.getElementById('abnormal-type');
+  const summary = document.getElementById('transcription-summary');
 
-      document.getElementById('remarks-text').textContent = data['說明'] || '無';
-      document.getElementById('reporter').innerHTML = `回報者：${data['回報者'] || '無'}`;
-      document.getElementById('companions').innerHTML = `同行者：${data['同行者'] || '無'}`;
-      document.getElementById('team').innerHTML = `所屬大隊：${data['所屬大隊'] || '無'}`;
+  if (data['狀態'] === '異常') {
+    abnormal.style.display = 'block';
+    abnormal.textContent = `異常分類：${data['異常分類'] || '無'}`;
+    summary.style.display = 'block';
+    summary.textContent = `語音轉文字：${data['語音轉文字'] || '無'}`;
+  } else {
+    abnormal.style.display = 'none';
+    summary.style.display = 'none';
+  }
 
-      // 顯示語音轉文字內容（來自 Sheet）
-const transcriptionSection = document.getElementById('transcription-section');
-const transcriptionText = document.getElementById('transcription-text');
-const transcriptionValue = data['語音轉文字'] || '';
+  // 語音轉文字編輯區
+  const transcriptionText = document.getElementById('transcription-text');
+  transcriptionText.textContent = data['語音轉文字'] || '';
+  transcriptionText.setAttribute('contenteditable', 'false');
 
-transcriptionText.textContent = data['語音轉文字'] || '';
-transcriptionText.setAttribute('contenteditable', 'false'); // ← 改這行
-setupTranscriptionEditing(currentReportId);
-      setupReportEditing(currentReportId);
-    }
+  // ⭐ 用 reportId，不用 currentReportId
+  if (reportId) {
+    setupTranscriptionEditing(reportId);
+    setupReportEditing(reportId);
+  }
+}
 
     async function loadReportInfoFromSheet(reportId) {
       const url = `https://script.google.com/macros/s/AKfycbw_zWtC5douqiQkviNskaaRihnk3d63kJf8eAzvphNxw4rpN43hbbnz5weST-p4UrO0Xw/exec?id=${reportId}&callback=handleResponse`;
