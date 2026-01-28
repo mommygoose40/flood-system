@@ -2034,8 +2034,8 @@ function updateTimeLabel(currentTime) {
       <button id="transcription-save-btn" class="save-btn">儲存</button>
     `;
 
-    const cancelBtn = document.getElementById('cancel-btn');
-    const saveBtn = document.getElementById('save-btn');
+    const cancelBtn = document.getElementById('transcription-cancel-btn');
+    const saveBtn = document.getElementById('transcription-save-btn');
 
     cancelBtn.onclick = () => {
       transcriptionElement.textContent = originalText;
