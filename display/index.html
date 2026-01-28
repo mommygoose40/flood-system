@@ -990,43 +990,51 @@ const checkInterval = setInterval(() => {
 }
 
     function handleResponse(data) {
-      console.log('📥 JSONP 取得:', data);
-      if (!data || data.error) return showError('查無此報告資料');
+  console.log('📥 JSONP 取得:', data);
+  if (!data || data.error) return showError('查無此報告資料');
 
-      const elements = ['report-type-text', 'report-status-text', 'abnormal-type', 'remarks-text', 
-                       'transcription-summary', 'reporter', 'companions', 'team'];
-      elements.forEach(id => {
-        const el = document.getElementById(id);
-        if (el) el.style.color = '';
-      });
+  // 定義 ID 對應表 [HTML ID : 資料 Key]
+  const fieldMap = {
+    'report-type': '通報類型',
+    'report-status': '狀態',
+    'abnormal-type': '異常分類',
+    'remarks': '說明',
+    'transcription-text': '語音轉文字',
+    'reporter': '回報者',
+    'companions': '同行者',
+    'team': '所屬大隊'
+  };
 
-      document.getElementById('report-type-text').innerHTML = `通報類型：${data['通報類型'] || '無'}`;
-      document.getElementById('report-status-text').innerHTML = `狀態：${data['狀態'] || '無'}`;
-
-      if (data['狀態'] === '異常') {
-        document.getElementById('abnormal-type').style.display = 'block';
-        document.getElementById('abnormal-type').innerHTML = `異常分類：${data['異常分類'] || '無'}`;
-        document.getElementById('transcription-summary').style.display = 'block';
-        document.getElementById('transcription-summary').innerHTML = `語音轉文字：${data['語音轉文字'] || '無'}`;
+  // 遍歷並填充資料
+  Object.keys(fieldMap).forEach(id => {
+    const el = document.getElementById(id);
+    if (el) {
+      el.style.color = ''; // 修正原本報錯的地方：先確認 el 存在才改 style
+      const value = data[fieldMap[id]] || '無';
+      
+      // 判斷是否為 span (可編輯區) 還是 p (純顯示區)
+      if (el.tagName === 'SPAN') {
+        el.textContent = value;
       } else {
-        document.getElementById('abnormal-type').style.display = 'none';
-        document.getElementById('transcription-summary').style.display = 'none';
+        // 如果是 <p>，保留標題，只改內容
+        const label = el.innerText.split('：')[0];
+        el.innerHTML = `${label}：<span id="${id}-content" class="editable-value">${value}</span>`;
       }
-
-      document.getElementById('remarks-text').innerHTML = `說明：${data['說明'] || '無'}`;
-      document.getElementById('reporter').innerHTML = `回報者：${data['回報者'] || '無'}`;
-      document.getElementById('companions').innerHTML = `同行者：${data['同行者'] || '無'}`;
-      document.getElementById('team').innerHTML = `所屬大隊：${data['所屬大隊'] || '無'}`;
-
-      // 顯示語音轉文字內容（來自 Sheet）
-const transcriptionSection = document.getElementById('transcription-section');
-const transcriptionText = document.getElementById('transcription-text');
-const transcriptionValue = data['語音轉文字'] || '';
-
-transcriptionText.textContent = data['語音轉文字'] || '';
-transcriptionText.setAttribute('contenteditable', 'false'); // ← 改這行
-setupTranscriptionEditing(currentReportId);
     }
+  });
+
+  // 處理異常分類與語音的顯示邏輯
+  const isAbnormal = data['狀態'] === '異常';
+  if (document.getElementById('abnormal-type')) {
+    document.getElementById('abnormal-type').style.display = isAbnormal ? 'block' : 'none';
+  }
+  if (document.getElementById('transcription-summary')) {
+    document.getElementById('transcription-summary').style.display = isAbnormal ? 'block' : 'none';
+  }
+
+  // 啟動統一編輯功能
+  setupGeneralEditing(currentReportId);
+}
 
     async function loadReportInfoFromSheet(reportId) {
       const url = `https://script.google.com/macros/s/AKfycbw_zWtC5douqiQkviNskaaRihnk3d63kJf8eAzvphNxw4rpN43hbbnz5weST-p4UrO0Xw/exec?id=${reportId}&callback=handleResponse`;
