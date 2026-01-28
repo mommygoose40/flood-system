@@ -2017,6 +2017,9 @@ function updateTimeLabel(currentTime) {
 
   const editBtn = document.getElementById('edit-btn');
   editBtn.onclick = () => {
+    // ❗ 也要開鎖，不然語音編輯也會閃退
+    isEditingMode = true;
+    
     // 進入編輯
     transcriptionElement.setAttribute('contenteditable', 'true');
     transcriptionElement.classList.add('editing');
