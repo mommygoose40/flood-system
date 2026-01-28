@@ -1013,7 +1013,7 @@ const checkInterval = setInterval(() => {
       console.log('📥 JSONP 取得:', data);
       if (!data || data.error) return showError('查無此報告資料');
 
-      const elements = ['report-type', 'report-status', 'abnormal-type', 'remarks', 
+      const elements = ['report-type-text', 'report-status-text', 'abnormal-type', 'remarks-text', 
                        'transcription-summary', 'reporter', 'companions', 'team'];
       elements.forEach(id => {
         const el = document.getElementById(id);
