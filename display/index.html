@@ -830,7 +830,7 @@ span#remarks-text.editing:focus {
     <div id="transcription-section" class="transcription-section" style="display:none;">
   <h2>語音轉文字</h2>
   <div id="transcription-text" class="transcription-text" contenteditable="false"></div>
-  <div id="edit-actions" style="margin-top: 15px; display: flex; gap: 10px;">
+  <div id="transcription-edit-actions" style="margin-top: 15px; display: flex; gap: 10px;">
     <button id="transcription-edit-btn" class="save-btn">修改</button>
   </div>
 </div>
@@ -2012,7 +2012,7 @@ function updateTimeLabel(currentTime) {
 
     function setupTranscriptionEditing(reportId) {
   const transcriptionElement = document.getElementById('transcription-text');
-  const actionArea = document.getElementById('edit-actions');
+  const actionArea = document.getElementById('transcription-edit-actions');
   let originalText = transcriptionElement.textContent.trim();
 
   const editBtn = document.getElementById('transcription-edit-btn');
