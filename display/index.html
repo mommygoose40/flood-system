@@ -1005,9 +1005,14 @@ const checkInterval = setInterval(() => {
     'abnormal-type-val': data['異常分類']
   };
 
+  // 2. 遍歷填充資料，並處理「無」的顯示邏輯
   for (let id in editables) {
     const el = document.getElementById(id);
-    if (el) el.textContent = editables[id] || '';
+    if (el) {
+      // 如果資料為空 (空字串或 null)，則顯示 '無'
+      const value = editables[id] ? editables[id].trim() : "";
+      el.textContent = value === "" ? "無" : value;
+    }
   }
 
       if (data['狀態'] === '異常') {
@@ -1033,7 +1038,7 @@ transcriptionText.textContent = data['語音轉文字'] || '';
 transcriptionText.setAttribute('contenteditable', 'false'); // ← 改這行
 setupTranscriptionEditing(currentReportId);
       // 4. 初始化編輯按鈕 (傳入網址抓到的 currentReportId)
-  setupReportEditing(currentReportId);
+  setupGeneralEditing(currentReportId);
     }
 
     async function loadReportInfoFromSheet(reportId) {
