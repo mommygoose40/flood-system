@@ -1047,7 +1047,7 @@ const checkInterval = setInterval(() => {
 }
 
     async function loadReportInfoFromSheet(reportId) {
-      const url = `https://script.google.com/macros/s/AKfycbw_zWtC5douqiQkviNskaaRihnk3d63kJf8eAzvphNxw4rpN43hbbnz5weST-p4UrO0Xw/exec?id=${reportId}&callback=handleResponse`;
+      const url = `https://script.google.com/macros/s/AKfycbwfWkHOXH_DYDIf9UhhfyE6Cnk2037pKMgno-55W-v-trCj_xrn_7S5nY1XwhsVgSK41A/exec?id=${reportId}&callback=handleResponse`;
       const script = document.createElement('script');
       script.src = url;
       document.body.appendChild(script);
