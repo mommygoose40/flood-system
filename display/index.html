@@ -745,13 +745,32 @@ h2 {
   filter: brightness(1.05);
 }
 
-    /* 確保這個類名被正確套用 */
-#remarks-text.editing {
-    border: 2px solid #0b5ed7 !important;
-    background: #f8fbff !important;
-    min-height: 100px;
-    display: block; /* 讓它像個框框 */
-    padding: 10px;
+/* 使用 ID + Class 組合，確保優先權最高 */
+span#remarks-text.editing {
+    display: block !important;       /* 確保變成長方形框 */
+    width: 100% !important;
+    min-height: 120px !important;
+    padding: 12px !important;
+    margin-top: 10px !important;
+    
+    /* 藍色外框與背景 */
+    border: 2px solid #0b5ed7 !important; 
+    background-color: #f8fbff !important;
+    
+    /* 讓它看起來像個舒服的輸入框 */
+    border-radius: 8px !important;
+    color: #333 !important;
+    line-height: 1.5 !important;
+    box-shadow: inset 0 1px 3px rgba(0,0,0,0.1) !important;
+    
+    /* 移除點擊時的預設黑框 */
+    outline: none !important; 
+}
+
+/* 取得焦點時稍微加深顏色 */
+span#remarks-text.editing:focus {
+    background-color: #ffffff !important;
+    box-shadow: 0 0 0 3px rgba(11, 94, 215, 0.2) !important;
 }
 </style>
 </head>
@@ -2304,10 +2323,28 @@ function setupGeneralEditing(reportId) {
         `;
 
         // 取消：解除鎖定並刷回原始狀態
-        document.getElementById('cancel-btn').onclick = () => {
-            isEditingMode = false;
-            location.reload(); 
-        };
+document.getElementById('cancel-btn').onclick = () => {
+  // 1. 還原文字內容 (利用剛剛存的 originalData)
+  document.getElementById('report-type-text').textContent = originalData.type;
+  document.getElementById('report-status-text').textContent = originalData.status;
+  document.getElementById('remarks-text').textContent = originalData.remarks;
+  
+  const abnormalValEl = document.getElementById('abnormal-type-val');
+  if (abnormalValEl) abnormalValEl.textContent = originalData.abnormal;
+
+  // 2. 恢復樣式
+  const remarksEl = document.getElementById('remarks-text');
+  remarksEl.setAttribute('contenteditable', 'false');
+  remarksEl.classList.remove('editing');
+
+  // 3. 🔒 解除編輯鎖定 (這很重要，否則背景更新會一直被擋住)
+  isEditingMode = false;
+
+  // 4. 只換按鈕，不 reload，不 loadData
+  restoreEditButton(reportId); 
+  
+  console.log("✅ 已取消編輯，僅還原文字，未重新載入多媒體");
+};
 
         // 儲存：成功後才解除鎖定
         document.getElementById('save-btn').onclick = async () => {
