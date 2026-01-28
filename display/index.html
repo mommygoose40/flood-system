@@ -2209,21 +2209,27 @@ function closeWindowSafe() {
   footer.style.display = 'flex';
 })();
 
-     //修改欄位內容
-     function setupGeneralEditing(reportId) {
-  const fields = ['report-type-text', 'report-status-text', 'abnormal-type-text', 'remarks-text', 'transcription-text'];
+     // 修改「內容」欄位（不包含語音）
+function setupGeneralEditing(reportId) {
+  // 移除 transcription-text，只留這四個
+  const fields = ['report-type-text', 'report-status-text', 'abnormal-type-text', 'remarks-text'];
   const actionArea = document.getElementById('edit-actions');
   const editBtn = document.getElementById('edit-btn');
 
-  // 紀錄原始資料，以便取消時還原
+  if (!editBtn) return;
+
   let originalData = {};
 
   editBtn.onclick = () => {
-    // 進入編輯模式
     fields.forEach(id => {
       const el = document.getElementById(id);
       if (el) {
-        originalData[id] = el.textContent.trim();
+        let currentText = el.textContent.trim();
+        // 紀錄原始資料：如果是 "無"，還原時要變回 "無"
+        originalData[id] = currentText;
+        
+        // 編輯時，如果是 "無" 則清空方便輸入
+        el.textContent = currentText === "無" ? "" : currentText;
         el.setAttribute('contenteditable', 'true');
         el.classList.add('editing');
       }
@@ -2231,7 +2237,7 @@ function closeWindowSafe() {
 
     actionArea.innerHTML = `
       <button id="cancel-btn" class="reset-btn">取消</button>
-      <button id="save-btn" class="save-btn">儲存全部</button>
+      <button id="save-btn" class="save-btn">儲存內容</button>
     `;
 
     // 取消按鈕
@@ -2239,7 +2245,7 @@ function closeWindowSafe() {
       fields.forEach(id => {
         const el = document.getElementById(id);
         if (el) {
-          el.textContent = originalData[id];
+          el.textContent = originalData[id]; // 還原 (包含原本的 "無")
           el.setAttribute('contenteditable', 'false');
           el.classList.remove('editing');
         }
@@ -2249,24 +2255,25 @@ function closeWindowSafe() {
 
     // 儲存按鈕
     document.getElementById('save-btn').onclick = async () => {
+      // 抓取時若為空，依然傳送空字串給後端
       const updatedData = {
         reportType: document.getElementById('report-type-text').textContent.trim(),
         status: document.getElementById('report-status-text').textContent.trim(),
         abnormalType: document.getElementById('abnormal-type-text').textContent.trim(),
-        remarks: document.getElementById('remarks-text').textContent.trim(),
-        transcription: document.getElementById('transcription-text').textContent.trim()
+        remarks: document.getElementById('remarks-text').textContent.trim()
       };
 
       showMicLoading(300);
       try {
-        await saveAllDataToServer(reportId, updatedData);
+        await saveContentFieldsToServer(reportId, updatedData);
         hideMicLoading();
-        showMessage("全數儲存成功！");
+        showMessage("內容儲存成功！");
         
-        // 結束編輯狀態
         fields.forEach(id => {
           const el = document.getElementById(id);
           if (el) {
+            // 儲存後，若內容為空則顯示 "無"
+            if (el.textContent.trim() === "") el.textContent = "無";
             el.setAttribute('contenteditable', 'false');
             el.classList.remove('editing');
           }
@@ -2280,23 +2287,23 @@ function closeWindowSafe() {
   };
 }
 
-function restoreEditButton(reportId) {
-  const actionArea = document.getElementById('edit-actions');
-  actionArea.innerHTML = `<button id="edit-btn" class="save-btn">修改資料</button>`;
-  setupGeneralEditing(reportId); // 重新綁定事件
-}
-
-// 統一的後端傳送函式
-async function saveAllDataToServer(reportId, data) {
+// 專屬於內容更新的傳送函式
+async function saveContentFieldsToServer(reportId, data) {
   const url = `https://script.google.com/macros/s/AKfycbwJmExFaj-FJtxX1AUDR_Rm_J0JF_GiVzx4XuIsQGxSajbSD-aK9bXgV9amwSexKHhaLg/exec`;
   const params = new URLSearchParams({
-    action: 'updateAllFields', // 修改 Google Script 的 switch case
+    action: 'updateContentFields', // 建議與語音的 action 分開
     id: reportId,
-    ...data // 展開物件
+    ...data
   });
 
   const response = await fetch(`${url}?${params.toString()}`, { method: 'GET' });
   return await response.text();
+}
+
+function restoreEditButton(reportId) {
+  const actionArea = document.getElementById('edit-actions');
+  actionArea.innerHTML = `<button id="edit-btn" class="save-btn">修改內容</button>`;
+  setupGeneralEditing(reportId);
 }
 
   </script>
