@@ -756,9 +756,20 @@ h2 {
 
     <div class="report-info">
         <p id="report-type">通報類型：載入中...</p>
-        <p id="report-status">狀態：載入中...</p>
-        <p id="abnormal-type" style="display:none;">異常分類：載入中...</p>
-        <p id="remarks">說明：載入中...</p>
+        <p id="report-status">
+  狀態：
+  <span data-editable="status">載入中...</span>
+</p>
+
+<p id="abnormal-type" style="display:none;">
+  異常分類：
+  <span data-editable="abnormal">載入中...</span>
+</p>
+
+<p id="remarks">
+  說明：
+  <span data-editable="remarks">載入中...</span>
+</p>
         <p id="transcription-summary" style="display:none;">語音轉文字：載入中...</p>
         <p id="reporter">回報者：載入中...</p>
         <p id="companions">同行者：載入中...</p>
@@ -1025,6 +1036,7 @@ const transcriptionValue = data['語音轉文字'] || '';
 transcriptionText.textContent = data['語音轉文字'] || '';
 transcriptionText.setAttribute('contenteditable', 'false'); // ← 改這行
 setupTranscriptionEditing(currentReportId);
+enableFieldEditingIfFromReport();
     }
 
     async function loadReportInfoFromSheet(reportId) {
@@ -2195,6 +2207,73 @@ function closeWindowSafe() {
   footer.style.display = 'flex';
 })();
 
+     function enableFieldEditingIfFromReport() {
+  const urlParams = new URLSearchParams(location.search);
+  const source = urlParams.get('source');
+
+  // 不是從 report 進來 → 全部鎖死
+  if (source !== 'report') return;
+
+  const editableFields = document.querySelectorAll('[data-editable]');
+
+  editableFields.forEach(el => {
+    el.contentEditable = 'true';
+    el.style.borderBottom = '2px dashed #0b5ed7';
+    el.style.padding = '2px 4px';
+    el.style.cursor = 'text';
+  });
+
+  // 加一顆儲存按鈕（照片上方）
+  addSaveReportInfoButton();
+}
+
+     function addSaveReportInfoButton() {
+  if (document.getElementById('save-report-info-btn')) return;
+
+  const photoSection = document.getElementById('photo-section');
+  const btn = document.createElement('button');
+  btn.id = 'save-report-info-btn';
+  btn.className = 'save-btn';
+  btn.textContent = '儲存通報資料';
+  btn.style.marginBottom = '16px';
+
+  btn.onclick = saveReportInfoEdits;
+
+  photoSection.parentNode.insertBefore(btn, photoSection);
+}
+
+function saveReportInfoEdits() {
+  const reportId = currentReportId;
+  const data = {};
+
+  document.querySelectorAll('[data-editable]').forEach(el => {
+    const key = el.dataset.editable;
+    data[key] = el.textContent.trim();
+  });
+
+  showMicLoading();
+
+  fetch(`https://script.google.com/macros/s/AKfycbwfWkHOXH_DYDIf9UhhfyE6Cnk2037pKMgno-55W-v-trCj_xrn_7S5nY1XwhsVgSK41A/exec`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      action: 'updateReportInfo',
+      id: reportId,
+      data
+    })
+  })
+  .then(res => res.text())
+  .then(() => {
+    hideMicLoading();
+    showMessage('通報資料已更新');
+  })
+  .catch(() => {
+    hideMicLoading();
+    alert('儲存失敗');
+  });
+}
+
+     
   </script>
 </body>
 </html>
