@@ -831,7 +831,7 @@ span#remarks-text.editing:focus {
   <h2>語音轉文字</h2>
   <div id="transcription-text" class="transcription-text" contenteditable="false"></div>
   <div id="edit-actions" style="margin-top: 15px; display: flex; gap: 10px;">
-    <button id="edit-btn" class="save-btn">修改</button>
+    <button id="transcription-edit-btn" class="save-btn">修改</button>
   </div>
 </div>
 
@@ -2015,7 +2015,7 @@ function updateTimeLabel(currentTime) {
   const actionArea = document.getElementById('edit-actions');
   let originalText = transcriptionElement.textContent.trim();
 
-  const editBtn = document.getElementById('edit-btn');
+  const editBtn = document.getElementById('transcription-edit-btn');
   editBtn.onclick = () => {
     // ❗ 也要開鎖，不然語音編輯也會閃退
     isEditingMode = true;
@@ -2043,7 +2043,7 @@ function updateTimeLabel(currentTime) {
       transcriptionElement.classList.remove('editing');
       transcriptionElement.blur();
       // 立即回復修改按鈕
-      actionArea.innerHTML = `<button id="edit-btn" class="save-btn">修改</button>`;
+      actionArea.innerHTML = `<button id="transcription-edit-btn" class="save-btn">修改</button>`;
       setupTranscriptionEditing(reportId);
     };
 
@@ -2075,7 +2075,7 @@ function updateTimeLabel(currentTime) {
       transcriptionElement.classList.remove('editing');
       transcriptionElement.blur();
       // 立即回復修改按鈕
-      actionArea.innerHTML = `<button id="edit-btn" class="save-btn">修改</button>`;
+      actionArea.innerHTML = `<button id="transcription-edit-btn" class="save-btn">修改</button>`;
       setupTranscriptionEditing(reportId);
     };
   };
