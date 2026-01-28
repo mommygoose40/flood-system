@@ -754,21 +754,20 @@ h2 {
         <p id="report-date">回報時間：載入中...</p>
     </div>
 
-   <div class="report-info">
-    <p>通報類型：<span id="report-type-text" class="editable-field">載入中...</span></p>
+    <div class="report-info">
+        <p>通報類型：<span id="report-type-text" class="editable-field">載入中...</span></p>
     <p>狀態：<span id="report-status-text" class="editable-field">載入中...</span></p>
-    <p id="abnormal-type-container" style="display:none;">異常分類：<span id="abnormal-type-text" class="editable-field">載入中...</span></p>
-    <p>說明：<span id="remarks-text" class="editable-field">載入中...</span></p>
-    <p>回報者：<span id="reporter">載入中...</span></p>
-    <p>同行者：<span id="companions">載入中...</span></p>
-    <p>所屬大隊：<span id="team">載入中...</span></p>
-    
-    <p id="transcription-summary" style="display:none;">語音轉文字：<span id="transcription-text" class="editable-field">載入中...</span></p>
+        <p id="abnormal-type" style="display:none;">異常分類：載入中...</p>
+        <p>說明：<span id="remarks-text" class="editable-field">載入中...</span></p>
+        <p id="transcription-summary" style="display:none;">語音轉文字：載入中...</p>
+        <p id="reporter">回報者：載入中...</p>
+        <p id="companions">同行者：載入中...</p>
+        <p id="team">所屬大隊：載入中...</p>
 
-    <div id="edit-actions" style="margin-top: 15px;">
-        <button id="edit-btn" class="save-btn">修改資料</button>
+      <div id="edit-actions">
+        <button id="edit-btn" class="save-btn">修改</button>
     </div>
-</div>
+    </div>
 
     <div id="photo-section">
       <h2>照片</h2>
@@ -994,51 +993,48 @@ const checkInterval = setInterval(() => {
 }
 
     function handleResponse(data) {
-  console.log('📥 JSONP 取得:', data);
-  if (!data || data.error) return showError('查無此報告資料');
+      console.log('📥 JSONP 取得:', data);
+      if (!data || data.error) return showError('查無此報告資料');
 
-  // 定義 ID 對應表 [HTML ID : 資料 Key]
-  const fieldMap = {
-    'report-type': '通報類型',
-    'report-status': '狀態',
-    'abnormal-type': '異常分類',
-    'remarks': '說明',
-    'transcription-text': '語音轉文字',
-    'reporter': '回報者',
-    'companions': '同行者',
-    'team': '所屬大隊'
+      // 1. 填充要編輯的三欄 (及語音)
+  const editables = {
+    'report-type-val': data['通報類型'],
+    'report-status-val': data['狀態'],
+    'remarks-val': data['說明'],
+    'transcription-text': data['語音轉文字'],
+    'abnormal-type-val': data['異常分類']
   };
 
-  // 遍歷並填充資料
-  Object.keys(fieldMap).forEach(id => {
+  for (let id in editables) {
     const el = document.getElementById(id);
-    if (el) {
-      el.style.color = ''; // 修正原本報錯的地方：先確認 el 存在才改 style
-      const value = data[fieldMap[id]] || '無';
-      
-      // 判斷是否為 span (可編輯區) 還是 p (純顯示區)
-      if (el.tagName === 'SPAN') {
-        el.textContent = value;
+    if (el) el.textContent = editables[id] || '';
+  }
+
+      if (data['狀態'] === '異常') {
+        document.getElementById('abnormal-type').style.display = 'block';
+        document.getElementById('abnormal-type').innerHTML = `異常分類：${data['異常分類'] || '無'}`;
+        document.getElementById('transcription-summary').style.display = 'block';
+        document.getElementById('transcription-summary').innerHTML = `語音轉文字：${data['語音轉文字'] || '無'}`;
       } else {
-        // 如果是 <p>，保留標題，只改內容
-        const label = el.innerText.split('：')[0];
-        el.innerHTML = `${label}：<span id="${id}-content" class="editable-value">${value}</span>`;
+        document.getElementById('abnormal-type').style.display = 'none';
+        document.getElementById('transcription-summary').style.display = 'none';
       }
+
+      document.getElementById('reporter').innerHTML = `回報者：${data['回報者'] || '無'}`;
+      document.getElementById('companions').innerHTML = `同行者：${data['同行者'] || '無'}`;
+      document.getElementById('team').innerHTML = `所屬大隊：${data['所屬大隊'] || '無'}`;
+
+      // 顯示語音轉文字內容（來自 Sheet）
+const transcriptionSection = document.getElementById('transcription-section');
+const transcriptionText = document.getElementById('transcription-text');
+const transcriptionValue = data['語音轉文字'] || '';
+
+transcriptionText.textContent = data['語音轉文字'] || '';
+transcriptionText.setAttribute('contenteditable', 'false'); // ← 改這行
+setupTranscriptionEditing(currentReportId);
+      // 4. 初始化編輯按鈕 (傳入網址抓到的 currentReportId)
+  setupReportEditing(currentReportId);
     }
-  });
-
-  // 處理異常分類與語音的顯示邏輯
-  const isAbnormal = data['狀態'] === '異常';
-  if (document.getElementById('abnormal-type')) {
-    document.getElementById('abnormal-type').style.display = isAbnormal ? 'block' : 'none';
-  }
-  if (document.getElementById('transcription-summary')) {
-    document.getElementById('transcription-summary').style.display = isAbnormal ? 'block' : 'none';
-  }
-
-  // 啟動統一編輯功能
-  setupGeneralEditing(currentReportId);
-}
 
     async function loadReportInfoFromSheet(reportId) {
       const url = `https://script.google.com/macros/s/AKfycbw_zWtC5douqiQkviNskaaRihnk3d63kJf8eAzvphNxw4rpN43hbbnz5weST-p4UrO0Xw/exec?id=${reportId}&callback=handleResponse`;
