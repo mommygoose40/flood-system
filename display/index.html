@@ -1070,24 +1070,29 @@ const checkInterval = setInterval(() => {
   console.log('📥 JSONP 取得:', data);
   if (!data || data.error) return showError('查無此報告資料');
 
-  // --- 在 handleResponse 裡面處理修改按鈕 ---
-const urlParams = new URLSearchParams(window.location.search);
-const isFromForm = urlParams.get('source') === 'form';
-const editBtn = document.getElementById('edit-btn');
+  // 1. 抓取參數與容器
+  const urlParams = new URLSearchParams(window.location.search);
+  const isFromForm = urlParams.get('source') === 'form';
+  const actionArea = document.getElementById('edit-actions');
+  const editBtn = document.getElementById('edit-btn');
 
-if (editBtn) {
+  // 2. 權限判斷：處理「整個容器」的顯示
+  if (actionArea) {
     if (isFromForm) {
-        // ✅ 只有這裡會強行把按鈕變出來
-        // 使用 setProperty 可以確保覆蓋掉 CSS 裡的 display: none !important
-        editBtn.style.setProperty('display', 'inline-block', 'important');
-        setupGeneralEditing(currentReportId); 
-        console.log("✅ 來源正確，已顯示修改按鈕");
+      // ✅ 顯示外層容器
+      actionArea.style.setProperty('display', 'block', 'important');
+      
+      // ✅ 確保內部的修改按鈕也是顯示的（預防萬一）
+      if (editBtn) editBtn.style.display = 'inline-block';
+      
+      // ✅ 初始化編輯功能綁定
+      setupGeneralEditing(currentReportId); 
+      console.log("✅ 來源為 form，已開啟編輯權限區塊");
     } else {
-        // ❌ 非 form 來源，確保它絕對隱藏
-        editBtn.style.setProperty('display', 'none', 'important');
-        console.log("🚫 來源不符，按鈕維持隱藏");
+      // ❌ 確保完全隱藏
+      actionArea.style.setProperty('display', 'none', 'important');
     }
-}
+  }
 
   // 1. 定義要填充的編輯欄位
   const editables = {
