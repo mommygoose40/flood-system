@@ -160,7 +160,7 @@ window.firebaseStorage = { storage, ref, list, listAll, getDownloadURL };
 }
 
 /* === 按鈕區 === */
-#edit-actions, #transcription-edit-actions {
+#edit-actions {
   display: flex;
   justify-content: center;
   gap: 14px;
@@ -745,23 +745,31 @@ h2 {
   filter: brightness(1.05);
 }
 
-/* 精簡版編輯框 */
+/*說明編輯框*/
 span#remarks-text.editing {
-    display: inline-block !important; /* 不再強制佔據整行 */
-    width: 100% !important;           /* 寬度維持填滿 */
-    min-height: 40px !important;      /* 縮小最小高度 */
-    max-height: 200px !important;     /* 設定最大高度，超過則滾動 */
-    padding: 6px 10px !important;     /* 減少內邊距 */
+    display: inline-block !important; 
+    width: auto !important;           /* 關鍵：不要強制 100% */
+    min-width: 150px !important;      /* 給予一個最小寬度，方便點擊 */
+    max-width: 100% !important;       /* 確保不會超出螢幕 */
+    
+    /* 預設一行 */
+    min-height: 28px !important;      
+    height: auto !important;
+    max-height: 150px !important;
+    
+    padding: 2px 8px !important;      /* 更精簡的內邊距 */
+    margin-left: 5px;                 /* 與「說明：」保持間距 */
     
     border: 2px solid #0b5ed7 !important; 
     background-color: #f8fbff !important;
     border-radius: 6px !important;
     
-    font-size: 18px !important;       /* 稍微縮小字體，如果你覺得 20 級太大 */
+    font-size: 18px !important;
     line-height: 1.4 !important;
-    overflow-y: auto !important;      /* 內容多時可捲動 */
-    vertical-align: top !important;
+    overflow-y: auto !important;
+    vertical-align: middle !important; /* 讓框與文字對齊 */
     outline: none !important;
+    word-break: break-all;            /* 防止長文字撐破框 */
 }
 
 /* 取得焦點時稍微加深顏色 */
@@ -782,9 +790,16 @@ span#remarks-text.editing:focus {
     <div class="report-info">
         <p>通報類型：<span id="report-type-text" class="editable-field">載入中...</span></p>
     <p>狀態：<span id="report-status-text" class="editable-field">載入中...</span></p>
-        <p id="abnormal-type" style="display:none;">異常分類：載入中...</p>
-        <p>說明：<span id="remarks-text" class="editable-field">載入中...</span></p>
-        <p id="transcription-summary" style="display:none;">語音轉文字：載入中...</p>
+        <p id="abnormal-type" style="display:none;">
+    異常分類：<span id="abnormal-type-val">載入中...</span>
+</p>
+       <p style="display: flex; align-items: flex-start; flex-wrap: wrap;">
+  <span style="flex-shrink: 0;">說明：</span>
+  <span id="remarks-text" class="editable-field">載入中...</span>
+</p>
+        <p id="transcription-summary" style="display:none;">
+    語音轉文字：<span id="transcription-summary-val">載入中...</span>
+</p>
         <p id="reporter">回報者：載入中...</p>
         <p id="companions">同行者：載入中...</p>
         <p id="team">所屬大隊：載入中...</p>
@@ -1033,8 +1048,8 @@ const checkInterval = setInterval(() => {
     'report-type-text': data['通報類型'],
     'report-status-text': data['狀態'],
     'remarks-text': data['說明'],
-    'transcription-summary': data['語音轉文字'],
-    'abnormal-type': data['異常分類']
+    'transcription-summary-val': data['語音轉文字'],
+    'abnormal-type-val': data['異常分類']
   };
 
   // 2. 遍歷填充資料，並處理「無」的顯示邏輯 (使用 textContent 確保 ID 存在)
@@ -2289,7 +2304,7 @@ function setupGeneralEditing(reportId) {
         const typeEl = document.getElementById('report-type-text');
         const statusEl = document.getElementById('report-status-text');
         const remarksEl = document.getElementById('remarks-text');
-        const abnormalValEl = document.getElementById('abnormal-type'); 
+        const abnormalValEl = document.getElementById('abnormal-type-val'); 
 
         const originalData = {
             type: typeEl.textContent.trim(),
@@ -2315,6 +2330,17 @@ function setupGeneralEditing(reportId) {
                 <span>${opt}</span>
             </label>`).join('');
 
+      // 若選中異常則顯示異常類型
+const statusRadios = document.querySelectorAll('input[name="edit-status"]');
+statusRadios.forEach(radio => {
+    radio.addEventListener('change', (e) => {
+        const abnormalRow = document.getElementById('abnormal-type');
+        if (abnormalRow) {
+            abnormalRow.style.display = (e.target.value === '異常') ? 'block' : 'none';
+        }
+    });
+});
+
         remarksEl.textContent = originalRemarks;
         remarksEl.setAttribute('contenteditable', 'true');
         remarksEl.classList.add('editing'); 
@@ -2333,7 +2359,7 @@ function setupGeneralEditing(reportId) {
             document.getElementById('report-status-text').textContent = originalData.status;
             document.getElementById('remarks-text').textContent = originalData.remarks;
             
-            const targetAbnormal = document.getElementById('abnormal-type');
+            const targetAbnormal = document.getElementById('abnormal-type-val');
             if (targetAbnormal) targetAbnormal.textContent = originalData.abnormal;
 
             remarksEl.setAttribute('contenteditable', 'false');
