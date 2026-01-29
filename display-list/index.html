@@ -1564,6 +1564,37 @@ body {
   display: none !important;
 }
 
+    /* 搜尋志工姓名 */
+.fakeInputStyle {
+  font-size: 20px;
+  padding: 4px 12px;
+  border: 1px solid #888;
+  border-radius: 4px;
+  background: #fff;
+  color: #333;
+  
+  /* 對齊 .fakeSelectBtn 的寬度與行為 */
+  min-width: 110px;
+  width: auto; /* 或視情況給固定寬度，如 150px */
+  box-sizing: border-box;
+  
+  /* 移除預設 input 藍框 */
+  outline: none;
+  vertical-align: middle;
+}
+
+/* 讓 input 跟按鈕一樣在點擊時有回饋感（可選） */
+.fakeInputStyle:focus {
+  border-color: #555;
+  background: #fdfdfd;
+}
+
+/* 讓 Placeholder 字體稍微小一點或顏色淡一點 */
+.fakeInputStyle::placeholder {
+  font-size: 16px;
+  color: #aaa;
+}
+
 </style>
 
   <script src="https://static.line-scdn.net/liff/edge/2/sdk.js"></script>
@@ -1913,9 +1944,17 @@ body {
           </button>
         </div>
 
+        <div style="margin-bottom:12px;">
+  <label>志工：</label>
+  <input type="text" 
+         id="volunteerSearch" 
+         placeholder="輸入姓名" 
+         class="fakeInputStyle">
+</div>
+
         <div class="admin-action-row">
           <button id="adminExportBtn" class="searchBtn" onclick="exportReport('history')">
-            下載報表
+            查看報表
           </button>
         </div>
 
@@ -2768,7 +2807,7 @@ document.getElementById("adminSearchBtn").onclick = () => {
 /**
  * 整合分流報表功能 (電腦版預覽 + 手機版原本邏輯)
  */
-// 加上 async 以支援歷史紀錄的 await fetch
+// 志工姓名搜尋由前端篩選
 async function exportReport(mode = 'current') {
     showMicLoading(0);
     let filteredData = [];
@@ -2782,6 +2821,9 @@ async function exportReport(mode = 'current') {
             const monthRaw = document.getElementById("reportMonth")?.value || "ALL";
             const yearRaw = document.getElementById("reportYearText")?.innerText.replace("年", "").trim() || "2025";
             
+            // 🚩 新增：取得志工搜尋文字
+            const volunteerSearchTerm = document.getElementById("volunteerSearch")?.value.trim() || "";
+            
             const match = teamRaw.match(/\d+/);
             const teamParam = (teamRaw === "全部") ? "all" : (match ? match[0] : teamRaw);
 
@@ -2793,7 +2835,8 @@ async function exportReport(mode = 'current') {
                 status: (document.getElementById("reportStatusText")?.innerText === "全部") ? "all" : document.getElementById("reportStatusText")?.innerText
             };
 
-            if (monthRaw === "ALL") {
+            // 如果是年度摘要，目前機制通常不支援特定志工搜尋，若要搜尋則強制走明細模式
+            if (monthRaw === "ALL" && !volunteerSearchTerm) {
                 const summaryData = await fetchYearlySummaryFromGAS(params);
                 if (!summaryData || summaryData.length === 0) {
                     showMessage("尚無符合的年度資料!");
@@ -2805,7 +2848,19 @@ async function exportReport(mode = 'current') {
                 hideMicLoading();
                 return;
             }
+
+            // 1. 先從 GAS 抓取基礎過濾後的明細資料
             filteredData = await fetchHistoryFromGAS(params);
+
+            // 2. 🚩 關鍵修改：如果在前端有輸入志工關鍵字，進行二次過濾
+            if (volunteerSearchTerm && filteredData && filteredData.length > 0) {
+                filteredData = filteredData.filter(r => {
+                    const reporter = r.回報者 || "";
+                    const companion = r.同行者 || "";
+                    // 同時搜尋「回報者」與「同行者」是否包含關鍵字
+                    return reporter.includes(volunteerSearchTerm) || companion.includes(volunteerSearchTerm);
+                });
+            }
         }
 
         if (!filteredData || filteredData.length === 0) {
