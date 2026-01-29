@@ -1116,6 +1116,22 @@ if (transSummary) {
   const teamEl = document.getElementById('team');
   if (teamEl) teamEl.textContent = `所屬大隊：${data['所屬大隊'] || '無'}`;
 
+  // --- 3. 來源權限判斷：處理「修改」按鈕 ---
+  const urlParams = new URLSearchParams(window.location.search);
+  const isFromForm = urlParams.get('source') === 'form';
+  const editBtn = document.getElementById('edit-btn');
+
+  if (editBtn) {
+    if (isFromForm) {
+      // 來自 form，顯示按鈕並綁定編輯功能
+      editBtn.style.display = 'inline-block';
+      setupGeneralEditing(currentReportId); 
+    } else {
+      // 非來自 form，隱藏按鈕
+      editBtn.style.display = 'none';
+    }
+  }
+
   // 5. 語音區塊顯示控制 (底部區塊)
   const transcriptionSection = document.getElementById('transcription-section');
   const transcriptionText = document.getElementById('transcription-text');
