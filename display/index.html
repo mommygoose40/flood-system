@@ -160,7 +160,7 @@ window.firebaseStorage = { storage, ref, list, listAll, getDownloadURL };
 }
 
 /* === 按鈕區 === */
-#edit-actions {
+#edit-actions, #transcription-edit-actions {
   display: flex;
   justify-content: center;
   gap: 14px;
@@ -1034,7 +1034,7 @@ const checkInterval = setInterval(() => {
     'report-status-text': data['狀態'],
     'remarks-text': data['說明'],
     'transcription-summary': data['語音轉文字'],
-    'abnormal-type-val': data['異常分類']
+    'abnormal-type': data['異常分類']
   };
 
   // 2. 遍歷填充資料，並處理「無」的顯示邏輯 (使用 textContent 確保 ID 存在)
@@ -2283,19 +2283,24 @@ function setupGeneralEditing(reportId) {
     editBtn.onclick = null; 
 
     editBtn.onclick = (e) => {
-        e.preventDefault();
-        
-        // ❗ 關鍵二：一旦按下，立刻變更旗標
-        isEditingMode = true; 
+    e.preventDefault();
+    isEditingMode = true; 
 
-        // 1. 取得現有值
-        const typeEl = document.getElementById('report-type-text');
-        const statusEl = document.getElementById('report-status-text');
-        const remarksEl = document.getElementById('remarks-text');
+    // --- 修正點：在這裡先儲存原始資料 ---
+    const typeEl = document.getElementById('report-type-text');
+    const statusEl = document.getElementById('report-status-text');
+    const remarksEl = document.getElementById('remarks-text');
+    const abnormalValEl = document.getElementById('abnormal-type');
 
-        const currentType = typeEl.textContent.trim();
-        const currentStatus = statusEl.textContent.trim();
-        const originalRemarks = remarksEl.textContent.trim() === "無" ? "" : remarksEl.textContent.trim();
+    const originalData = {
+        type: typeEl.textContent.trim(),
+        status: statusEl.textContent.trim(),
+        remarks: remarksEl.textContent.trim(),
+        abnormal: abnormalValEl ? abnormalValEl.textContent.trim() : ""
+    };
+    // ----------------------------------
+
+    const originalRemarks = originalData.remarks === "無" ? "" : originalData.remarks;
 
         // 2. 轉換為編輯 UI (這裡只改 innerHTML，不觸發 fetch)
         typeEl.innerHTML = ['平時', '災中', '其他'].map(opt => `
@@ -2322,29 +2327,28 @@ function setupGeneralEditing(reportId) {
             <button id="save-btn" class="save-btn">儲存</button>
         `;
 
-        // 取消：解除鎖定並刷回原始狀態
-document.getElementById('cancel-btn').onclick = () => {
-  // 1. 還原文字內容 (利用剛剛存的 originalData)
-  document.getElementById('report-type-text').textContent = originalData.type;
-  document.getElementById('report-status-text').textContent = originalData.status;
-  document.getElementById('remarks-text').textContent = originalData.remarks;
-  
-  const abnormalValEl = document.getElementById('abnormal-type-val');
-  if (abnormalValEl) abnormalValEl.textContent = originalData.abnormal;
+        // 取消按鈕邏輯
+    document.getElementById('cancel-btn').onclick = () => {
+        // 1. 利用閉包(Closure)特性，這裡可以讀取到上面定義的 originalData
+        document.getElementById('report-type-text').textContent = originalData.type;
+        document.getElementById('report-status-text').textContent = originalData.status;
+        document.getElementById('remarks-text').textContent = originalData.remarks;
+        
+        const abnormalValEl = document.getElementById('abnormal-type');
+        if (abnormalValEl) abnormalValEl.textContent = originalData.abnormal;
 
-  // 2. 恢復樣式
-  const remarksEl = document.getElementById('remarks-text');
-  remarksEl.setAttribute('contenteditable', 'false');
-  remarksEl.classList.remove('editing');
+        // 2. 恢復樣式
+        remarksEl.setAttribute('contenteditable', 'false');
+        remarksEl.classList.remove('editing');
 
-  // 3. 🔒 解除編輯鎖定 (這很重要，否則背景更新會一直被擋住)
-  isEditingMode = false;
+        // 3. 解除編輯鎖定
+        isEditingMode = false;
 
-  // 4. 只換按鈕，不 reload，不 loadData
-  restoreEditButton(reportId); 
-  
-  console.log("✅ 已取消編輯，僅還原文字，未重新載入多媒體");
-};
+        // 4. 還原按鈕
+        restoreEditButton(reportId); 
+        
+        console.log("✅ 已取消編輯，資料已還原");
+    };
 
         // 儲存：成功後才解除鎖定
         document.getElementById('save-btn').onclick = async () => {
