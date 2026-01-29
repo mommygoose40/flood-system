@@ -1135,11 +1135,6 @@ const checkInterval = setInterval(() => {
     transcriptionText.setAttribute('contenteditable', 'false');
   }
 
-  // 如果有語音文字才顯示區塊，否則隱藏
-  if (transcriptionSection) {
-    transcriptionSection.style.display = hasTranscription ? 'block' : 'none';
-  }
-
   // 6. 初始化所有編輯按鈕
   setupTranscriptionEditing(currentReportId);
   setupGeneralEditing(currentReportId);
@@ -2428,40 +2423,71 @@ function setupGeneralEditing(reportId) {
             restoreEditButton(reportId);
         };
 
-        // 儲存邏輯
-       document.getElementById('save-btn').onclick = async () => {
-        const selectedStatus = document.querySelector('input[name="edit-status"]:checked').value;
-        const selectVal = document.getElementById('edit-abnormal-select').value;
-        const otherText = document.getElementById('edit-abnormal-other').value.trim();
+       // 儲存：成功後直接更新 UI，不 reload
+document.getElementById('save-btn').onclick = async () => {
+    // 1. 取得編輯後的數值
+    const selectedType = document.querySelector('input[name="edit-type"]:checked').value;
+    const selectedStatus = document.querySelector('input[name="edit-status"]:checked').value;
+    const remarksValue = remarksEl.textContent.trim();
+
+    // 處理異常分類：組合 "其他(內容)" 格式
+    const selectVal = document.getElementById('edit-abnormal-select').value;
+    const otherText = document.getElementById('edit-abnormal-other') ? document.getElementById('edit-abnormal-other').value.trim() : "";
+    let finalAbnormal = "";
+    if (selectedStatus === '異常') {
+        finalAbnormal = (selectVal === '編輯其他' || selectVal === '其他') ? `其他(${otherText})` : selectVal;
+    }
+
+    const updatedData = {
+        reportType: selectedType,
+        status: selectedStatus,
+        abnormalType: finalAbnormal,
+        remarks: remarksValue
+    };
+
+    showMicLoading(300); // 顯示小動畫提示儲存中
+
+    try {
+        // 2. 傳送到伺服器
+        await saveContentFieldsToServer(reportId, updatedData);
         
-        // 核心邏輯：如果是選其他，組合字串
-        let finalAbnormal = "";
-        if (selectedStatus === '異常') {
-            if (selectVal === '其他') {
-                finalAbnormal = otherText ? `其他(${otherText})` : "其他";
-            } else {
-                finalAbnormal = selectVal;
-            }
+        // 3. 🔒 關鍵：儲存成功後，直接更新前端 DOM，不 reload
+        
+        // 更新通報類型與狀態文字
+        document.getElementById('report-type-text').textContent = selectedType;
+        document.getElementById('report-status-text').textContent = selectedStatus;
+        document.getElementById('remarks-text').textContent = remarksValue === "" ? "無" : remarksValue;
+        
+        // 更新異常分類與顯示邏輯
+        const abnormalRow = document.getElementById('abnormal-type');
+        const abnormalValEl = document.getElementById('abnormal-type-val');
+        if (abnormalValEl) abnormalValEl.textContent = finalAbnormal || "無";
+        if (abnormalRow) abnormalRow.style.display = (selectedStatus === '異常') ? 'block' : 'none';
+
+        // 處理語音小結的聯動顯示 (若狀態改為正常則隱藏小結)
+        const transSummary = document.getElementById('transcription-summary');
+        if (transSummary) {
+            const hasTranscription = document.getElementById('transcription-text').textContent.trim() !== "";
+            transSummary.style.display = (selectedStatus === '異常' && hasTranscription) ? 'block' : 'none';
         }
 
-        const updatedData = {
-            reportType: document.querySelector('input[name="edit-type"]:checked').value,
-            status: selectedStatus,
-            abnormalType: finalAbnormal, // 這裡傳給 GAS
-            remarks: remarksEl.textContent.trim()
-        };
+        // 4. 恢復介面狀態
+        remarksEl.setAttribute('contenteditable', 'false');
+        remarksEl.classList.remove('editing');
+        isEditingMode = false;
+        
+        // 5. 換回「修改」按鈕
+        restoreEditButton(reportId); 
+        
+        // 清除緩存
+        sessionStorage.removeItem('reportListCache');
+        showMessage("儲存成功!");
 
-            showMicLoading(300);
-            try {
-                await saveContentFieldsToServer(reportId, updatedData);
-                sessionStorage.removeItem('reportListCache');
-                isEditingMode = false;
-                showMessage("儲存成功!");
-                setTimeout(() => { location.reload(); }, 1000);
-            } catch (err) {
-                showMessage("儲存失敗");
-            }
-        };
+    } catch (err) {
+        console.error("儲存失敗:", err);
+        showMessage("儲存失敗，請檢查網路連接");
+    }
+};
     };
 }
 
