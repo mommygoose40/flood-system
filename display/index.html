@@ -1088,33 +1088,23 @@ const checkInterval = setInterval(() => {
     }
   }
 
-  // 3. 核心隱藏邏輯修正：判斷狀態與內容
-  const isAbnormal = (data['狀態'] === '異常');
-  const hasAbnormalType = data['異常分類'] && data['異常分類'].trim() !== "";
-  const hasTranscription = data['語音轉文字'] && data['語音轉文字'].trim() !== "";
+ // 3. 核心隱藏邏輯修正：判斷狀態與內容
+const isAbnormal = (data['狀態'] === '異常');
+const hasAbnormalType = data['異常分類'] && data['異常分類'].trim() !== "";
+const hasTranscription = data['語音轉文字'] && data['語音轉文字'].trim() !== "" && data['語音轉文字'] !== "無";
 
-  // 異常分類顯示判斷
-  const abnormalRow = document.getElementById('abnormal-type');
-  if (abnormalRow) {
-    // 只有「異常」且「有分類內容」時才顯示，否則隱藏
-    if (isAbnormal && hasAbnormalType) {
-      abnormalRow.style.display = 'block';
-      // 注意：這裡不要用 innerHTML = ... 會刷掉裡面原本的 span 或結構
-      // 建議 HTML 結構保持：異常分類：<span id="abnormal-type-val"></span>
-    } else {
-      abnormalRow.style.display = 'none';
-    }
-  }
+// 異常分類：維持「異常」且「有內容」才顯示
+const abnormalRow = document.getElementById('abnormal-type');
+if (abnormalRow) {
+  abnormalRow.style.display = (isAbnormal && hasAbnormalType) ? 'block' : 'none';
+}
 
-  // 語音轉文字顯示判斷 (小結部分)
-  const transSummary = document.getElementById('transcription-summary');
-  if (transSummary) {
-    if (isAbnormal && hasTranscription) {
-      transSummary.style.display = 'block';
-    } else {
-      transSummary.style.display = 'none';
-    }
-  }
+// 語音轉文字：只要「有內容」就顯示 (簡化重點在此 ❗)
+const transSummary = document.getElementById('transcription-summary');
+if (transSummary) {
+  // 不再判斷 isAbnormal，只判斷 hasTranscription
+  transSummary.style.display = hasTranscription ? 'block' : 'none';
+}
 
   // 4. 填充不可編輯的資訊 (使用 textContent 較安全)
   const reporterEl = document.getElementById('reporter');
@@ -2464,11 +2454,15 @@ document.getElementById('save-btn').onclick = async () => {
         const abnormalRow = document.getElementById('abnormal-type');
         if (abnormalRow) abnormalRow.style.display = (selectedStatus === '異常') ? 'block' : 'none';
 
-        const transSummary = document.getElementById('transcription-summary');
-        if (transSummary) {
-            const hasTranscription = document.getElementById('transcription-text').textContent.trim() !== "";
-            transSummary.style.display = (selectedStatus === '異常' && hasTranscription) ? 'block' : 'none';
-        }
+        // 儲存成功後更新 UI 的部分
+const transSummary = document.getElementById('transcription-summary');
+if (transSummary) {
+    const hasText = document.getElementById('transcription-text').textContent.trim() !== "" && 
+                    document.getElementById('transcription-text').textContent.trim() !== "無";
+    
+    // 同樣只需判斷有無內容
+    transSummary.style.display = hasText ? 'block' : 'none';
+}
 
         // 4. 重設狀態
         remarksEl.setAttribute('contenteditable', 'false');
