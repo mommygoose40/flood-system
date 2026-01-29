@@ -832,7 +832,7 @@ span#remarks-text.editing:focus {
         <p id="team">所屬大隊：載入中...</p>
 
       <div id="edit-actions">
-        <button id="edit-btn" class="save-btn">修改</button>
+        <button id="edit-btn" class="save-btn" style="displya:none;">修改</button>
     </div>
     </div>
 
@@ -1123,13 +1123,11 @@ if (transSummary) {
 
   if (editBtn) {
     if (isFromForm) {
-      // 來自 form，顯示按鈕並綁定編輯功能
+      // 只有符合 source=form，才讓按鈕「現身」
       editBtn.style.display = 'inline-block';
       setupGeneralEditing(currentReportId); 
-    } else {
-      // 非來自 form，隱藏按鈕
-      editBtn.style.display = 'none';
-    }
+    } 
+    // 注意：這裡不需要寫 else { display: none }，因為 CSS 已經預設隱藏了
   }
 
   // 5. 語音區塊顯示控制 (底部區塊)
