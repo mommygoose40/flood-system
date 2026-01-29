@@ -160,7 +160,7 @@ window.firebaseStorage = { storage, ref, list, listAll, getDownloadURL };
 }
 
 /* === 按鈕區 === */
-#edit-actions, #transcription-edit-btn {
+#edit-actions, #transcription-edit-actions {
   display: flex;
   justify-content: center;
   gap: 14px;
@@ -776,6 +776,33 @@ span#remarks-text.editing {
 span#remarks-text.editing:focus {
     background-color: #ffffff !important;
     box-shadow: 0 0 0 3px rgba(11, 94, 215, 0.2) !important;
+}
+
+/*異常分類下拉選單*/
+/* 讓下拉選單與輸入框繼承父層文字樣式 */
+.edit-select, .edit-input-inline {
+    font-size: inherit !important;   /* 繼承原本的 18px 或 20px */
+    font-family: inherit !important;
+    font-weight: inherit !important;
+    color: #0b5ed7 !important;       /* 編輯中顏色改為藍色提示 */
+    background: #f8fbff !important;
+    border: none !important;
+    border-bottom: 1px solid #0b5ed7 !important; /* 只留底線 */
+    padding: 0 4px !important;
+    outline: none !important;
+    vertical-align: baseline !important;
+}
+
+.edit-select {
+    cursor: pointer;
+    appearance: none; /* 移除瀏覽器預設箭頭 (可選) */
+    -webkit-appearance: none;
+}
+
+/* 針對「其他」文字框的寬度自動調整 */
+.edit-input-inline {
+    width: 120px !important;
+    text-align: left;
 }
 </style>
 </head>
@@ -2345,6 +2372,8 @@ function setupGeneralEditing(reportId) {
 
         // 6. 轉換 UI - 異常分類 (改為下拉選單 + 隱藏文字框)
         if (abnormalValEl) {
+          // 繼承原本的字體大小
+    abnormalValEl.style.fontSize = "18px";
         abnormalValEl.innerHTML = `
             <select id="edit-abnormal-select" class="edit-select">
                 <option value="">請選擇...</option>
