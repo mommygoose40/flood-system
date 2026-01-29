@@ -2279,45 +2279,45 @@ function setupGeneralEditing(reportId) {
     const editBtn = document.getElementById('edit-btn');
     if (!editBtn) return;
 
-    // 重新綁定時先清除舊事件，避免重複觸發
     editBtn.onclick = null; 
 
     editBtn.onclick = (e) => {
-    e.preventDefault();
-    isEditingMode = true; 
+        e.preventDefault();
+        isEditingMode = true; 
 
-    // --- 修正點：在這裡先儲存原始資料 ---
-    const typeEl = document.getElementById('report-type-text');
-    const statusEl = document.getElementById('report-status-text');
-    const remarksEl = document.getElementById('remarks-text');
-    const abnormalValEl = document.getElementById('abnormal-type');
+        // 1. 取得現有值並存入 originalData
+        const typeEl = document.getElementById('report-type-text');
+        const statusEl = document.getElementById('report-status-text');
+        const remarksEl = document.getElementById('remarks-text');
+        const abnormalValEl = document.getElementById('abnormal-type'); 
 
-    const originalData = {
-        type: typeEl.textContent.trim(),
-        status: statusEl.textContent.trim(),
-        remarks: remarksEl.textContent.trim(),
-        abnormal: abnormalValEl ? abnormalValEl.textContent.trim() : ""
-    };
-    // ----------------------------------
+        const originalData = {
+            type: typeEl.textContent.trim(),
+            status: statusEl.textContent.trim(),
+            remarks: remarksEl.textContent.trim(),
+            abnormal: abnormalValEl ? abnormalValEl.textContent.trim() : ""
+        };
 
-    const originalRemarks = originalData.remarks === "無" ? "" : originalData.remarks;
+        const originalRemarks = originalData.remarks === "無" ? "" : originalData.remarks;
 
-        // 2. 轉換為編輯 UI (這裡只改 innerHTML，不觸發 fetch)
+        // 2. 轉換為編輯 UI 
+        // ❗ 修正：將 currentType 改為 originalData.type
         typeEl.innerHTML = ['平時', '災中', '其他'].map(opt => `
             <label class="edit-chip">
-                <input type="radio" name="edit-type" value="${opt}" ${currentType === opt ? 'checked' : ''}>
+                <input type="radio" name="edit-type" value="${opt}" ${originalData.type === opt ? 'checked' : ''}>
                 <span>${opt}</span>
             </label>`).join('');
 
+        // ❗ 修正：將 currentStatus 改為 originalData.status
         statusEl.innerHTML = ['正常', '異常'].map(opt => `
             <label class="edit-chip">
-                <input type="radio" name="edit-status" value="${opt}" ${currentStatus === opt ? 'checked' : ''}>
+                <input type="radio" name="edit-status" value="${opt}" ${originalData.status === opt ? 'checked' : ''}>
                 <span>${opt}</span>
             </label>`).join('');
 
         remarksEl.textContent = originalRemarks;
         remarksEl.setAttribute('contenteditable', 'true');
-        remarksEl.classList.add('editing'); // 觸發藍色邊框
+        remarksEl.classList.add('editing'); 
         remarksEl.focus();
 
         // 3. 切換按鈕
@@ -2327,30 +2327,23 @@ function setupGeneralEditing(reportId) {
             <button id="save-btn" class="save-btn">儲存</button>
         `;
 
-        // 取消按鈕邏輯
-    document.getElementById('cancel-btn').onclick = () => {
-        // 1. 利用閉包(Closure)特性，這裡可以讀取到上面定義的 originalData
-        document.getElementById('report-type-text').textContent = originalData.type;
-        document.getElementById('report-status-text').textContent = originalData.status;
-        document.getElementById('remarks-text').textContent = originalData.remarks;
-        
-        const abnormalValEl = document.getElementById('abnormal-type');
-        if (abnormalValEl) abnormalValEl.textContent = originalData.abnormal;
+        // --- 取消邏輯 ---
+        document.getElementById('cancel-btn').onclick = () => {
+            document.getElementById('report-type-text').textContent = originalData.type;
+            document.getElementById('report-status-text').textContent = originalData.status;
+            document.getElementById('remarks-text').textContent = originalData.remarks;
+            
+            const targetAbnormal = document.getElementById('abnormal-type');
+            if (targetAbnormal) targetAbnormal.textContent = originalData.abnormal;
 
-        // 2. 恢復樣式
-        remarksEl.setAttribute('contenteditable', 'false');
-        remarksEl.classList.remove('editing');
+            remarksEl.setAttribute('contenteditable', 'false');
+            remarksEl.classList.remove('editing');
+            isEditingMode = false;
+            restoreEditButton(reportId); 
+            console.log("✅ 已取消編輯，資料已還原");
+        };
 
-        // 3. 解除編輯鎖定
-        isEditingMode = false;
-
-        // 4. 還原按鈕
-        restoreEditButton(reportId); 
-        
-        console.log("✅ 已取消編輯，資料已還原");
-    };
-
-        // 儲存：成功後才解除鎖定
+        // --- 儲存邏輯 ---
         document.getElementById('save-btn').onclick = async () => {
             const updatedData = {
                 reportType: document.querySelector('input[name="edit-type"]:checked').value,
@@ -2360,23 +2353,16 @@ function setupGeneralEditing(reportId) {
 
             showMicLoading(300);
             try {
-    await saveContentFieldsToServer(reportId, updatedData);
-    
-    // ❗ 關鍵修正：清除快取，防止 reload 後讀到舊資料
-    sessionStorage.removeItem('reportListCache'); 
-    localStorage.removeItem('tempReportData'); 
-    
-    isEditingMode = false;
-    showMessage("儲存成功!");
+                await saveContentFieldsToServer(reportId, updatedData);
+                sessionStorage.removeItem('reportListCache'); 
+                localStorage.removeItem('tempReportData'); 
+                isEditingMode = false;
+                showMessage("儲存成功!");
 
-    // 給 GAS 一點點寫入時間後再刷新
-    setTimeout(() => {
-      location.reload(); 
-    }, 1000);
-
-  } catch (err) {
-    showMessage("儲存失敗");
-  }
+                setTimeout(() => { location.reload(); }, 1000);
+            } catch (err) {
+                showMessage("儲存失敗");
+            }
         };
     };
 }
