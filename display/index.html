@@ -784,7 +784,7 @@ span#remarks-text.editing:focus {
     font-size: inherit !important;   /* 繼承原本的 18px 或 20px */
     font-family: inherit !important;
     font-weight: inherit !important;
-    color: #0b5ed7 !important;       /* 編輯中顏色改為藍色提示 */
+    color: inherit !important;       /* 編輯中顏色改為藍色提示 */
     background: #f8fbff !important;
     border: none !important;
     border-bottom: 1px solid #0b5ed7 !important; /* 只留底線 */
@@ -2347,7 +2347,7 @@ function setupGeneralEditing(reportId) {
     let initialSelectValue = "";
     let otherInputValue = "";
 
-    const abnormalOptions = ["設施損壞/積淹水", "水情異常", "水源環境汙染", "山崩、地層下陷", "其他"];
+    const abnormalOptions = ["設施損壞", "積淹水、水情異常", "水源環境汙染", "山崩、地層下陷", "其他"];
 
     if (rawAbnormal.startsWith("其他(")) {
         initialSelectValue = "其他";
@@ -2373,7 +2373,7 @@ function setupGeneralEditing(reportId) {
         // 6. 轉換 UI - 異常分類 (改為下拉選單 + 隱藏文字框)
         if (abnormalValEl) {
           // 繼承原本的字體大小
-    abnormalValEl.style.fontSize = "18px";
+    abnormalValEl.style.fontSize = "20px";
         abnormalValEl.innerHTML = `
             <select id="edit-abnormal-select" class="edit-select">
                 <option value="">請選擇...</option>
