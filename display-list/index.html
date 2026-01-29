@@ -1443,7 +1443,7 @@ body {
 
 /* 日期框彈性寬度 */
 .dateInput {
-  width: 145px; /* 根據你的需求調整數值，讓兩行等寬 */
+  width: 150px; /* 根據你的需求調整數值，讓兩行等寬 */
   flex-shrink: 0; /* 禁止被壓縮 */
 }
 
@@ -1564,23 +1564,22 @@ body {
   display: none !important;
 }
 
-    /* 搜尋志工姓名 */
 .fakeInputStyle {
+  /* 關鍵：設定與按鈕相同的高度 */
+  height: 38px;             /* 20px(字體) + 8px(上下padding) + 2px(邊框) 大約是 38-40px */
+  
   font-size: 20px;
   padding: 4px 12px;
   border: 1px solid #888;
   border-radius: 4px;
   background: #fff;
   color: #333;
-  
-  /* 對齊 .fakeSelectBtn 的寬度與行為 */
-  min-width: 110px;
-  width: auto; /* 或視情況給固定寬度，如 150px */
-  box-sizing: border-box;
-  
-  /* 移除預設 input 藍框 */
+  box-sizing: border-box;   /* ❗ 非常重要：確保 padding 不會撐大寬高 */
+  width: 145px;
   outline: none;
-  vertical-align: middle;
+  
+  /* 修正對齊位移 */
+  vertical-align: middle; 
 }
 
 /* 讓 input 跟按鈕一樣在點擊時有回饋感（可選） */
