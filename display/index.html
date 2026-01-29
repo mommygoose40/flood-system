@@ -834,7 +834,7 @@ span#remarks-text.editing:focus {
         <p id="team">所屬大隊：載入中...</p>
 
       <div id="edit-actions">
-        <button id="edit-btn" class="save-btn" style="displya:none;">修改</button>
+        <button id="edit-btn" class="save-btn">修改</button>
     </div>
     </div>
 
@@ -2523,9 +2523,15 @@ async function saveContentFieldsToServer(reportId, data) {
 function restoreEditButton(reportId) {
     const actionArea = document.getElementById('edit-actions');
     if (actionArea) {
-        // ❗ 同樣確保變回修改按鈕時也是 flex
+        // 確保外層維持 flex 佈局
         actionArea.style.setProperty('display', 'flex', 'important');
-        actionArea.innerHTML = `<button id="edit-btn" class="edit-btn">修改</button>`;
+
+        // ❗ 關鍵：class 必須是 "save-btn"，才會套用你原本漂亮的樣式
+        actionArea.innerHTML = `
+            <button id="edit-btn" class="save-btn">修改</button>
+        `;
+
+        // 重新綁定「點擊修改」的事件邏輯
         setupGeneralEditing(reportId);
     }
 }
