@@ -161,8 +161,10 @@ window.firebaseStorage = { storage, ref, list, listAll, getDownloadURL };
 
 /* === 按鈕區 === */
 #edit-actions, #transcription-edit-actions {
-  display: none;
+  display: none;      /* 預設隱藏 */
+  width: 100%;        /* ❗ 必須有寬度，置中才有效 */
   justify-content: center;
+  align-items: center;
   gap: 14px;
   margin-top: 18px;
   transition: opacity 0.25s ease;
@@ -1078,15 +1080,11 @@ const checkInterval = setInterval(() => {
 
   // 2. 權限判斷：處理「整個容器」的顯示
   if (actionArea) {
-    if (isFromForm) {
-      // ✅ 顯示外層容器
-      actionArea.style.setProperty('display', 'block', 'important');
-      
-      // ✅ 確保內部的修改按鈕也是顯示的（預防萬一）
-      if (editBtn) editBtn.style.display = 'inline-block';
-      
-      // ✅ 初始化編輯功能綁定
-      setupGeneralEditing(currentReportId); 
+    // 在 handleResponse 裡面
+if (isFromForm) {
+    // ✅ 改用 flex 而不是 block，置中才會生效
+    actionArea.style.setProperty('display', 'flex', 'important');
+    setupGeneralEditing(currentReportId);
       console.log("✅ 來源為 form，已開啟編輯權限區塊");
     } else {
       // ❌ 確保完全隱藏
@@ -2523,9 +2521,13 @@ async function saveContentFieldsToServer(reportId, data) {
 }
 
 function restoreEditButton(reportId) {
-  const actionArea = document.getElementById('edit-actions');
-  actionArea.innerHTML = `<button id="edit-btn" class="save-btn">修改</button>`;
-  setupGeneralEditing(reportId);
+    const actionArea = document.getElementById('edit-actions');
+    if (actionArea) {
+        // ❗ 同樣確保變回修改按鈕時也是 flex
+        actionArea.style.setProperty('display', 'flex', 'important');
+        actionArea.innerHTML = `<button id="edit-btn" class="edit-btn">修改</button>`;
+        setupGeneralEditing(reportId);
+    }
 }
 
   </script>
