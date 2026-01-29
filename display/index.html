@@ -1070,17 +1070,24 @@ const checkInterval = setInterval(() => {
   console.log('📥 JSONP 取得:', data);
   if (!data || data.error) return showError('查無此報告資料');
 
-  // --- 關鍵：先判斷 URL 來源 ---
-  const urlParams = new URLSearchParams(window.location.search);
-  const sourceParam = urlParams.get('source'); 
-  const editBtn = document.getElementById('edit-btn');
+  // --- 在 handleResponse 裡面處理修改按鈕 ---
+const urlParams = new URLSearchParams(window.location.search);
+const isFromForm = urlParams.get('source') === 'form';
+const editBtn = document.getElementById('edit-btn');
 
-  console.log("Source from URL:", sourceParam); // 除錯用：看有沒有抓到 "form"
-
-  if (editBtn && sourceParam === 'form') {
-    editBtn.style.display = 'inline-block'; // 條件符合才打開
-    setupGeneralEditing(currentReportId); 
-  }
+if (editBtn) {
+    if (isFromForm) {
+        // ✅ 只有這裡會強行把按鈕變出來
+        // 使用 setProperty 可以確保覆蓋掉 CSS 裡的 display: none !important
+        editBtn.style.setProperty('display', 'inline-block', 'important');
+        setupGeneralEditing(currentReportId); 
+        console.log("✅ 來源正確，已顯示修改按鈕");
+    } else {
+        // ❌ 非 form 來源，確保它絕對隱藏
+        editBtn.style.setProperty('display', 'none', 'important');
+        console.log("🚫 來源不符，按鈕維持隱藏");
+    }
+}
 
   // 1. 定義要填充的編輯欄位
   const editables = {
