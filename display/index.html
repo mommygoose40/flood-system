@@ -2423,20 +2423,18 @@ function setupGeneralEditing(reportId) {
             restoreEditButton(reportId);
         };
 
-       // 儲存：成功後直接更新 UI，不 reload
+// 儲存邏輯修正
 document.getElementById('save-btn').onclick = async () => {
-    // 1. 取得編輯後的數值
+    // 1. 取得數值
     const selectedType = document.querySelector('input[name="edit-type"]:checked').value;
     const selectedStatus = document.querySelector('input[name="edit-status"]:checked').value;
     const remarksValue = remarksEl.textContent.trim();
-
-    // 處理異常分類：組合 "其他(內容)" 格式
     const selectVal = document.getElementById('edit-abnormal-select').value;
     const otherText = document.getElementById('edit-abnormal-other') ? document.getElementById('edit-abnormal-other').value.trim() : "";
-    let finalAbnormal = "";
-    if (selectedStatus === '異常') {
-        finalAbnormal = (selectVal === '編輯其他' || selectVal === '其他') ? `其他(${otherText})` : selectVal;
-    }
+    
+    let finalAbnormal = (selectedStatus === '異常') 
+        ? (selectVal === '其他' ? `其他(${otherText})` : selectVal) 
+        : "";
 
     const updatedData = {
         reportType: selectedType,
@@ -2445,47 +2443,49 @@ document.getElementById('save-btn').onclick = async () => {
         remarks: remarksValue
     };
 
-    showMicLoading(300); // 顯示小動畫提示儲存中
+    // 顯示 Loading (注意：如果 showMicLoading 沒自動關閉，這就是卡住的主因)
+    showMicLoading(); 
 
     try {
-        // 2. 傳送到伺服器
+        // 2. 執行傳送
         await saveContentFieldsToServer(reportId, updatedData);
         
-        // 3. 🔒 關鍵：儲存成功後，直接更新前端 DOM，不 reload
-        
-        // 更新通報類型與狀態文字
+        // 3. 更新 UI
         document.getElementById('report-type-text').textContent = selectedType;
         document.getElementById('report-status-text').textContent = selectedStatus;
-        document.getElementById('remarks-text').textContent = remarksValue === "" ? "無" : remarksValue;
+        document.getElementById('remarks-text').textContent = remarksValue || "無";
         
-        // 更新異常分類與顯示邏輯
-        const abnormalRow = document.getElementById('abnormal-type');
         const abnormalValEl = document.getElementById('abnormal-type-val');
-        if (abnormalValEl) abnormalValEl.textContent = finalAbnormal || "無";
+        if (abnormalValEl) {
+            abnormalValEl.style.fontSize = ""; // 恢復原始大小，移除編輯時的 20px
+            abnormalValEl.textContent = (selectedStatus === '異常' && finalAbnormal) ? finalAbnormal : "無";
+        }
+        
+        const abnormalRow = document.getElementById('abnormal-type');
         if (abnormalRow) abnormalRow.style.display = (selectedStatus === '異常') ? 'block' : 'none';
 
-        // 處理語音小結的聯動顯示 (若狀態改為正常則隱藏小結)
         const transSummary = document.getElementById('transcription-summary');
         if (transSummary) {
             const hasTranscription = document.getElementById('transcription-text').textContent.trim() !== "";
             transSummary.style.display = (selectedStatus === '異常' && hasTranscription) ? 'block' : 'none';
         }
 
-        // 4. 恢復介面狀態
+        // 4. 重設狀態
         remarksEl.setAttribute('contenteditable', 'false');
         remarksEl.classList.remove('editing');
         isEditingMode = false;
         
-        // 5. 換回「修改」按鈕
+        // 5. 恢復按鈕 (這會重新執行 setupGeneralEditing 綁定點擊事件)
         restoreEditButton(reportId); 
         
-        // 清除緩存
         sessionStorage.removeItem('reportListCache');
         showMessage("儲存成功!");
 
     } catch (err) {
         console.error("儲存失敗:", err);
-        showMessage("儲存失敗，請檢查網路連接");
+        showMessage("儲存失敗，請檢查網路");
+    } finally {
+        hidemicloading();
     }
 };
     };
