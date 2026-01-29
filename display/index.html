@@ -1070,6 +1070,18 @@ const checkInterval = setInterval(() => {
   console.log('📥 JSONP 取得:', data);
   if (!data || data.error) return showError('查無此報告資料');
 
+  // --- 關鍵：先判斷 URL 來源 ---
+  const urlParams = new URLSearchParams(window.location.search);
+  const sourceParam = urlParams.get('source'); 
+  const editBtn = document.getElementById('edit-btn');
+
+  console.log("Source from URL:", sourceParam); // 除錯用：看有沒有抓到 "form"
+
+  if (editBtn && sourceParam === 'form') {
+    editBtn.style.display = 'inline-block'; // 條件符合才打開
+    setupGeneralEditing(currentReportId); 
+  }
+
   // 1. 定義要填充的編輯欄位
   const editables = {
     'report-type-text': data['通報類型'],
@@ -1115,20 +1127,6 @@ if (transSummary) {
   
   const teamEl = document.getElementById('team');
   if (teamEl) teamEl.textContent = `所屬大隊：${data['所屬大隊'] || '無'}`;
-
-  // --- 3. 來源權限判斷：處理「修改」按鈕 ---
-  const urlParams = new URLSearchParams(window.location.search);
-  const isFromForm = urlParams.get('source') === 'form';
-  const editBtn = document.getElementById('edit-btn');
-
-  if (editBtn) {
-    if (isFromForm) {
-      // 只有符合 source=form，才讓按鈕「現身」
-      editBtn.style.display = 'inline-block';
-      setupGeneralEditing(currentReportId); 
-    } 
-    // 注意：這裡不需要寫 else { display: none }，因為 CSS 已經預設隱藏了
-  }
 
   // 5. 語音區塊顯示控制 (底部區塊)
   const transcriptionSection = document.getElementById('transcription-section');
