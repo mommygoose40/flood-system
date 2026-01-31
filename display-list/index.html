@@ -2909,14 +2909,29 @@ filteredData.forEach((r, index) => {
     const note = (r.說明 || "").trim();
     const voice = (r.語音轉文字 || "").trim();
     const combinedNote = (note && voice) ? `${note} / ${voice}` : (note || voice);
-    const reporterDisplay = (r.回報者 || "").trim() + (r.同行者 ? `,${r.同行者.trim()}` : "");
+    // 在 exportReport 函式的迴圈內找到這段
+const reporterDisplay = (r.回報者 || "").trim() + (r.同行者 ? `,${r.同行者.trim()}` : "");
 
-    tableRows += `
-        <tr>
-            <td style="text-align:center;">${index + 1}</td> <td style="text-align:center; white-space:nowrap;">${r.日期 ? normalizeDate(r.日期) : ''}<br/>${hh}:${mm}</td> <td style="text-align:center;">${r.通報類型 || ''}</td> <td style="text-align:center; color: ${r.狀態 === '異常' ? 'red' : 'black'}; font-weight: ${r.狀態 === '異常' ? 'bold' : 'normal'}">${r.狀態 || ''}</td> <td style="text-align:left;">${r.異常分類 || ''}</td>
-            <td style="text-align:center;"><a href="${r.詳細紀錄}" target="_blank" style="color:#0b5ed7; text-decoration:underline;">連結</a></td> <td style="text-align:left;">${combinedNote}</td>
-            <td style="text-align:left;">${reporterDisplay}</td>
-            <td style="text-align:center;">${r.所屬大隊 || ''}</td> </tr>`;
+// 🚩 修改：將 <td> 加上 data- 屬性，保留原始欄位內容
+tableRows += `
+    <tr>
+        <td style="text-align:center;">${index + 1}</td> 
+        <td style="text-align:center; white-space:nowrap;">${r.日期 ? normalizeDate(r.日期) : ''}<br/>${hh}:${mm}</td> 
+        <td style="text-align:center;">${r.通報類型 || ''}</td> 
+        <td style="text-align:center; color: ${r.狀態 === '異常' ? 'red' : 'black'}; font-weight: ${r.狀態 === '異常' ? 'bold' : 'normal'}">${r.狀態 || ''}</td> 
+        <td style="text-align:left;">${r.異常分類 || ''}</td>
+        <td style="text-align:center;"><a href="${r.詳細紀錄}" target="_blank" style="color:#0b5ed7; text-decoration:underline;">連結</a></td> 
+        <td style="text-align:left;">${combinedNote}</td>
+        
+        <td style="text-align:left;" 
+            data-name="${(r.回報者 || "").trim()}" 
+            data-rid="${(r.回報者ID || "").trim()}" 
+            data-comp="${(r.同行者 || "").trim()}">
+            ${reporterDisplay}
+        </td>
+        
+        <td style="text-align:center;">${r.所屬大隊 || ''}</td> 
+    </tr>`;
 });
 
 const reportHtml = `
@@ -2929,7 +2944,7 @@ const reportHtml = `
                     <button onclick="closeReportLayer()" style="padding:10px 20px; background:#dc3545; color:white; border:none; border-radius:6px; cursor:pointer; font-weight:bold;">✕ 關閉視窗</button>
                 </div>
             </div>
-            <h2 style="text-align:center; margin:20px 0; font-size:28px;">巡視紀錄明細報表</h2>
+            <h2 style="text-align:center; margin:20px 0; font-size:28px;">巡視紀錄報表</h2>
             <table id="targetTable" style="width:100%; border-collapse:collapse; font-size:14px;">
                 <thead>
                     <tr style="background:#f2f2f2;">${thHtml}</tr>
@@ -3001,7 +3016,7 @@ function renderDesktopReportOverlay(data, title, mode) {
                     <button onclick="closeReportLayer()" style="padding: 10px 20px; background: #dc3545; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: bold;">✕ 關閉視窗</button>
                 </div>
             </div>
-            <h2 style="text-align:center; margin: 20px 0;">巡視紀錄明細報表</h2>
+            <h2 style="text-align:center; margin: 20px 0;">巡視紀錄報表</h2>
             <table id="targetTable" style="width:100%; border-collapse:collapse; font-size:14px;">
                 <thead>
                     <tr style="background:#f2f2f2; position: sticky; top: 45px; z-index: 15;">
@@ -3766,7 +3781,7 @@ function renderMobileReportOverlay(filteredData) {
             </div>
             
             <div id="reportContent" style="flex: 1; padding: 10px; box-sizing: border-box; overflow-y: auto;">
-                <h2 style="text-align:center; margin-bottom:5px; font-size: 22px; color: #333;">巡視紀錄明細報表</h2>
+                <h2 style="text-align:center; margin-bottom:5px; font-size: 22px; color: #333;">巡視紀錄報表</h2>
                 
                 <div style="margin-bottom: 10px; color: #666666; font-size: 13px; text-align: center; font-weight: bold;">
                     ※ 左右滑動以查看完整內容
