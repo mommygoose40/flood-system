@@ -3583,46 +3583,60 @@ if (isAllMonths) {
   }
 }
   
-  function downloadYearlySummaryExcel(summaryData, fileName) {
+  async function downloadYearlySummaryExcel(summaryData, fileName) {
+    if (!Array.isArray(summaryData) || summaryData.length === 0) {
+        alert("尚無符合資料可供下載!");
+        return;
+    }
 
-  if (!Array.isArray(summaryData) || summaryData.length === 0) {
-    showMessage("尚無符合資料!");
-    return;
-  }
+    // 🚩 關鍵修正：確保 XLSX 函式庫已載入
+    if (typeof XLSX === 'undefined') {
+        showMicLoading(0); // 顯示載入中
+        const script = document.createElement('script');
+        script.src = "https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js";
+        script.onload = () => {
+            hideMicLoading();
+            executeYearlyDownload(summaryData, fileName);
+        };
+        script.onerror = () => {
+            hideMicLoading();
+            alert("Excel 匯出元件載入失敗，請檢查網路連線");
+        };
+        document.head.appendChild(script);
+    } else {
+        executeYearlyDownload(summaryData, fileName);
+    }
 
-  // 1️⃣ 取得欄位順序（來自 GAS）
-  const headers = Object.keys(summaryData[0]);
-  // 例如：["大隊","1月","2月","3月","總件數"]
+    // 實際執行下載的私有函式
+    function executeYearlyDownload(data, name) {
+        try {
+            const headers = Object.keys(data[0]);
+            const excelData = data.map(row => {
+                const newRow = { ...row };
+                // 格式化大隊名稱
+                if (newRow["大隊"] && newRow["大隊"] !== "未分隊") {
+                    newRow["大隊"] = `第 ${newRow["大隊"]} 大隊`;
+                }
+                return newRow;
+            });
 
-  // 2️⃣ 轉換資料：只動「大隊顯示格式」
-  const excelData = summaryData.map(row => {
-    const newRow = { ...row };
+            const ws = XLSX.utils.json_to_sheet(excelData, { header: headers });
+            
+            // 設定欄寬
+            ws['!cols'] = headers.map(h => (h === "大隊" ? { wch: 14 } : { wch: 10 }));
 
-    if (newRow["大隊"] !== "未分隊") {
-  newRow["大隊"] = `第 ${newRow["大隊"]} 大隊`;
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, "年度累計");
+            XLSX.writeFile(wb, `${name}.xlsx`);
+            
+            console.log("✅ 年度報表下載指令已發送");
+        } catch (err) {
+            console.error("下載失敗:", err);
+            alert("產生檔案時出錯: " + err.message);
+        }
+    }
 }
-
-    return newRow;
-  });
-
-  // 3️⃣ 產生工作表
-  const ws = XLSX.utils.json_to_sheet(excelData, {
-    header: headers
-  });
-
-  // 4️⃣ 欄寬設定
-  ws['!cols'] = headers.map(h => {
-    if (h === "大隊") return { wch: 14 };
-    if (h === "總件數") return { wch: 12 };
-    return { wch: 8 };
-  });
-
-  const wb = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(wb, ws, "年度累計");
-
-  XLSX.writeFile(wb, `${fileName}.xlsx`);
-}
-
+  
 /**
  * 電腦版專用：將 JSON 直接轉為 Excel 下載
  * 解決：時間亂掉、移除詳細紀錄、說明語音合併
