@@ -4407,54 +4407,55 @@ function hideScreenLock() {
     }
 });
 
-// 1. 定義輔助函數
+  //限制日期選擇
+  document.addEventListener("DOMContentLoaded", () => {
+  const start = document.getElementById("dateStart");
+  const end = document.getElementById("dateEnd");
+
+  const today = new Date();
+  const day13 = new Date(today);
+  day13.setDate(today.getDate() - 13);
+
+  const maxStr = getLocalDateString(today);    // 今天
+  const minStr = getLocalDateString(day13);    // 13天前
+
+  // 設定基礎屬性（給有用的瀏覽器看）
+  [start, end].forEach(el => {
+    el.min = minStr;
+    el.max = maxStr;
+  });
+
+  // 強制檢查函式
+  const validateDate = (e) => {
+    const selectedDate = e.target.value;
+    
+    // 如果沒選日期就跳過
+    if (!selectedDate) return;
+
+    // 判斷是否超出範圍
+    if (selectedDate < minStr || selectedDate > maxStr) {
+      showMessage(`選擇無效！請選擇 ${minStr} 到 ${maxStr} 之間的日期。`);
+      e.target.value = ""; // 清除選擇
+    }
+  };
+
+  // 監聽變動事件
+  start.addEventListener("change", validateDate);
+  end.addEventListener("change", validateDate);
+
+  // 初始化預設值
+  const day2 = new Date();
+  day2.setDate(today.getDate() - 2);
+  start.value = getLocalDateString(day2);
+  end.value = maxStr;
+});
+
 function getLocalDateString(date) {
   const y = date.getFullYear();
   const m = String(date.getMonth() + 1).padStart(2, '0');
   const d = String(date.getDate()).padStart(2, '0');
   return `${y}-${m}-${d}`;
 }
-
-// 2. 限制日期選擇邏輯
-function initDateLimits() {
-  const start = document.getElementById("dateStart");
-  const end = document.getElementById("dateEnd");
-  if (!start || !end) return;
-
-  const today = new Date();
-  const day2 = new Date(); day2.setDate(today.getDate() - 2);
-  const day13 = new Date(); day13.setDate(today.getDate() - 13);
-
-  const maxStr = getLocalDateString(today);
-  const minStr = getLocalDateString(day13);
-
-  const applyLimit = (el, val) => {
-    // 1. 強制設定屬性
-    el.setAttribute('min', minStr);
-    el.setAttribute('max', maxStr);
-    el.value = val;
-
-    // 2. 針對 iOS 的物理重繪：先變 text 再變回 date
-    // 這會強迫 iOS 銷毀舊滾輪並根據新 min/max 建立新滾輪
-    const originalType = el.type;
-    el.type = 'text';
-    setTimeout(() => { el.type = originalType; }, 10);
-
-    // 3. 終極防線：如果用戶還是選了範圍外的，一離開 (blur) 就強制彈回
-    el.addEventListener('blur', function() {
-      if (this.value > maxStr) this.value = maxStr;
-      if (this.value < minStr) this.value = minStr;
-    });
-  };
-
-  applyLimit(start, getLocalDateString(day2));
-  applyLimit(end, maxStr);
-}
-
-// 確保在所有資源（包括 iOS 原生元件）準備好後再跑，並延遲 300ms 確保穩妥
-window.addEventListener('load', () => {
-  setTimeout(initDateLimits, 300);
-});
 
   function toLocalTimestamp(dateStr, timeStr, isEnd = false) {
   const [y, m, d] = dateStr.split('-').map(Number);
