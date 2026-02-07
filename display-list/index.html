@@ -4407,35 +4407,43 @@ function hideScreenLock() {
     }
 });
 
-  //選擇具體日期時間
-  document.addEventListener("DOMContentLoaded", () => {
-  const start = document.getElementById("dateStart");
-  const end   = document.getElementById("dateEnd");
-
-  const today = new Date();
-
-  const day0 = new Date(today);           // 今天
-  const day2 = new Date(today); day2.setDate(today.getDate() - 2); // 前天
-
-  start.value = getLocalDateString(day2);
-  end.value   = getLocalDateString(day0);
-
-  // 限制最多 14 天
-  const day13 = new Date(today);
-  day13.setDate(today.getDate() - 13);
-
-  start.min = getLocalDateString(day13);
-  start.max = getLocalDateString(day0);
-  end.min   = getLocalDateString(day13);
-  end.max   = getLocalDateString(day0);
-});
-
-  function getLocalDateString(date) {
+// 1. 定義輔助函數
+function getLocalDateString(date) {
   const y = date.getFullYear();
   const m = String(date.getMonth() + 1).padStart(2, '0');
   const d = String(date.getDate()).padStart(2, '0');
   return `${y}-${m}-${d}`;
 }
+
+// 2. 限制日期選擇
+function initDateLimits() {
+  const start = document.getElementById("dateStart");
+  const end = document.getElementById("dateEnd");
+  if (!start || !end) return; // 防呆：確保元素存在
+
+  const today = new Date();
+  const day2 = new Date(today); day2.setDate(today.getDate() - 2);
+  const day13 = new Date(today); day13.setDate(today.getDate() - 13);
+
+  const maxStr = getLocalDateString(today);
+  const minStr = getLocalDateString(day13);
+
+  // 設定範圍屬性
+  [start, end].forEach(el => {
+    el.min = minStr;
+    el.max = maxStr;
+  });
+
+  // 設定初始顯示值
+  start.value = getLocalDateString(day2);
+  end.value = maxStr;
+}
+
+// 3. 在頁面載入時呼叫
+document.addEventListener("DOMContentLoaded", initDateLimits);
+
+// 針對 iOS 的保險做法：如果 DOMContentLoaded 沒抓到，window.load 再跑一次
+window.addEventListener("load", initDateLimits);
 
   function toLocalTimestamp(dateStr, timeStr, isEnd = false) {
   const [y, m, d] = dateStr.split('-').map(Number);
