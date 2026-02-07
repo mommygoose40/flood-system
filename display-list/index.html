@@ -4415,11 +4415,11 @@ function getLocalDateString(date) {
   return `${y}-${m}-${d}`;
 }
 
-// 2. 限制日期選擇
+// 2. 限制日期選擇邏輯
 function initDateLimits() {
   const start = document.getElementById("dateStart");
   const end = document.getElementById("dateEnd");
-  if (!start || !end) return; // 防呆：確保元素存在
+  if (!start || !end) return;
 
   const today = new Date();
   const day2 = new Date(today); day2.setDate(today.getDate() - 2);
@@ -4428,21 +4428,45 @@ function initDateLimits() {
   const maxStr = getLocalDateString(today);
   const minStr = getLocalDateString(day13);
 
-  // 設定範圍屬性
-  [start, end].forEach(el => {
+  const setupElement = (el, defaultValue) => {
+    // 關鍵：先移除屬性再重新設定，強迫 iOS 重新偵測
+    el.removeAttribute('min');
+    el.removeAttribute('max');
+    
     el.min = minStr;
     el.max = maxStr;
-  });
+    el.value = defaultValue;
 
-  // 設定初始顯示值
-  start.value = getLocalDateString(day2);
-  end.value = maxStr;
+    // 針對 iOS Safari 的暴力重刷：切換 type
+    // 這會強迫瀏覽器重新渲染該 Input 的 Shadow DOM 滾輪
+    const currentType = el.type;
+    el.type = 'text';
+    el.type = currentType;
+
+    // 增加一個監控：如果使用者真的選了範圍外的（iOS 滾輪有時會滑過頭），立刻強制跳回
+    el.addEventListener('change', function() {
+      if (this.value > maxStr) {
+        this.value = maxStr;
+        console.warn("超出最大日期限制，已重置");
+      } else if (this.value < minStr) {
+        this.value = minStr;
+        console.warn("超出最小日期限制，已重置");
+      }
+    });
+  };
+
+  setupElement(start, getLocalDateString(day2));
+  setupElement(end, maxStr);
 }
 
-// 3. 在頁面載入時呼叫
-document.addEventListener("DOMContentLoaded", initDateLimits);
+// 3. 執行初始化
+if (document.readyState === 'loading') {
+  document.addEventListener("DOMContentLoaded", initDateLimits);
+} else {
+  initDateLimits();
+}
 
-// 針對 iOS 的保險做法：如果 DOMContentLoaded 沒抓到，window.load 再跑一次
+// iOS 專用：保險執行
 window.addEventListener("load", initDateLimits);
 
   function toLocalTimestamp(dateStr, timeStr, isEnd = false) {
