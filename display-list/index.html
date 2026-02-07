@@ -1748,6 +1748,8 @@ body {
     <!-- 結束日期 -->
     <input type="date" id="dateEnd" class="dateInput">
 
+    <input type="date" id="testDate" min="2026-02-01" max="2026-02-07">
+
     <select id="timeEnd" style="display:none;">
       <option value="00:59">00:59</option>
       <option value="01:59">01:59</option>
@@ -4419,44 +4421,36 @@ function getLocalDateString(date) {
 function initDateLimits() {
   const start = document.getElementById("dateStart");
   const end = document.getElementById("dateEnd");
-  if (!start || !end) return;
 
   const today = new Date();
-  const day2 = new Date(today); day2.setDate(today.getDate() - 2);
-  const day13 = new Date(today); day13.setDate(today.getDate() - 13);
+  const minDate = new Date();
+  minDate.setDate(today.getDate() - 13);
 
   const maxStr = getLocalDateString(today);
-  const minStr = getLocalDateString(day13);
+  const minStr = getLocalDateString(minDate);
 
-  const setupElement = (el, defaultValue) => {
-    // 關鍵：先移除屬性再重新設定，強迫 iOS 重新偵測
-    el.removeAttribute('min');
-    el.removeAttribute('max');
-    
+  const validate = (el) => {
+    // 1. 先設好屬性 (給乖巧的瀏覽器看)
     el.min = minStr;
     el.max = maxStr;
-    el.value = defaultValue;
 
-    // 針對 iOS Safari 的暴力重刷：切換 type
-    // 這會強迫瀏覽器重新渲染該 Input 的 Shadow DOM 滾輪
-    const currentType = el.type;
-    el.type = 'text';
-    el.type = currentType;
+    // 2. 強制監控 (給不聽話的 iOS 看)
+    el.addEventListener('blur', function() { // blur 比 change 在 iOS 上更即時
+      const selected = this.value;
+      if (!selected) return;
 
-    // 增加一個監控：如果使用者真的選了範圍外的（iOS 滾輪有時會滑過頭），立刻強制跳回
-    el.addEventListener('change', function() {
-      if (this.value > maxStr) {
+      if (selected > maxStr) {
         this.value = maxStr;
-        console.warn("超出最大日期限制，已重置");
-      } else if (this.value < minStr) {
+        alert("日期最晚只能選今天");
+      } else if (selected < minStr) {
         this.value = minStr;
-        console.warn("超出最小日期限制，已重置");
+        alert("日期最早只能選 14 天內");
       }
     });
   };
 
-  setupElement(start, getLocalDateString(day2));
-  setupElement(end, maxStr);
+  validate(start);
+  validate(end);
 }
 
 // 3. 執行初始化
