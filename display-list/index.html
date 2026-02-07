@@ -1748,8 +1748,6 @@ body {
     <!-- 結束日期 -->
     <input type="date" id="dateEnd" class="dateInput">
 
-    <input type="date" id="testDate" min="2026-02-01" max="2026-02-07">
-
     <select id="timeEnd" style="display:none;">
       <option value="00:59">00:59</option>
       <option value="01:59">01:59</option>
@@ -4421,47 +4419,42 @@ function getLocalDateString(date) {
 function initDateLimits() {
   const start = document.getElementById("dateStart");
   const end = document.getElementById("dateEnd");
+  if (!start || !end) return;
 
   const today = new Date();
-  const minDate = new Date();
-  minDate.setDate(today.getDate() - 13);
+  const day2 = new Date(); day2.setDate(today.getDate() - 2);
+  const day13 = new Date(); day13.setDate(today.getDate() - 13);
 
   const maxStr = getLocalDateString(today);
-  const minStr = getLocalDateString(minDate);
+  const minStr = getLocalDateString(day13);
 
-  const validate = (el) => {
-    // 1. 先設好屬性 (給乖巧的瀏覽器看)
-    el.min = minStr;
-    el.max = maxStr;
+  const applyLimit = (el, val) => {
+    // 1. 強制設定屬性
+    el.setAttribute('min', minStr);
+    el.setAttribute('max', maxStr);
+    el.value = val;
 
-    // 2. 強制監控 (給不聽話的 iOS 看)
-    el.addEventListener('blur', function() { // blur 比 change 在 iOS 上更即時
-      const selected = this.value;
-      if (!selected) return;
+    // 2. 針對 iOS 的物理重繪：先變 text 再變回 date
+    // 這會強迫 iOS 銷毀舊滾輪並根據新 min/max 建立新滾輪
+    const originalType = el.type;
+    el.type = 'text';
+    setTimeout(() => { el.type = originalType; }, 10);
 
-      if (selected > maxStr) {
-        this.value = maxStr;
-        alert("日期最晚只能選今天");
-      } else if (selected < minStr) {
-        this.value = minStr;
-        alert("日期最早只能選 14 天內");
-      }
+    // 3. 終極防線：如果用戶還是選了範圍外的，一離開 (blur) 就強制彈回
+    el.addEventListener('blur', function() {
+      if (this.value > maxStr) this.value = maxStr;
+      if (this.value < minStr) this.value = minStr;
     });
   };
 
-  validate(start);
-  validate(end);
+  applyLimit(start, getLocalDateString(day2));
+  applyLimit(end, maxStr);
 }
 
-// 3. 執行初始化
-if (document.readyState === 'loading') {
-  document.addEventListener("DOMContentLoaded", initDateLimits);
-} else {
-  initDateLimits();
-}
-
-// iOS 專用：保險執行
-window.addEventListener("load", initDateLimits);
+// 確保在所有資源（包括 iOS 原生元件）準備好後再跑，並延遲 300ms 確保穩妥
+window.addEventListener('load', () => {
+  setTimeout(initDateLimits, 300);
+});
 
   function toLocalTimestamp(dateStr, timeStr, isEnd = false) {
   const [y, m, d] = dateStr.split('-').map(Number);
