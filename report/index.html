@@ -28,6 +28,10 @@
     // 將 Firebase 功能暴露給全局使用
     window.firebaseStorage = { getStorage, ref, uploadBytesResumable, getDownloadURL, storage };
   </script>
+  
+  <!--壓縮照片-->
+  <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/browser-image-compression@2.0.2/dist/browser-image-compression.js"></script>
+  
 <style>
 /* === 基本排版設定 === */
 body {
@@ -2456,25 +2460,40 @@ async function submitForm() {
 
   try {
 
-    /* === 上傳照片 === */
-    for (let i = 0; i < photos.length; i++) {
+    /* === 上傳照片 (優化版：平行壓縮與並行上傳) === */
+showUploadModal('照片壓縮與上傳中...');
 
-      const raw = photos[i];
-      const file = raw.file || raw.blob || raw;
+// 設定壓縮參數
+const compressionOptions = {
+  maxSizeMB: 0.5,          // 強制壓到 0.5MB 以下 (LINE 的壓縮級別)
+  maxWidthOrHeight: 1280,  // 最大寬高，這對通報來說非常清晰了
+  useWebWorker: true       // 使用 WebWorker 避免介面卡頓
+};
 
-      if (!file) {
-        throw new Error("照片資料錯誤（file undefined）");
-      }
-      
-      // 顯示照片上傳進度
-      const title = `照片上傳中 (${i + 1}/${photos.length})`;
-      showUploadModal(title); 
+try {
+  // 1. 使用 Promise.all 同時啟動所有照片的「壓縮 + 上傳」任務
+  const uploadPromises = photos.map(async (raw, i) => {
+    const file = raw.file || raw.blob || raw;
+    if (!file) throw new Error(`第 ${i + 1} 張照片資料錯誤`);
 
-      const comp = await compressImage(file);
-      const url = await uploadToFirebaseOnce(comp, `reports/${rid}/photo_${i}.jpg`);
+    // A. 壓縮圖片
+    const compressedFile = await imageCompression(file, compressionOptions);
+    
+    // B. 上傳至 Firebase
+    const url = await uploadToFirebaseOnce(compressedFile, `reports/${rid}/photo_${i}.jpg`);
+    
+    // 更新進度 (雖然是平行的，但可以簡單顯示已啟動)
+    console.log(`第 ${i + 1} 張照片已完成上傳`);
+    return url;
+  });
 
-      photoUrls.push(url);
-    }
+  // 2. 等待所有照片完成
+  const photoUrlsResult = await Promise.all(uploadPromises);
+  photoUrls.push(...photoUrlsResult);
+
+} catch (error) {
+  throw new Error("照片處理失敗: " + error.message);
+}
 
     /* === 上傳語音與轉文字 === */
     if (audioBlob) {
