@@ -1012,7 +1012,7 @@ function createDeleteButton(index) {
   const del = document.createElement("button");
   del.className = "delete-btn";
   del.textContent = "✔";
-  del.onclick = () => showConfirmDialog("確定要刪除這張照片？", () => removePhoto(index));
+  del.onclick = () => showConfirmDialog("確定要取消這張照片？", () => removePhoto(index));
   return del;
 }
 
