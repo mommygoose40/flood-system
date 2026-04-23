@@ -2460,18 +2460,26 @@ async function submitForm() {
 
   try {
 
-    /* === 上傳照片 (優化版：平行壓縮與並行上傳) === */
-showUploadModal('照片壓縮與上傳中...');
+    /* === 上傳照片 (優化版：並行上傳 + 即時進度顯示) === */
+let completedCount = 0;
+const totalPhotos = photos.length;
+
+// 更新 Modal 文字的輔助函式
+const updateProgress = () => {
+  completedCount++;
+  showUploadModal(`照片上傳中 (${completedCount}/${totalPhotos})`);
+};
 
 // 設定壓縮參數
 const compressionOptions = {
-  maxSizeMB: 0.5,          // 強制壓到 0.5MB 以下 (LINE 的壓縮級別)
-  maxWidthOrHeight: 1280,  // 最大寬高，這對通報來說非常清晰了
-  useWebWorker: true       // 使用 WebWorker 避免介面卡頓
+  maxSizeMB: 0.5,          
+  maxWidthOrHeight: 1280,  
+  useWebWorker: true       
 };
 
 try {
-  // 1. 使用 Promise.all 同時啟動所有照片的「壓縮 + 上傳」任務
+  showUploadModal(`準備上傳中 (0/${totalPhotos})...`);
+
   const uploadPromises = photos.map(async (raw, i) => {
     const file = raw.file || raw.blob || raw;
     if (!file) throw new Error(`第 ${i + 1} 張照片資料錯誤`);
@@ -2482,12 +2490,13 @@ try {
     // B. 上傳至 Firebase
     const url = await uploadToFirebaseOnce(compressedFile, `reports/${rid}/photo_${i}.jpg`);
     
-    // 更新進度 (雖然是平行的，但可以簡單顯示已啟動)
-    console.log(`第 ${i + 1} 張照片已完成上傳`);
+    // C. 每完成一張就更新進度
+    updateProgress(); 
+    
     return url;
   });
 
-  // 2. 等待所有照片完成
+  // 等待所有照片完成
   const photoUrlsResult = await Promise.all(uploadPromises);
   photoUrls.push(...photoUrlsResult);
 
