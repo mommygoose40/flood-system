@@ -146,7 +146,7 @@ body {
   display: block;
 }
 
-/* 縮圖小勾勾 (原為刪除叉叉) */
+/* 縮圖小勾勾 */
 .thumb .delete-btn {
   position: absolute;
   top: 4px;
@@ -486,7 +486,7 @@ input[type="text"]:focus {
     </div>
 
     <div class="action-buttons">
-      <label id="deleteCurrentBtn" class="ui-btn red" onclick="deletePreviewPhoto()">刪除這張</label>
+      <label id="deleteCurrentBtn" class="ui-btn red" onclick="deletePreviewPhoto()">移除這張</label>
       <label id="confirmBtn" class="ui-btn blue" onclick="handleConfirm()">確認完成</label>
     </div>
   </div>
@@ -952,7 +952,7 @@ if (photos.length > 0) {
     ">
       ※ 點擊
 <span style="display:inline-flex; align-items:center; justify-content:center; background:#28a745; color:#fff; border-radius:50%; font-size:16px; width:24px; height:24px; line-height:24px; vertical-align:middle; margin:0 4px;">✔</span>
-可取消選取照片
+可移除所選照片
     </div>
   `;
   thumbs.appendChild(hint);
@@ -993,7 +993,7 @@ function createThumbnail(url, index) {
   img.onerror = () => handleImageError(img);  // 圖片錯誤處理
 
   div.appendChild(img);
-  const del = createDeleteButton(index);  // 創建刪除按鈕
+  const del = createDeleteButton(index);  // 創建移除按鈕
   div.appendChild(del);
 
   return div;
@@ -1007,12 +1007,12 @@ function handleImageError(img) {
   }));
 }
 
-// 創建刪除按鈕
+// 創建移除按鈕
 function createDeleteButton(index) {
   const del = document.createElement("button");
   del.className = "delete-btn";
   del.textContent = "✔";
-  del.onclick = () => showConfirmDialog("確定要取消這張照片？", () => removePhoto(index));
+  del.onclick = () => showConfirmDialog("確定要移除這張照片？", () => removePhoto(index));
   return del;
 }
 
@@ -1281,7 +1281,7 @@ function updatePreviewImage() {
   confirmBtn.style.display = "none";
 }
 
-  document.getElementById("deleteCurrentBtn").textContent = "刪除這張";
+  document.getElementById("deleteCurrentBtn").textContent = "移除這張";
   leftBtn.classList.toggle("disabled", previewIndex === 0);
   rightBtn.classList.toggle("disabled", previewIndex === total - 1);
 }
@@ -1317,7 +1317,7 @@ function showPhotoError(container) {
 }
 
 function deletePreviewPhoto() {
-  showConfirmDialog("確定要刪除這張照片？", () => {
+  showConfirmDialog("確定要移除這張照片？", () => {
     const removed = previewFiles.splice(previewIndex, 1)[0];
     if (removed.url?.startsWith("blob:")) URL.revokeObjectURL(removed.url);
 
@@ -1388,7 +1388,7 @@ function showConfirmDialog(message, onConfirm) {
   cancelBtn.onclick = () => overlay.remove();
 
   const confirmBtn = document.createElement("button");
-  confirmBtn.textContent = "刪除";
+  confirmBtn.textContent = "移除";
   Object.assign(confirmBtn.style, {
     padding: "10px 26px",
     fontSize: "20px",
@@ -1984,8 +1984,8 @@ function confirmAudio() {
         <div id="formBar" style="width:0%;height:100%;background:#0b5ed7;"></div>
       </div>
 
-      <!-- 🔹 刪除按鈕 -->
-      <button id="deleteAudioBtn" title="刪除錄音" style="
+      <!-- 🔹 移除按鈕 -->
+      <button id="deleteAudioBtn" title="移除錄音" style="
         width:42px;height:42px;
         border:none;border-radius:50%;
         background:#d32f2f;
@@ -2065,7 +2065,7 @@ function confirmAudio() {
     "></div>`;
   }
 
-  // 🔹 刪除按鈕邏輯
+  // 🔹 移除按鈕邏輯
   del.onclick = () =>
     showConfirmDeleteAudio(() => {
       try { audio.pause(); } catch {}
@@ -2078,7 +2078,7 @@ function confirmAudio() {
     });
 }
 
-/* === 刪除錄音確認 === */
+/* === 移除錄音確認 === */
 function showConfirmDeleteAudio(onConfirm) {
   document.getElementById('customConfirm')?.remove();
 
@@ -2108,14 +2108,14 @@ function showConfirmDeleteAudio(onConfirm) {
   });
 
   modal.innerHTML = `
-    <div style="font-size:21px;margin-bottom:24px;">確定要刪除錄音？</div>
+    <div style="font-size:21px;margin-bottom:24px;">確定要移除錄音？</div>
     <div style="display:flex;justify-content:center;gap:20px;">
       <button id="cancelDeleteBtn" style="
         font-size:20px;padding:10px 26px;border:none;border-radius:8px;
         background:#888;color:#fff;cursor:pointer;">取消</button>
       <button id="confirmDeleteBtn" style="
         font-size:20px;padding:10px 26px;border:none;border-radius:8px;
-        background:#d32f2f;color:#fff;cursor:pointer;">刪除</button>
+        background:#d32f2f;color:#fff;cursor:pointer;">移除</button>
     </div>
   `;
 
