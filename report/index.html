@@ -146,27 +146,29 @@ body {
   display: block;
 }
 
-/* 縮圖小叉叉 */
+/* 縮圖小勾勾 (原為刪除叉叉) */
 .thumb .delete-btn {
   position: absolute;
   top: 4px;
   right: 4px;
-  background: rgba(220, 53, 69, 0.9);
+  /* 改為正向的綠色，例如 Bootstrap 的 success 綠或更鮮明的綠 */
+  background: rgba(40, 167, 69, 0.9); 
   color: #fff;
   border: none;
   border-radius: 50%;
-  font-size: 18px;
+  font-size: 16px; /* 勾勾通常比叉叉大，縮小一點點視覺較平衡 */
   width: 24px;
   height: 24px;
-  line-height: 22px;
+  line-height: 24px;
   text-align: center;
   cursor: pointer;
   padding: 0;
   -webkit-tap-highlight-color: transparent;
-  transition: none;
+  transition: background 0.2s; /* 增加一點點點擊反應 */
   display: flex;
   align-items: center;
   justify-content: center;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.2); /* 增加陰影讓它在照片上更明顯 */
 }
 
 /* 加號按鈕 */
@@ -538,9 +540,40 @@ input[type="text"]:focus {
   <div class="thumbs" id="thumbs"></div>
 </div>
 
+  <div class="form-section">
+  <div class="step-title">④ 現場狀況</div>
+
+  <div class="tight-row">
+    <input type="radio" name="disaster" value="" style="display:none;" checked>
+    <label><input type="radio" name="disaster" value="正常" onchange="toggleDisasterTypes()"> 正常</label>
+    <label><input type="radio" name="disaster" value="異常" onchange="toggleDisasterTypes()"> 異常</label>
+  </div>
+
+  <div id="disasterTypes" style="display:none;">
+    <div class="tight-title">- 請勾選異常類型：</div>
+
+    <div class="tight-group">
+      <label><input type="checkbox" name="disasterType" value="設施損壞"> 設施損壞</label>
+      <label><input type="checkbox" name="disasterType" value="積淹水、水情異常"> 積淹水、水情異常</label>
+      <label><input type="checkbox" name="disasterType" value="水源環境汙染"> 水源環境汙染</label>
+      <label><input type="checkbox" name="disasterType" value="山崩、地層下陷"> 山崩、地層下陷</label>
+    </div>
+
+    <div class="bottom-group">
+      <label>
+        <input type="checkbox" id="otherDisaster" name="disasterType" value="其他">
+        其他
+        <span id="otherDisasterWrap" style="display:none;">
+          ：<input type="text" id="otherDisasterText" name="otherDisasterText" placeholder="輸入類型說明" style="width:150px;">
+        </span>
+      </label>
+    </div>
+  </div>
+</div>
+
 <!-- Step 3 -->
 <div class="form-section">
-  <div class="step-title">④ 照片說明</div>
+  <div class="step-title">⑤ 照片說明</div>
 
   <label id="recordBtn" class="ui-btn" onclick="startRecording()">開始錄音</label>
   <div style="margin:0 0 6px 0;color:#d32f2f;font-weight:700;font-size:20px;">
@@ -599,37 +632,6 @@ input[type="text"]:focus {
     margin-top: 10px; /* 調整回正常欄距，與上方一致 */
   }
 </style>
-
-<div class="form-section">
-  <div class="step-title">⑤ 現場狀況</div>
-
-  <div class="tight-row">
-    <input type="radio" name="disaster" value="" style="display:none;" checked>
-    <label><input type="radio" name="disaster" value="正常" onchange="toggleDisasterTypes()"> 正常</label>
-    <label><input type="radio" name="disaster" value="異常" onchange="toggleDisasterTypes()"> 異常</label>
-  </div>
-
-  <div id="disasterTypes" style="display:none;">
-    <div class="tight-title">- 請勾選異常類型：</div>
-
-    <div class="tight-group">
-      <label><input type="checkbox" name="disasterType" value="設施損壞"> 設施損壞</label>
-      <label><input type="checkbox" name="disasterType" value="積淹水、水情異常"> 積淹水、水情異常</label>
-      <label><input type="checkbox" name="disasterType" value="水源環境汙染"> 水源環境汙染</label>
-      <label><input type="checkbox" name="disasterType" value="山崩、地層下陷"> 山崩、地層下陷</label>
-    </div>
-
-    <div class="bottom-group">
-      <label>
-        <input type="checkbox" id="otherDisaster" name="disasterType" value="其他">
-        其他
-        <span id="otherDisasterWrap" style="display:none;">
-          ：<input type="text" id="otherDisasterText" name="otherDisasterText" placeholder="輸入類型說明" style="width:150px;">
-        </span>
-      </label>
-    </div>
-  </div>
-</div>
 
   <!-- Submit -->
 <div class="form-section" style="text-align:center;">
@@ -949,21 +951,8 @@ if (photos.length > 0) {
       display:inline-block;
     ">
       ※ 點擊
-      <span style="
-        display:inline-flex;
-        align-items:center;
-        justify-content:center;
-        background:#dc3545;
-        color:#fff;
-        border-radius:50%;
-        font-size:18px;
-        width:24px;
-        height:24px;
-        line-height:22px;
-        vertical-align:middle;
-        margin:0 4px;
-      ">×</span>
-    可刪除照片
+<span style="display:inline-flex; align-items:center; justify-content:center; background:#28a745; color:#fff; border-radius:50%; font-size:16px; width:24px; height:24px; line-height:24px; vertical-align:middle; margin:0 4px;">✔</span>
+可取消選取照片
     </div>
   `;
   thumbs.appendChild(hint);
@@ -1022,7 +1011,7 @@ function handleImageError(img) {
 function createDeleteButton(index) {
   const del = document.createElement("button");
   del.className = "delete-btn";
-  del.textContent = "×";
+  del.textContent = "✔";
   del.onclick = () => showConfirmDialog("確定要刪除這張照片？", () => removePhoto(index));
   return del;
 }
