@@ -2467,7 +2467,7 @@ const compressionOptions = {
 };
 
 try {
-  showUploadModal(`準備上傳中 (0/${totalPhotos})...`);
+  showUploadModal(`準備上傳中`);
 
   const uploadPromises = photos.map(async (raw, i) => {
     const file = raw.file || raw.blob || raw;
@@ -2493,20 +2493,22 @@ try {
   throw new Error("照片處理失敗: " + error.message);
 }
 
-    /* === 上傳語音與轉文字 === */
-    if (audioBlob) {
-      // 顯示語音上傳中
-      showUploadModal('語音上傳中');
-      
-      audioUrl = await uploadToFirebaseOnce(audioBlob, `reports/${rid}/recording.wav`);
+    /* === 優化後的語音處理 (並行處理) === */
+if (audioBlob) {
+    showUploadModal('語音上傳中');
+    
+    // 同時啟動「上傳 Firebase」與「AI 轉文字」兩個任務
+    const audioTasks = [
+        uploadToFirebaseOnce(audioBlob, `reports/${rid}/recording.wav`), // 任務 A
+        abnormal ? transcribeAudio(audioBlob, rid) : Promise.resolve('') // 任務 B
+    ];
 
-      if (abnormal) {
-        // 顯示語音轉文字中
-        showUploadModal('語音轉文字中');
-        
-        txt = await transcribeAudio(audioBlob, rid);
-      }
-    }
+    // 使用 Promise.all 等待兩個任務完成
+    const [url, transcribedText] = await Promise.all(audioTasks);
+    
+    audioUrl = url;
+    txt = transcribedText;
+}
 
     /* === 提交資料至 GAS === */
     // 顯示提交中
