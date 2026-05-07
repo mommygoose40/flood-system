@@ -2925,7 +2925,8 @@ tableRows += `
         
         <td style="text-align:left;" 
             data-name="${(r.回報者 || "").trim()}" 
-            data-rid="${(r.回報者ID || "").trim()}" 
+            data-rid="${// 確保先轉成字串再 trim
+(String(r.回報者ID || "")).trim()}" 
             data-comp="${(r.同行者 || "").trim()}">
             ${reporterDisplay}
         </td>
@@ -3671,7 +3672,8 @@ function downloadExcelDirectly(data, fileName) {
             "分類": r.異常分類 || "",
             "說明": combinedNote,
             "回報者": (r.回報者 || "").trim(),
-            "回報者ID": (r.回報者ID || "").trim(),
+            "回報者ID": // 確保先轉成字串再 trim
+(String(r.回報者ID || "")).trim(),
             "同行者": (r.同行者 || "").trim(),
             "大隊": r.所屬大隊 || ""
         };
