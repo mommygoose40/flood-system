@@ -146,27 +146,29 @@ body {
   display: block;
 }
 
-/* 縮圖小叉叉 */
+/* 縮圖小勾勾 */
 .thumb .delete-btn {
   position: absolute;
   top: 4px;
   right: 4px;
-  background: rgba(220, 53, 69, 0.9);
+  /* 淺藍灰色 */
+  background: rgba(120, 144, 156, 0.9);
   color: #fff;
   border: none;
   border-radius: 50%;
-  font-size: 18px;
+  font-size: 16px; /* 勾勾通常比叉叉大，縮小一點點視覺較平衡 */
   width: 24px;
   height: 24px;
-  line-height: 22px;
+  line-height: 24px;
   text-align: center;
   cursor: pointer;
   padding: 0;
   -webkit-tap-highlight-color: transparent;
-  transition: none;
+  transition: background 0.2s; /* 增加一點點點擊反應 */
   display: flex;
   align-items: center;
   justify-content: center;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.2); /* 增加陰影讓它在照片上更明顯 */
 }
 
 /* 加號按鈕 */
@@ -484,7 +486,7 @@ input[type="text"]:focus {
     </div>
 
     <div class="action-buttons">
-      <label id="deleteCurrentBtn" class="ui-btn red" onclick="deletePreviewPhoto()">刪除這張</label>
+      <label id="deleteCurrentBtn" class="ui-btn red" onclick="deletePreviewPhoto()">移除這張</label>
       <label id="confirmBtn" class="ui-btn blue" onclick="handleConfirm()">確認完成</label>
     </div>
   </div>
@@ -538,9 +540,39 @@ input[type="text"]:focus {
   <div class="thumbs" id="thumbs"></div>
 </div>
 
+  <div class="form-section">
+  <div class="step-title">④ 通報狀況</div>
+
+  <div class="tight-row">
+    <input type="radio" name="disaster" value="" style="display:none;" checked>
+    <label><input type="radio" name="disaster" value="正常" onchange="toggleDisasterTypes()"> 一般</label>
+    <label><input type="radio" name="disaster" value="異常" onchange="toggleDisasterTypes()"> 特殊</label>
+  </div>
+
+  <div id="disasterTypes" style="display:none;">
+    <div class="tight-title">- 請勾選特殊狀況：</div>
+
+    <div class="tight-group">
+      <label><input type="checkbox" name="disasterType" value="設施損壞"> 水利設施損壞</label>
+      <label><input type="checkbox" name="disasterType" value="積淹水、水情異常"> 積淹水、水情異常</label>
+      <label><input type="checkbox" name="disasterType" value="水源環境汙染"> 水源環境汙染</label>
+    </div>
+
+    <div class="bottom-group">
+      <label>
+        <input type="checkbox" id="otherDisaster" name="disasterType" value="其他">
+        其他
+        <span id="otherDisasterWrap" style="display:none;">
+          ：<input type="text" id="otherDisasterText" name="otherDisasterText" placeholder="輸入類型說明" style="width:150px;">
+        </span>
+      </label>
+    </div>
+  </div>
+</div>
+
 <!-- Step 3 -->
 <div class="form-section">
-  <div class="step-title">④ 照片說明</div>
+  <div class="step-title">⑤ 照片說明</div>
 
   <label id="recordBtn" class="ui-btn" onclick="startRecording()">開始錄音</label>
   <div style="margin:0 0 6px 0;color:#d32f2f;font-weight:700;font-size:20px;">
@@ -599,37 +631,6 @@ input[type="text"]:focus {
     margin-top: 10px; /* 調整回正常欄距，與上方一致 */
   }
 </style>
-
-<div class="form-section">
-  <div class="step-title">⑤ 現場狀況</div>
-
-  <div class="tight-row">
-    <input type="radio" name="disaster" value="" style="display:none;" checked>
-    <label><input type="radio" name="disaster" value="正常" onchange="toggleDisasterTypes()"> 正常</label>
-    <label><input type="radio" name="disaster" value="異常" onchange="toggleDisasterTypes()"> 異常</label>
-  </div>
-
-  <div id="disasterTypes" style="display:none;">
-    <div class="tight-title">- 請勾選異常類型：</div>
-
-    <div class="tight-group">
-      <label><input type="checkbox" name="disasterType" value="設施損壞"> 設施損壞</label>
-      <label><input type="checkbox" name="disasterType" value="積淹水、水情異常"> 積淹水、水情異常</label>
-      <label><input type="checkbox" name="disasterType" value="水源環境汙染"> 水源環境汙染</label>
-      <label><input type="checkbox" name="disasterType" value="山崩、地層下陷"> 山崩、地層下陷</label>
-    </div>
-
-    <div class="bottom-group">
-      <label>
-        <input type="checkbox" id="otherDisaster" name="disasterType" value="其他">
-        其他
-        <span id="otherDisasterWrap" style="display:none;">
-          ：<input type="text" id="otherDisasterText" name="otherDisasterText" placeholder="輸入類型說明" style="width:150px;">
-        </span>
-      </label>
-    </div>
-  </div>
-</div>
 
   <!-- Submit -->
 <div class="form-section" style="text-align:center;">
@@ -943,27 +944,14 @@ if (photos.length > 0) {
   `;
   hint.innerHTML = `
     <div style="
-      color:#d32f2f;
+      color:rgba(120, 144, 156, 0.9);
       font-weight:700;
       font-size:20px;
       display:inline-block;
     ">
       ※ 點擊
-      <span style="
-        display:inline-flex;
-        align-items:center;
-        justify-content:center;
-        background:#dc3545;
-        color:#fff;
-        border-radius:50%;
-        font-size:18px;
-        width:24px;
-        height:24px;
-        line-height:22px;
-        vertical-align:middle;
-        margin:0 4px;
-      ">×</span>
-    可刪除照片
+<span style="display:inline-flex; align-items:center; justify-content:center; background: rgba(120, 144, 156, 0.9); color:#fff; border-radius:50%; font-size:16px; width:24px; height:24px; line-height:24px; vertical-align:middle; margin:0 4px;">－</span>
+可移除所選照片
     </div>
   `;
   thumbs.appendChild(hint);
@@ -1004,7 +992,7 @@ function createThumbnail(url, index) {
   img.onerror = () => handleImageError(img);  // 圖片錯誤處理
 
   div.appendChild(img);
-  const del = createDeleteButton(index);  // 創建刪除按鈕
+  const del = createDeleteButton(index);  // 創建移除按鈕
   div.appendChild(del);
 
   return div;
@@ -1018,12 +1006,12 @@ function handleImageError(img) {
   }));
 }
 
-// 創建刪除按鈕
+// 創建縮圖移除按鈕
 function createDeleteButton(index) {
   const del = document.createElement("button");
   del.className = "delete-btn";
-  del.textContent = "×";
-  del.onclick = () => showConfirmDialog("確定要刪除這張照片？", () => removePhoto(index));
+  del.textContent = "－";
+  del.onclick = () => showConfirmDialog("確定要移除這張照片？", () => removePhoto(index));
   return del;
 }
 
@@ -1292,7 +1280,7 @@ function updatePreviewImage() {
   confirmBtn.style.display = "none";
 }
 
-  document.getElementById("deleteCurrentBtn").textContent = "刪除這張";
+  document.getElementById("deleteCurrentBtn").textContent = "移除這張";
   leftBtn.classList.toggle("disabled", previewIndex === 0);
   rightBtn.classList.toggle("disabled", previewIndex === total - 1);
 }
@@ -1328,7 +1316,7 @@ function showPhotoError(container) {
 }
 
 function deletePreviewPhoto() {
-  showConfirmDialog("確定要刪除這張照片？", () => {
+  showConfirmDialog("確定要移除這張照片？", () => {
     const removed = previewFiles.splice(previewIndex, 1)[0];
     if (removed.url?.startsWith("blob:")) URL.revokeObjectURL(removed.url);
 
@@ -1399,7 +1387,7 @@ function showConfirmDialog(message, onConfirm) {
   cancelBtn.onclick = () => overlay.remove();
 
   const confirmBtn = document.createElement("button");
-  confirmBtn.textContent = "刪除";
+  confirmBtn.textContent = "移除";
   Object.assign(confirmBtn.style, {
     padding: "10px 26px",
     fontSize: "20px",
@@ -1995,8 +1983,8 @@ function confirmAudio() {
         <div id="formBar" style="width:0%;height:100%;background:#0b5ed7;"></div>
       </div>
 
-      <!-- 🔹 刪除按鈕 -->
-      <button id="deleteAudioBtn" title="刪除錄音" style="
+      <!-- 🔹 移除按鈕 -->
+      <button id="deleteAudioBtn" title="移除錄音" style="
         width:42px;height:42px;
         border:none;border-radius:50%;
         background:#d32f2f;
@@ -2076,7 +2064,7 @@ function confirmAudio() {
     "></div>`;
   }
 
-  // 🔹 刪除按鈕邏輯
+  // 🔹 移除按鈕邏輯
   del.onclick = () =>
     showConfirmDeleteAudio(() => {
       try { audio.pause(); } catch {}
@@ -2089,7 +2077,7 @@ function confirmAudio() {
     });
 }
 
-/* === 刪除錄音確認 === */
+/* === 移除錄音確認 === */
 function showConfirmDeleteAudio(onConfirm) {
   document.getElementById('customConfirm')?.remove();
 
@@ -2119,14 +2107,14 @@ function showConfirmDeleteAudio(onConfirm) {
   });
 
   modal.innerHTML = `
-    <div style="font-size:21px;margin-bottom:24px;">確定要刪除錄音？</div>
+    <div style="font-size:21px;margin-bottom:24px;">確定要移除錄音？</div>
     <div style="display:flex;justify-content:center;gap:20px;">
       <button id="cancelDeleteBtn" style="
         font-size:20px;padding:10px 26px;border:none;border-radius:8px;
         background:#888;color:#fff;cursor:pointer;">取消</button>
       <button id="confirmDeleteBtn" style="
         font-size:20px;padding:10px 26px;border:none;border-radius:8px;
-        background:#d32f2f;color:#fff;cursor:pointer;">刪除</button>
+        background:#d32f2f;color:#fff;cursor:pointer;">移除</button>
     </div>
   `;
 
@@ -2478,7 +2466,7 @@ const compressionOptions = {
 };
 
 try {
-  showUploadModal(`準備上傳中 (0/${totalPhotos})...`);
+  showUploadModal(`準備上傳中`);
 
   const uploadPromises = photos.map(async (raw, i) => {
     const file = raw.file || raw.blob || raw;
@@ -2504,20 +2492,22 @@ try {
   throw new Error("照片處理失敗: " + error.message);
 }
 
-    /* === 上傳語音與轉文字 === */
-    if (audioBlob) {
-      // 顯示語音上傳中
-      showUploadModal('語音上傳中');
-      
-      audioUrl = await uploadToFirebaseOnce(audioBlob, `reports/${rid}/recording.wav`);
+    /* === 優化後的語音處理 (並行處理) === */
+if (audioBlob) {
+    showUploadModal('語音上傳中');
+    
+    // 同時啟動「上傳 Firebase」與「AI 轉文字」兩個任務
+    const audioTasks = [
+        uploadToFirebaseOnce(audioBlob, `reports/${rid}/recording.wav`), // 任務 A
+        abnormal ? transcribeAudio(audioBlob, rid) : Promise.resolve('') // 任務 B
+    ];
 
-      if (abnormal) {
-        // 顯示語音轉文字中
-        showUploadModal('語音轉文字中');
-        
-        txt = await transcribeAudio(audioBlob, rid);
-      }
-    }
+    // 使用 Promise.all 等待兩個任務完成
+    const [url, transcribedText] = await Promise.all(audioTasks);
+    
+    audioUrl = url;
+    txt = transcribedText;
+}
 
     /* === 提交資料至 GAS === */
     // 顯示提交中
