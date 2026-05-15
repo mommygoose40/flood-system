@@ -151,8 +151,8 @@ body {
   position: absolute;
   top: 4px;
   right: 4px;
-  /* 專業藍灰色，接近 Bootstrap 的 secondary 顏色但偏藍 */
-background: rgba(84, 110, 122, 0.9);
+  /* 淺藍灰色 */
+  background: rgba(120, 144, 156, 0.9);
   color: #fff;
   border: none;
   border-radius: 50%;
@@ -1011,7 +1011,7 @@ function handleImageError(img) {
 function createDeleteButton(index) {
   const del = document.createElement("button");
   del.className = "delete-btn";
-  del.textContent = "-";
+  del.textContent = "–";
   del.onclick = () => showConfirmDialog("確定要移除這張照片？", () => removePhoto(index));
   return del;
 }
