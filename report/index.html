@@ -541,22 +541,21 @@ input[type="text"]:focus {
 </div>
 
   <div class="form-section">
-  <div class="step-title">④ 現場狀況</div>
+  <div class="step-title">④ 通報狀況</div>
 
   <div class="tight-row">
     <input type="radio" name="disaster" value="" style="display:none;" checked>
-    <label><input type="radio" name="disaster" value="正常" onchange="toggleDisasterTypes()"> 正常</label>
-    <label><input type="radio" name="disaster" value="異常" onchange="toggleDisasterTypes()"> 異常</label>
+    <label><input type="radio" name="disaster" value="正常" onchange="toggleDisasterTypes()"> 一般</label>
+    <label><input type="radio" name="disaster" value="異常" onchange="toggleDisasterTypes()"> 特殊</label>
   </div>
 
   <div id="disasterTypes" style="display:none;">
-    <div class="tight-title">- 請勾選異常類型：</div>
+    <div class="tight-title">- 請勾選特殊狀況：</div>
 
     <div class="tight-group">
       <label><input type="checkbox" name="disasterType" value="設施損壞"> 設施損壞</label>
       <label><input type="checkbox" name="disasterType" value="積淹水、水情異常"> 積淹水、水情異常</label>
       <label><input type="checkbox" name="disasterType" value="水源環境汙染"> 水源環境汙染</label>
-      <label><input type="checkbox" name="disasterType" value="山崩、地層下陷"> 山崩、地層下陷</label>
     </div>
 
     <div class="bottom-group">
