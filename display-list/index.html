@@ -979,13 +979,14 @@ body {
    以「時間框」為基準寬度
    ===================================================== */
 
-  /* 2️⃣ 類型 → 跟時間一樣寬 */
-  #adminFilterArea button[onclick*="openDropdown('type')"] {
-    width: auto !important;
-    min-width: 145px !important;   /* ★ 同時間 */
-    max-width: 145px !important;
-    flex: none !important;
-  }
+  /* 2️⃣ 類型、狀態 → 跟時間一樣寬 */
+  #adminFilterArea button[onclick*="openDropdown('type')"],
+#adminFilterArea button[onclick*="openDropdown('adminStatus')"] {
+  width: auto !important;
+  min-width: 145px !important;
+  max-width: 145px !important;
+  flex: none !important;
+}
 
   /* 3️⃣ 大隊、範圍 → 完全自動，不限制 */
   #adminFilterArea button[onclick*="openDropdown('team')"],
@@ -1801,6 +1802,21 @@ body {
 </button>
   </div>
 
+  <!-- 狀態 -->
+<div style="margin-bottom:12px;">
+  <label>狀態：</label>
+
+  <select id="adminStatusSelect" style="display:none;">
+    <option value="全部">全部</option>
+    <option value="正常">一般</option>
+    <option value="異常">特殊</option>
+  </select>
+
+  <button class="fakeSelectBtn" onclick="openDropdown('adminStatus')">
+    <span id="adminStatusText">全部</span>
+    <span class="arrow">▾</span>
+  </button>
+</div>
 
   <!-- 搜尋 -->
   <div class="admin-action-row">
@@ -1933,8 +1949,8 @@ body {
 
           <select id="reportStatus" style="display:none;">
           <option value="全部">全部</option>
-          <option value="正常">正常</option>
-          <option value="異常">異常</option>
+          <option value="正常">一般</option>
+          <option value="異常">特殊</option>
           </select>
 
           <button class="fakeSelectBtn" onclick="openDropdown('reportStatus')">
@@ -2029,6 +2045,16 @@ let restoredOnce = false;
 let isInitialLoad = true;
 let globalRecords = [];
 let historyReportRecords = [];
+
+//修改用語：一般/特殊
+function statusDisplayText(status) {
+  const v = String(status || "").trim();
+
+  if (v === "正常") return "一般";
+  if (v === "異常") return "特殊";
+
+  return v;
+}
 
 // ------------------------------------------
 // ★★★ Session Storage 預快取輔助函式 ★★★
@@ -2558,11 +2584,12 @@ if (twYear === latestYear) {
             }
           } catch (e) {}
 
-          const status = (record.狀態 || "").trim();
-          const isAbnormal = status === "異常";
-          
-          const timeText = document.createElement("span");
-          timeText.textContent = status ? `${hh}:${mm}｜${status}` : `${hh}:${mm}`;
+          const rawStatus = (record.狀態 || "").trim();
+const status = statusDisplayText(rawStatus);
+const isAbnormal = rawStatus === "異常";
+
+const timeText = document.createElement("span");
+timeText.textContent = status ? `${hh}:${mm}｜${status}` : `${hh}:${mm}`;
           div.appendChild(timeText);
 
           if ((viewMode === "team" || viewMode === "admin") && record.回報者) {
@@ -2831,7 +2858,9 @@ async function exportReport(mode = 'current') {
                 year: yearRaw,
                 month: monthRaw,
                 type: (document.getElementById("historyTypeText")?.innerText === "全部") ? "all" : document.getElementById("historyTypeText")?.innerText,
-                status: (document.getElementById("reportStatusText")?.innerText === "全部") ? "all" : document.getElementById("reportStatusText")?.innerText
+                status: (document.getElementById("reportStatus")?.value === "全部")
+  ? "all"
+  : document.getElementById("reportStatus")?.value
             };
 
             // 如果是年度摘要，目前機制通常不支援特定志工搜尋，若要搜尋則強制走明細模式
@@ -2918,7 +2947,7 @@ tableRows += `
         <td style="text-align:center;">${index + 1}</td> 
         <td style="text-align:center; white-space:nowrap;">${r.日期 ? normalizeDate(r.日期) : ''}<br/>${hh}:${mm}</td> 
         <td style="text-align:center;">${r.通報類型 || ''}</td> 
-        <td style="text-align:center; color: ${r.狀態 === '異常' ? 'red' : 'black'}; font-weight: ${r.狀態 === '異常' ? 'bold' : 'normal'}">${r.狀態 || ''}</td> 
+        <td style="text-align:center; color: ${r.狀態 === '異常' ? 'red' : 'black'}; font-weight: ${r.狀態 === '異常' ? 'bold' : 'normal'}">${statusDisplayText(r.狀態)}</td>
         <td style="text-align:left;">${r.異常分類 || ''}</td>
         <td style="text-align:center;"><a href="${r.詳細紀錄}" target="_blank" style="color:#0b5ed7; text-decoration:underline;">連結</a></td> 
         <td style="text-align:left;">${combinedNote}</td>
@@ -3668,7 +3697,7 @@ function downloadExcelDirectly(data, fileName) {
             "日期": r.日期 || "",
             "時間": `${hh}:${mm}`,
             "類型": r.通報類型 || "",
-            "狀態": r.狀態 || "",
+            "狀態": statusDisplayText(r.狀態),
             "分類": r.異常分類 || "",
             "說明": combinedNote,
             "回報者": (r.回報者 || "").trim(),
@@ -3760,7 +3789,7 @@ function renderMobileReportOverlay(filteredData) {
                     ${hh}:${mm}
                 </td>
                 <td style="text-align:center;">${r.通報類型 || ''}</td>
-                <td style="text-align:center; color: ${r.狀態 === '異常' ? 'red' : 'black'}; font-weight: ${r.狀態 === '異常' ? 'bold' : 'normal'}">${r.狀態 || ''}</td>
+                <td style="text-align:center; color: ${r.狀態 === '異常' ? 'red' : 'black'}; font-weight: ${r.狀態 === '異常' ? 'bold' : 'normal'}">${statusDisplayText(r.狀態)}</td>
                 <td style="text-align:center;">${r.異常分類 || ''}</td>
                 <td style="text-align:center;">${detailLink}</td>
                 <td>${combinedNote}</td>
@@ -3899,6 +3928,16 @@ const dropdownData = {
       {value:"其他", text:"其他"}
     ]
   },
+  adminStatus: {
+  title: "選擇狀態",
+  target: "adminStatusText",
+  input: "adminStatusSelect",
+  options: [
+    { value: "全部", text: "全部" },
+    { value: "正常", text: "一般" },
+    { value: "異常", text: "特殊" }
+  ]
+},
   timeStart: {
     title: "開始時間",
     target: "timeStartText",
@@ -3954,8 +3993,8 @@ const dropdownData = {
   input: "reportStatus",
   options: [
     {value:"全部", text:"全部"},
-    {value:"正常", text:"正常"},
-    {value:"異常", text:"異常"}
+    {value:"正常", text:"一般"},
+    {value:"異常", text:"特殊"}
   ]
   }
 };
